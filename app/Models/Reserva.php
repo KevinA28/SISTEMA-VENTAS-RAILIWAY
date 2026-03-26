@@ -11,15 +11,31 @@ use Illuminate\Database\Eloquent\Model;
 class Reserva extends Model
 {
     protected $fillable = [
-        'codigo_reserva', 'cliente_id', 'fecha_tour_id',
-        'estado_id', 'usuario_admin_id', 'cantidad_adultos',
-        'cantidad_ninos', 'precio_total', 'monto_pagado',
-        'canal_contacto', 'observaciones',
+        'codigo_reserva',
+        'cliente_id',
+        'fecha_tour_id',
+        'estado_id',
+        'usuario_admin_id',
+        'cantidad_adultos',
+        'cantidad_ninos',
+        'precio_total',
+        'monto_pagado',
+        'canal_contacto',
+        'ciudad_procedencia',
+        'tipo_comprobante',
+        'ruc_factura',
+        'razon_social',
+        'punto_encuentro',
+        'hora_recojo',
+        'alergias_titular',
+        'restricciones_alimentarias_titular',
+        'observaciones',
     ];
 
     protected $casts = [
         'precio_total' => 'decimal:2',
         'monto_pagado' => 'decimal:2',
+        'hora_recojo'  => 'datetime:H:i',
     ];
 
     // ── Relaciones ────────────────────────────────────────────────
@@ -71,13 +87,22 @@ class Reserva extends Model
 
     // ── Helpers ───────────────────────────────────────────────────
 
-    // Cuánto falta por pagar
     public function getSaldoPendienteAttribute(): float
     {
         return $this->precio_total - $this->monto_pagado;
     }
 
-    // Genera código tipo ADV-2026-014
+    public function getPorcentajePagadoAttribute(): float
+    {
+        if ($this->precio_total <= 0) return 0;
+        return round(($this->monto_pagado / $this->precio_total) * 100, 1);
+    }
+
+    public function getEsFacturaAttribute(): bool
+    {
+        return $this->tipo_comprobante === 'factura';
+    }
+
     public static function generarCodigo(): string
     {
         $año    = date('Y');

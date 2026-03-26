@@ -1,44 +1,51 @@
 <?php
 // =====================================================================
-// ARCHIVO: 2026_03_12_000004_create_reservas_table.php
+// ARCHIVO: 2026_03_26_000001_add_campos_formulario_to_reservas_table.php
 // UBICACIÓN: database/migrations/
+// =====================================================================
+// Agrega los campos nuevos del formulario completo:
+// ciudad_procedencia, tipo_comprobante, ruc_factura,
+// razon_social, punto_encuentro, hora_recojo
 // =====================================================================
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateReservasTable extends Migration
+return new class extends Migration
 {
-    public function up()
+    public function up(): void
     {
-        Schema::create('estados_reserva', function (Blueprint $table) {
-            $table->id();
-            $table->string('nombre');
-            $table->string('color_hex', 7)->default('#6b7280');
-            $table->timestamps();
+        Schema::table('reservas', function (Blueprint $table) {
+            $table->string('ciudad_procedencia', 100)->nullable()->after('canal_contacto');
+            $table->enum('tipo_comprobante', ['boleta', 'factura'])->default('boleta')->after('ciudad_procedencia');
+            $table->string('ruc_factura', 11)->nullable()->after('tipo_comprobante');
+            $table->string('razon_social', 200)->nullable()->after('ruc_factura');
+            $table->string('punto_encuentro', 300)->nullable()->after('razon_social');
+            $table->time('hora_recojo')->nullable()->after('punto_encuentro');
         });
 
-        Schema::create('reservas', function (Blueprint $table) {
-            $table->id();
-            $table->string('codigo_reserva', 20)->unique();
-            $table->foreignId('cliente_id')->constrained('clientes');
-            $table->foreignId('fecha_tour_id')->constrained('fechas_tour');
-            $table->foreignId('estado_id')->constrained('estados_reserva');
-            $table->foreignId('usuario_admin_id')->constrained('usuarios_admin');
-            $table->integer('cantidad_adultos')->default(1);
-            $table->integer('cantidad_ninos')->default(0);
-            $table->decimal('precio_total', 10, 2);
-            $table->decimal('monto_pagado', 10, 2)->default(0);
-            $table->enum('canal_contacto', ['whatsapp', 'presencial', 'llamada', 'redes_sociales', 'web'])->default('whatsapp');
-            $table->text('observaciones')->nullable();
-            $table->timestamps();
+        // También agregar alergias y restricciones al titular
+        // (los pasajeros ya tienen salud_pasajero, esto es para el titular)
+        Schema::table('reservas', function (Blueprint $table) {
+            $table->text('alergias_titular')->nullable()->after('hora_recojo');
+            $table->text('restricciones_alimentarias_titular')->nullable()->after('alergias_titular');
         });
     }
 
-    public function down()
+    public function down(): void
     {
-        Schema::dropIfExists('reservas');
-        Schema::dropIfExists('estados_reserva');
+        Schema::table('reservas', function (Blueprint $table) {
+            $table->dropColumn([
+                'ciudad_procedencia',
+                'tipo_comprobante',
+                'ruc_factura',
+                'razon_social',
+                'punto_encuentro',
+                'hora_recojo',
+                'alergias_titular',
+                'restricciones_alimentarias_titular',
+            ]);
+        });
     }
-}
+};
