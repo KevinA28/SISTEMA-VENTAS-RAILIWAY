@@ -279,13 +279,6 @@
             <i class="bi bi-calendar-check"></i>
             Reservas
         </a>
-
-        <a href="{{ route('reservas.create') }}"
-           class="nav-item {{ request()->routeIs('reservas.create') ? 'active' : '' }}"
-           style="padding-left: 46px; font-size: 0.8rem; color: #64748b;">
-            <i class="bi bi-plus-circle" style="font-size:.85rem"></i>
-            Nueva reserva
-        </a>
     </nav>
 
     {{-- Usuario al fondo --}}
