@@ -1,99 +1,102 @@
-<nav x-data="{ open: false }" class="bg-white border-b border-gray-100">
-    <!-- Primary Navigation Menu -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-            <div class="flex">
-                <!-- Logo -->
-                <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}">
-                        <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
-                    </a>
+<nav style="background:#1a2744;border-bottom:2px solid #f59e0b;font-family:'DM Sans',sans-serif;">
+    <div style="max-width:1280px;margin:0 auto;padding:0 1.5rem;display:flex;justify-content:space-between;align-items:center;height:64px;">
+
+        {{-- Logo --}}
+        <div style="display:flex;align-items:center;gap:2.5rem;">
+            <a href="{{ route('dashboard') }}" style="display:flex;align-items:center;gap:.6rem;text-decoration:none;">
+                <div style="background:#f59e0b;width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;">
+                    <span style="color:#1a2744;font-size:.7rem;font-weight:900;letter-spacing:.02em;">ADV</span>
                 </div>
-
-                <!-- Navigation Links -->
-                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                        {{ __('Dashboard') }}
-                    </x-nav-link>
+                <div>
+                    <div style="color:white;font-weight:800;font-size:1rem;line-height:1;">Adventur</div>
+                    <div style="color:#f59e0b;font-size:.62rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;">Sistema de Reservas</div>
                 </div>
+            </a>
+
+            {{-- Links principales --}}
+            <div style="display:flex;align-items:center;gap:.2rem;">
+                <a href="{{ route('dashboard') }}"
+                   style="color:{{ request()->routeIs('dashboard') ? '#f59e0b' : 'rgba(255,255,255,.65)' }};
+                          background:{{ request()->routeIs('dashboard') ? 'rgba(245,158,11,.12)' : 'transparent' }};
+                          border-bottom:{{ request()->routeIs('dashboard') ? '2px solid #f59e0b' : '2px solid transparent' }};
+                          padding:8px 14px;font-size:.85rem;font-weight:600;
+                          text-decoration:none;display:flex;align-items:center;gap:.4rem;
+                          height:64px;box-sizing:border-box;transition:all .15s;">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a>
+                <a href="{{ route('reservas.index') }}"
+                   style="color:{{ request()->routeIs('reservas.*') ? '#f59e0b' : 'rgba(255,255,255,.65)' }};
+                          background:{{ request()->routeIs('reservas.*') ? 'rgba(245,158,11,.12)' : 'transparent' }};
+                          border-bottom:{{ request()->routeIs('reservas.*') ? '2px solid #f59e0b' : '2px solid transparent' }};
+                          padding:8px 14px;font-size:.85rem;font-weight:600;
+                          text-decoration:none;display:flex;align-items:center;gap:.4rem;
+                          height:64px;box-sizing:border-box;transition:all .15s;">
+                    <i class="bi bi-calendar-check"></i> Reservas
+                </a>
+                <a href="{{ route('clientes.index') }}"
+                   style="color:{{ request()->routeIs('clientes.*') ? '#f59e0b' : 'rgba(255,255,255,.65)' }};
+                          background:{{ request()->routeIs('clientes.*') ? 'rgba(245,158,11,.12)' : 'transparent' }};
+                          border-bottom:{{ request()->routeIs('clientes.*') ? '2px solid #f59e0b' : '2px solid transparent' }};
+                          padding:8px 14px;font-size:.85rem;font-weight:600;
+                          text-decoration:none;display:flex;align-items:center;gap:.4rem;
+                          height:64px;box-sizing:border-box;transition:all .15s;">
+                    <i class="bi bi-people"></i> Clientes
+                </a>
             </div>
+        </div>
 
-            <!-- Settings Dropdown -->
-            <div class="hidden sm:flex sm:items-center sm:ms-6">
-                <x-dropdown align="right" width="48">
-                    <x-slot name="trigger">
-                        <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
-                            <div>{{ Auth::user()->name }}</div>
+        {{-- Derecha: botón + usuario --}}
+        <div style="display:flex;align-items:center;gap:.75rem;">
+            <a href="{{ route('reservas.create') }}"
+               style="background:#f59e0b;color:#1a2744;padding:8px 16px;border-radius:8px;
+                      font-size:.82rem;font-weight:800;text-decoration:none;
+                      display:flex;align-items:center;gap:.4rem;letter-spacing:.01em;">
+                <i class="bi bi-plus-lg"></i> Nueva Reserva
+            </a>
 
-                            <div class="ms-1">
-                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                        </button>
-                    </x-slot>
-
-                    <x-slot name="content">
-                        <x-dropdown-link :href="route('profile.edit')">
-                            {{ __('Profile') }}
-                        </x-dropdown-link>
-
-                        <!-- Authentication -->
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-
-                            <x-dropdown-link :href="route('logout')"
-                                    onclick="event.preventDefault();
-                                                this.closest('form').submit();">
-                                {{ __('Log Out') }}
-                            </x-dropdown-link>
-                        </form>
-                    </x-slot>
-                </x-dropdown>
-            </div>
-
-            <!-- Hamburger -->
-            <div class="-me-2 flex items-center sm:hidden">
-                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out">
-                    <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                        <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+            <div x-data="{ open: false }" style="position:relative;">
+                <button @click="open = !open"
+                        style="display:flex;align-items:center;gap:.5rem;
+                               background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
+                               color:white;padding:7px 13px;border-radius:8px;
+                               font-size:.84rem;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;">
+                    <div style="width:28px;height:28px;background:#f59e0b;border-radius:50%;
+                                display:flex;align-items:center;justify-content:center;
+                                color:#1a2744;font-size:.7rem;font-weight:900;">
+                        {{ strtoupper(substr(Auth::user()->name,0,2)) }}
+                    </div>
+                    {{ Auth::user()->name }}
+                    <i class="bi bi-chevron-down" style="font-size:.6rem;opacity:.7;"></i>
                 </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Responsive Navigation Menu -->
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
-        <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                {{ __('Dashboard') }}
-            </x-responsive-nav-link>
-        </div>
-
-        <!-- Responsive Settings Options -->
-        <div class="pt-4 pb-1 border-t border-gray-200">
-            <div class="px-4">
-                <div class="font-medium text-base text-gray-800">{{ Auth::user()->name }}</div>
-                <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
-            </div>
-
-            <div class="mt-3 space-y-1">
-                <x-responsive-nav-link :href="route('profile.edit')">
-                    {{ __('Profile') }}
-                </x-responsive-nav-link>
-
-                <!-- Authentication -->
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-
-                    <x-responsive-nav-link :href="route('logout')"
-                            onclick="event.preventDefault();
-                                        this.closest('form').submit();">
-                        {{ __('Log Out') }}
-                    </x-responsive-nav-link>
-                </form>
+                
+                {{-- Dropdown corregido --}}
+                <div x-show="open" @click.away="open = false"
+                   style="position:absolute;right:0;top:calc(100% + 8px);background:white;
+                        border:1px solid #e5e7eb;border-radius:10px;min-width:190px;
+                        box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:50;overflow:hidden;">
+                    <div style="padding:10px 14px;border-bottom:1px solid #f3f4f6;background:#f9fafb;">
+                        <div style="font-size:.82rem;font-weight:700;color:#0f1923;">{{ Auth::user()->name }}</div>
+                        <div style="font-size:.72rem;color:#9ca3af;">{{ Auth::user()->email }}</div>
+                    </div>
+                    <a href="{{ route('profile.edit') }}"
+                       style="display:flex;align-items:center;gap:.5rem;padding:10px 14px;
+                              font-size:.84rem;color:#374151;text-decoration:none;">
+                        <i class="bi bi-gear" style="color:#6b7280;"></i> Configuración
+                    </a>
+                    <div style="border-top:1px solid #f3f4f6;"></div>
+                    
+                    {{-- Formulario sin margen por defecto --}}
+                    <form method="POST" action="{{ route('logout') }}" style="margin:0;">
+                        @csrf
+                        <button type="submit"
+                                style="width:100%;display:flex;align-items:center;gap:.5rem;
+                                       padding:10px 14px;font-size:.84rem;color:#dc2626;
+                                       background:none;border:none;cursor:pointer;text-align:left;
+                                       font-family:'DM Sans',sans-serif;">
+                            <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>

@@ -13,4 +13,9 @@ class EstadoReserva extends Model
     protected $table = 'estados_reserva';
 
     protected $fillable = ['nombre', 'color_hex'];
+
+    public function reservas()
+    {
+        return $this->hasMany(Reserva::class, 'estado_id');
+    }
 }

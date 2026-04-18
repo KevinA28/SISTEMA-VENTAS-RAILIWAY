@@ -30,62 +30,28 @@ class Reserva extends Model
         'alergias_titular',
         'restricciones_alimentarias_titular',
         'observaciones',
+        // campos de entrada manual
+        'nombre_tour',
+        'fecha_tour',
+        'hora_salida',
     ];
 
     protected $casts = [
         'precio_total' => 'decimal:2',
         'monto_pagado' => 'decimal:2',
         'hora_recojo'  => 'datetime:H:i',
+        'fecha_tour'   => 'date',
     ];
 
-    // ── Relaciones ────────────────────────────────────────────────
-
-    public function cliente()
-    {
-        return $this->belongsTo(Cliente::class);
-    }
-
-    public function fechaTour()
-    {
-        return $this->belongsTo(FechaTour::class);
-    }
-
-    public function estado()
-    {
-        return $this->belongsTo(EstadoReserva::class, 'estado_id');
-    }
-
-    public function usuarioAdmin()
-    {
-        return $this->belongsTo(UsuarioAdmin::class, 'usuario_admin_id');
-    }
-
-    public function pasajeros()
-    {
-        return $this->hasMany(Pasajero::class);
-    }
-
-    public function pagos()
-    {
-        return $this->hasMany(Pago::class);
-    }
-
-    public function comprobantes()
-    {
-        return $this->hasMany(Comprobante::class);
-    }
-
-    public function logistica()
-    {
-        return $this->hasOne(LogisticaReserva::class);
-    }
-
-    public function historialEstados()
-    {
-        return $this->hasMany(HistorialEstado::class);
-    }
-
-    // ── Helpers ───────────────────────────────────────────────────
+    public function cliente()      { return $this->belongsTo(Cliente::class); }
+    public function fechaTour()    { return $this->belongsTo(FechaTour::class); }
+    public function estado()       { return $this->belongsTo(EstadoReserva::class, 'estado_id'); }
+    public function usuarioAdmin() { return $this->belongsTo(UsuarioAdmin::class, 'usuario_admin_id'); }
+    public function pasajeros()    { return $this->hasMany(Pasajero::class); }
+    public function pagos()        { return $this->hasMany(Pago::class); }
+    public function comprobantes() { return $this->hasMany(Comprobante::class); }
+    public function logistica()    { return $this->hasOne(LogisticaReserva::class); }
+    public function historialEstados() { return $this->hasMany(HistorialEstado::class); }
 
     public function getSaldoPendienteAttribute(): float
     {

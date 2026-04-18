@@ -6,21 +6,39 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+// 1. Importamos la clase especial Authenticatable en lugar de Model
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
-class UsuarioAdmin extends Model
+// 2. Extendemos de Authenticatable
+class UsuarioAdmin extends Authenticatable
 {
+    // 3. Agregamos los traits necesarios para autenticación
+    use HasApiTokens, Notifiable;
+
     protected $table = 'usuarios_admin';
 
+    // Tus campos originales
     protected $fillable = [
         'nombre', 'apellido', 'email', 'password', 'rol', 'activo',
     ];
 
-    protected $hidden = ['password'];
+    // Ocultamos el password y agregamos remember_token (necesario para el "Recuérdame" del login)
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
 
+    // Tus conversiones originales + el encriptado de contraseña
     protected $casts = [
         'activo' => 'boolean',
+        'password' => 'hashed',
     ];
+
+    // ==========================================
+    // TUS RELACIONES Y MÉTODOS ORIGINALES
+    // ==========================================
 
     public function reservasRegistradas()
     {
