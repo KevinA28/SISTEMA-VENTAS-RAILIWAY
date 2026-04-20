@@ -1,8 +1,4 @@
 <?php
-// =====================================================================
-// ARCHIVO: MetodoPagoSeeder.php
-// UBICACIÓN: database/seeders/MetodoPagoSeeder.php
-// =====================================================================
 
 namespace Database\Seeders;
 
@@ -13,27 +9,31 @@ class MetodoPagoSeeder extends Seeder
 {
     public function run(): void
     {
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        DB::table('metodos_pago')->truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
         $metodos = [
-            'Efectivo',
-            'Yape',
-            'Plin',
-            'Tunki',
-            'Transferencia BCP',
-            'Transferencia BBVA',
-            'Transferencia Interbank',
-            'Transferencia Scotiabank',
-            'Transferencia Banco Nación',
-            'Transferencia otro banco',
-            'Depósito BCP',
-            'Depósito BBVA',
-            'Depósito Interbank',
-            'Depósito otro banco',
-            'Tarjeta crédito',
-            'Tarjeta débito',
+            'efectivo',
+            'yape',
+            'plin',
+            'tunki',
+            'transf_bcp',
+            'transf_bbva',
+            'transf_inter',
+            'transf_sc',
+            'transf_bn',
+            'transf_otros',
+            'dep_bcp',
+            'dep_bbva',
+            'dep_inter',
+            'dep_otros',
+            'tarjeta_credito',
+            'tarjeta_debito',
         ];
 
         foreach ($metodos as $nombre) {
-            DB::table('metodos_pago')->insertOrIgnore([
+            DB::table('metodos_pago')->insert([
                 'nombre'     => $nombre,
                 'activo'     => true,
                 'created_at' => now(),

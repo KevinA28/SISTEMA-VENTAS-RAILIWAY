@@ -29,9 +29,8 @@ class DatabaseSeeder extends Seeder
         }
 
         // Métodos de pago
-        foreach (['Yape', 'Plin', 'Transferencia bancaria', 'Tarjeta de crédito', 'Efectivo'] as $nombre) {
-            DB::table('metodos_pago')->insert(['nombre' => $nombre, 'activo' => true, 'created_at' => now(), 'updated_at' => now()]);
-        }
+        
+        $this->call(MetodoPagoSeeder::class);
 
         // Usuario administrador inicial
         DB::table('usuarios_admin')->insert([

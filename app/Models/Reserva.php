@@ -34,6 +34,8 @@ class Reserva extends Model
         'nombre_tour',
         'fecha_tour',
         'hora_salida',
+        'politica_descripcion',
+        'politica_tipo',
     ];
 
     protected $casts = [

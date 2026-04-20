@@ -83,6 +83,8 @@ class ReservaService
                 'alergias_titular'                   => $datos['titular_tiene_alergias'] === 'si'
                                                         ? ($datos['titular_alergias_detalle'] ?? null)
                                                         : null,
+                'politica_descripcion'               => $datos['politica_descripcion'] ?? null,
+                'politica_tipo'                      => $datos['politica_tipo'] ?? null,
                 'restricciones_alimentarias_titular' => $datos['titular_restricciones'] ?? null,
                 'observaciones'                      => $datos['observaciones']       ?? null,
             ]);

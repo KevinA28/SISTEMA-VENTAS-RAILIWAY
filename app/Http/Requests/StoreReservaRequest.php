@@ -110,6 +110,9 @@ class StoreReservaRequest extends FormRequest
             'hora_recojo'              => 'nullable|date_format:H:i',
             'guia_asignado'            => 'nullable|string|max:150',
             'observaciones'            => 'nullable|string|max:1000',
+            // ── AÑADIR: Bloque 7 — Políticas ────────────────────────────
+            'politica_descripcion'     => 'required|string|min:20',
+            'politica_tipo'            => 'nullable|in:tours,viajes',
         ];
     }
 
@@ -127,6 +130,7 @@ class StoreReservaRequest extends FormRequest
             'ciudad_procedencia.required'       => 'La ciudad de origen es obligatoria.',
             'canal_contacto.required'           => 'El canal de contacto es obligatorio.',
             'canal_contacto.in'                 => 'El canal de contacto seleccionado no es válido.',
+            'canal_contacto'                    => 'required|in:whatsapp,presencial,llamada,redes_sociales,web,referido',
             'estado_inicial.required'           => 'Debes seleccionar un estado inicial para la reserva.',
             'cantidad_adultos.min'              => 'Debe haber al menos 1 adulto en la reserva.',
 
@@ -151,6 +155,9 @@ class StoreReservaRequest extends FormRequest
             // Pasajeros
             'pasajeros.*.nombre_completo.required' => 'El nombre de cada pasajero adicional es obligatorio.',
             'pasajeros.*.tipo.in'                  => 'El tipo de pasajero debe ser "adulto" o "niño".',
+            'politica_descripcion.required' => 'La descripción de políticas es obligatoria.',
+            'politica_descripcion.min'      => 'Las políticas deben tener al menos 20 caracteres.',
+            'canal_contacto.in'             => 'El canal de contacto seleccionado no es válido.',
         ];
     }
 

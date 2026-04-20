@@ -2,7 +2,7 @@
      ARCHIVO: create.blade.php
      UBICACIÓN: resources/views/reservas/create.blade.php
      SERVICIO: Agencia de Viajes — Formulario de Nueva Reserva
-     VERSIÓN MEJORADA: Barra de progreso lateral vertical sticky
+     VERSIÓN MEJORADA v2: Progreso real, Políticas dinámicas, Validación corregida
      ===================================================================== --}}
 @extends('layouts.app')
 @section('titulo', 'Nueva Reserva de Viaje')
@@ -76,7 +76,7 @@ body {
    BARRA DE PROGRESO LATERAL
 ═══════════════════════════════ */
 .progress-sidebar {
-    width: 200px;
+    width: 210px;
     flex-shrink: 0;
     position: sticky;
     top: 1.5rem;
@@ -100,6 +100,9 @@ body {
     margin-bottom: 1rem;
     padding-bottom: .6rem;
     border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: .4rem;
 }
 
 .progress-steps-v {
@@ -152,6 +155,8 @@ body {
     display: flex;
     flex-direction: column;
     gap: 1px;
+    flex: 1;
+    min-width: 0;
 }
 
 .ps-label {
@@ -160,6 +165,9 @@ body {
     color: var(--ink-4);
     line-height: 1.2;
     transition: color .2s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .ps-sublabel {
@@ -167,6 +175,9 @@ body {
     color: var(--ink-4);
     opacity: 0;
     transition: opacity .2s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Estado activo */
@@ -182,14 +193,19 @@ body {
 .ps-item.active:not(.done):not(.has-error) .ps-sublabel { opacity: 1; color: var(--gold-d); }
 .ps-item.active:not(.done):not(.has-error) { background: var(--gold-l); }
 
+/* Estado activo + completado */
+.ps-item.active.done { background: var(--blue-l); }
+.ps-item.active.done .ps-sublabel { opacity: 1; color: var(--blue); }
+.ps-item.active.done .ps-label { color: var(--blue-d); font-weight: 700; }
+
 /* Estado completado */
 .ps-item.done .ps-num {
-    border-color: var(--blue);
-    background: var(--blue);
+    border-color: var(--green);
+    background: var(--green);
     color: #fff;
 }
-.ps-item.done .ps-label { color: var(--blue); }
-.ps-item.done::after { background: var(--blue-m); }
+.ps-item.done .ps-label { color: var(--green); }
+.ps-item.done::after { background: var(--green-m); }
 
 /* Estado con error */
 .ps-item.has-error .ps-num {
@@ -214,6 +230,23 @@ body {
 }
 .ps-item.has-error .ps-err-badge { display: block; }
 
+/* Check de completado */
+.ps-ok-badge {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--blue);
+    color: #fff;
+    font-size: .55rem;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+.ps-item.done .ps-ok-badge { display: flex; }
+.ps-item.has-error .ps-ok-badge { display: none; }
+
 /* Mini progreso total */
 .ps-footer {
     margin-top: 1rem;
@@ -227,26 +260,43 @@ body {
     text-transform: uppercase;
     letter-spacing: .08em;
     margin-bottom: .4rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 .ps-progress-bar {
-    height: 5px;
+    height: 6px;
     background: var(--border);
     border-radius: 999px;
     overflow: hidden;
 }
 .ps-progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--blue) 0%, var(--gold) 100%);
+    background: linear-gradient(90deg, var(--green) 0%, var(--blue) 60%, var(--gold) 100%);
     border-radius: 999px;
-    transition: width .4s ease;
+    transition: width .5s cubic-bezier(.4,0,.2,1);
     width: 0%;
 }
 .ps-pct {
-    font-size: .68rem;
+    font-size: .72rem;
     font-weight: 700;
     color: var(--blue);
     margin-top: .3rem;
+    text-align: right;
 }
+
+/* Sección de seguridad con indicador circular */
+.section-status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--border);
+    margin-left: auto;
+    flex-shrink: 0;
+    transition: background .3s;
+}
+.ps-item.done .section-status-indicator { background: var(--blue); display: none; }
+.ps-item.has-error .section-status-indicator { background: var(--red); display: none; }
 
 @keyframes shakeNum {
     0%,100% { transform: translateX(0); }
@@ -258,10 +308,11 @@ body {
     .page-layout { flex-direction: column; }
     .progress-sidebar { width: 100%; position: static; }
     .progress-steps-v { flex-direction: row; flex-wrap: wrap; gap: .4rem; }
-    .ps-item { flex: 1; min-width: 80px; justify-content: center; text-align: center; flex-direction: column; gap: .25rem; }
+    .ps-item { flex: 1; min-width: 70px; justify-content: center; text-align: center; flex-direction: column; gap: .25rem; padding: .4rem .2rem; }
     .ps-item:not(:last-child)::after { display: none; }
     .ps-info { align-items: center; }
     .ps-sublabel { display: none; }
+    .ps-ok-badge, .ps-err-badge { display: none !important; }
 }
 
 /* ═══════════════════════════════
@@ -354,6 +405,9 @@ body {
     border-color: var(--red-m);
     box-shadow: var(--sh), 0 0 0 2px rgba(192,41,46,.08);
 }
+.fb.is-complete {
+    border-color: var(--green-m);
+}
 .fb-head {
     padding: 1rem 1.5rem;
     border-bottom: 1px solid var(--border);
@@ -375,6 +429,10 @@ body {
     background: var(--gold-m);
     color: var(--gold-d);
 }
+.fb-head .ico.green {
+    background: var(--green-l);
+    color: var(--green);
+}
 .fb-head h3 {
     font-size: .92rem;
     font-weight: 700;
@@ -386,19 +444,27 @@ body {
     color: var(--ink-4);
     margin-top: 2px;
 }
-.fb-num {
-    width: 24px; height: 24px;
+/* Indicador de estado en cabecera del bloque */
+.fb-status {
+    width: 28px; height: 28px;
     border-radius: 50%;
-    background: var(--blue);
-    color: #fff;
-    font-size: .68rem;
+    background: var(--border);
+    color: var(--ink-4);
+    font-size: .75rem;
     font-weight: 700;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
     margin-left: auto;
-    transition: background .2s;
+    transition: all .3s;
 }
-.fb.has-errors .fb-num { background: var(--red); }
+.fb.is-complete .fb-status {
+    background: var(--green);
+    color: #fff;
+}
+.fb.has-errors .fb-status {
+    background: var(--red);
+    color: #fff;
+}
 .fb-body { padding: 1.5rem; }
 
 /* ═══════════════════════════════
@@ -803,6 +869,9 @@ select.fi {
     position: relative;
     animation: fu .2s ease;
 }
+.pax-card.pax-incomplete {
+    border-color: var(--red-m);
+}
 .pax-head {
     font-size: .69rem;
     font-weight: 700;
@@ -921,6 +990,19 @@ select.fi {
     color: var(--ink-2);
     display: flex; align-items: center; gap: .45rem;
 }
+/* Indicador visual salud/seguridad */
+.salud-status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--green);
+    margin-left: auto;
+    flex-shrink: 0;
+    transition: background .3s;
+}
+.salud-pasajero.salud-error .salud-status-dot { background: var(--red); }
+.salud-pasajero.salud-ok    .salud-status-dot { background: var(--green); }
+
 .salud-pasajero-body { padding: 1rem; }
 .salud-grid {
     display: grid;
@@ -1101,6 +1183,76 @@ select.fi {
 .btn-s:hover { border-color: var(--border-h); color: var(--ink); }
 
 /* ═══════════════════════════════
+   BOTONES DE POLÍTICA
+═══════════════════════════════ */
+.politica-btns {
+    display: flex;
+    gap: .75rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+.btn-politica {
+    display: inline-flex;
+    align-items: center;
+    gap: .55rem;
+    padding: 10px 20px;
+    border: 2px solid var(--blue-m);
+    border-radius: var(--r);
+    background: var(--blue-l);
+    color: var(--blue);
+    font-size: .82rem;
+    font-weight: 700;
+    font-family: 'Sora', sans-serif;
+    cursor: pointer;
+    transition: all .2s;
+    user-select: none;
+    flex-shrink: 0;
+}
+.btn-politica:hover {
+    background: var(--blue);
+    color: #fff;
+    border-color: var(--blue);
+    transform: translateY(-1px);
+    box-shadow: var(--sh-md);
+}
+.btn-politica.active {
+    background: var(--blue);
+    color: #fff;
+    border-color: var(--blue-d);
+    box-shadow: 0 0 0 3px rgba(26,79,160,.2);
+}
+.btn-politica .bp-ico {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+.politica-textarea-wrap {
+    position: relative;
+}
+.politica-loaded-badge {
+    display: none;
+    align-items: center;
+    gap: .4rem;
+    font-size: .7rem;
+    font-weight: 700;
+    color: var(--green);
+    background: var(--green-l);
+    border: 1px solid var(--green-m);
+    border-radius: 999px;
+    padding: 3px 10px;
+    position: absolute;
+    top: -10px;
+    right: 8px;
+    z-index: 1;
+}
+.politica-loaded-badge.visible { display: inline-flex; }
+#politica_descripcion {
+    min-height: 180px;
+    font-size: .82rem;
+    line-height: 1.65;
+}
+.politica-tipo-hidden { /* hidden input para enviar tipo */ }
+
+/* ═══════════════════════════════
    BARRA DE SUBMIT
 ═══════════════════════════════ */
 .sbar {
@@ -1184,59 +1336,85 @@ html { scroll-behavior: smooth; }
 ══════════════════════════════════ --}}
 <aside class="progress-sidebar">
     <div class="progress-sidebar-inner">
-        <div class="ps-title"><i class="bi bi-list-check me-1"></i> Progreso</div>
+        <div class="ps-title"><i class="bi bi-list-check"></i> Progreso</div>
         <div class="progress-steps-v">
+
             <div class="ps-item active" id="ps-1" onclick="scrollToBloque(1)" title="Datos del viaje">
                 <div class="ps-num">1</div>
                 <div class="ps-info">
                     <span class="ps-label">Viaje</span>
                     <span class="ps-sublabel">Servicio y fechas</span>
                 </div>
+                <span class="ps-ok-badge"><i class="bi bi-check2"></i></span>
                 <span class="ps-err-badge"></span>
             </div>
+
             <div class="ps-item" id="ps-2" onclick="scrollToBloque(2)" title="Pasajero titular">
                 <div class="ps-num">2</div>
                 <div class="ps-info">
                     <span class="ps-label">Titular</span>
                     <span class="ps-sublabel">Contacto principal</span>
                 </div>
+                <span class="ps-ok-badge"><i class="bi bi-check2"></i></span>
                 <span class="ps-err-badge"></span>
             </div>
+
             <div class="ps-item" id="ps-3" onclick="scrollToBloque(3)" title="Pasajeros adicionales">
                 <div class="ps-num">3</div>
                 <div class="ps-info">
                     <span class="ps-label">Pasajeros</span>
                     <span class="ps-sublabel">Grupo de viaje</span>
                 </div>
+                <span class="ps-ok-badge"><i class="bi bi-check2"></i></span>
                 <span class="ps-err-badge"></span>
             </div>
-            <div class="ps-item" id="ps-4" onclick="scrollToBloque(4)" title="Salud">
+
+            <div class="ps-item" id="ps-4" onclick="scrollToBloque(4)" title="Salud y seguridad">
                 <div class="ps-num">4</div>
                 <div class="ps-info">
                     <span class="ps-label">Salud</span>
                     <span class="ps-sublabel">Info médica</span>
                 </div>
+                <span class="ps-ok-badge"><i class="bi bi-check2"></i></span>
                 <span class="ps-err-badge"></span>
             </div>
-            <div class="ps-item" id="ps-5" onclick="scrollToBloque(5)" title="Pago">
+
+            <div class="ps-item" id="ps-5" onclick="scrollToBloque(5)" title="Pago y comprobante">
                 <div class="ps-num">5</div>
                 <div class="ps-info">
                     <span class="ps-label">Pago</span>
                     <span class="ps-sublabel">Comprobante</span>
                 </div>
+                <span class="ps-ok-badge"><i class="bi bi-check2"></i></span>
                 <span class="ps-err-badge"></span>
             </div>
+
             <div class="ps-item" id="ps-6" onclick="scrollToBloque(6)" title="Logística">
                 <div class="ps-num">6</div>
                 <div class="ps-info">
                     <span class="ps-label">Logística</span>
                     <span class="ps-sublabel">Encuentro y guía</span>
                 </div>
+                <span class="ps-ok-badge"><i class="bi bi-check2"></i></span>
                 <span class="ps-err-badge"></span>
             </div>
+
+            <div class="ps-item" id="ps-7" onclick="scrollToBloque(7)" title="Políticas y Privacidad">
+                <div class="ps-num">7</div>
+                <div class="ps-info">
+                    <span class="ps-label">Políticas</span>
+                    <span class="ps-sublabel">Términos</span>
+                </div>
+                <span class="ps-ok-badge"><i class="bi bi-check2"></i></span>
+                <span class="ps-err-badge"></span>
+            </div>
+
         </div>
         <div class="ps-footer">
-            <div class="ps-footer-label">Completado</div>
+            <div class="ps-footer-label">
+                <span>Completado</span>
+                <span id="ps-done-count" style="font-weight:700;color:var(--blue)">0/7</span>
+            </div>
             <div class="ps-progress-bar">
                 <div class="ps-progress-fill" id="ps-fill"></div>
             </div>
@@ -1282,7 +1460,7 @@ html { scroll-behavior: smooth; }
             <h3>Datos del viaje</h3>
             <p>Servicio, precio, fechas y estado de la reserva</p>
         </div>
-        <div class="fb-num">1</div>
+        <div class="fb-status" id="fb-status-1" title="Estado de sección">1</div>
     </div>
     <div class="fb-body">
 
@@ -1298,7 +1476,8 @@ html { scroll-behavior: smooth; }
                         class="fi {{ $errors->has('nombre_tour')?'err':'' }}"
                         placeholder="Ej: Paquete Lima – Cusco 5D/4N"
                         required maxlength="200"
-                        data-validate="required">
+                        data-validate="required"
+                        data-bloque="1">
                 </div>
                 @error('nombre_tour')<div class="ferr"><i class="bi bi-exclamation-circle"></i>{{ $message }}</div>@enderror
             </div>
@@ -1313,7 +1492,8 @@ html { scroll-behavior: smooth; }
                         step="0.01" min="0" placeholder="0.00"
                         required inputmode="decimal"
                         oninput="this.value=this.value.replace(/[^0-9.]/g,'');calcTotal()"
-                        data-validate="required|numeric">
+                        data-validate="required|numeric"
+                        data-bloque="1">
                 </div>
                 @error('precio_tour')<div class="ferr"><i class="bi bi-exclamation-circle"></i>{{ $message }}</div>@enderror
             </div>
@@ -1327,7 +1507,8 @@ html { scroll-behavior: smooth; }
                         class="fi {{ $errors->has('ciudad_procedencia')?'err':'' }}"
                         placeholder="Lima, Cusco, Arequipa..."
                         required maxlength="100"
-                        data-validate="required">
+                        data-validate="required"
+                        data-bloque="1">
                 </div>
                 @error('ciudad_procedencia')<div class="ferr"><i class="bi bi-exclamation-circle"></i>{{ $message }}</div>@enderror
             </div>
@@ -1350,7 +1531,6 @@ html { scroll-behavior: smooth; }
 
         <div class="st" style="margin-top:1.25rem">Fechas y canal</div>
 
-        {{-- ELIMINADO: "Ciudad de destino" del bloque de Fechas y canal --}}
         <div class="g2">
             <div class="field" style="margin-bottom:0">
                 <label class="lbl" for="fecha_tour">Fecha de salida <span class="req">*</span></label>
@@ -1360,7 +1540,8 @@ html { scroll-behavior: smooth; }
                         value="{{ old('fecha_tour') }}"
                         class="fi {{ $errors->has('fecha_tour')?'err':'' }}"
                         required
-                        data-validate="required">
+                        data-validate="required"
+                        data-bloque="1">
                 </div>
                 @error('fecha_tour')<div class="ferr"><i class="bi bi-exclamation-circle"></i>{{ $message }}</div>@enderror
             </div>
@@ -1372,7 +1553,9 @@ html { scroll-behavior: smooth; }
                     <input type="time" name="hora_salida" id="hora_salida_24"
                         value="{{ old('hora_salida') }}"
                         class="fi fi-hora {{ $errors->has('hora_salida')?'err':'' }}"
-                        required oninput="syncAmPm()">
+                        required oninput="syncAmPm()"
+                        data-validate="required"
+                        data-bloque="1">
                     <select class="ampm-sel" id="ampm-sel" onchange="syncHora()">
                         <option value="AM">AM</option>
                         <option value="PM">PM</option>
@@ -1384,7 +1567,8 @@ html { scroll-behavior: smooth; }
 
         <div class="field" style="margin-top:1rem;max-width:340px">
             <label class="lbl" for="canal_contacto">Canal de venta <span class="req">*</span></label>
-            <select name="canal_contacto" id="canal_contacto" class="fi" required>
+            <select name="canal_contacto" id="canal_contacto" class="fi" required
+                    data-validate="required" data-bloque="1">
                 <option value="whatsapp"       {{ old('canal_contacto','whatsapp')=='whatsapp'       ?'selected':'' }}>WhatsApp</option>
                 <option value="presencial"     {{ old('canal_contacto')=='presencial'     ?'selected':'' }}>Presencial</option>
                 <option value="llamada"        {{ old('canal_contacto')=='llamada'        ?'selected':'' }}>Llamada telefónica</option>
@@ -1434,7 +1618,7 @@ html { scroll-behavior: smooth; }
             <h3>Pasajero titular</h3>
             <p>Responsable principal y datos de contacto de la reserva</p>
         </div>
-        <div class="fb-num">2</div>
+        <div class="fb-status" id="fb-status-2" title="Estado de sección">2</div>
     </div>
     <div class="fb-body">
 
@@ -1452,7 +1636,8 @@ html { scroll-behavior: smooth; }
                     placeholder="NOMBRES Y APELLIDOS COMPLETOS"
                     required maxlength="200"
                     oninput="this.value=this.value.toUpperCase();actualizarNombreTitularSalud(this.value)"
-                    data-validate="required">
+                    data-validate="required"
+                    data-bloque="2">
             </div>
             @error('titular_nombre')<div class="ferr"><i class="bi bi-exclamation-circle"></i>{{ $message }}</div>@enderror
         </div>
@@ -1519,7 +1704,8 @@ html { scroll-behavior: smooth; }
                         placeholder="9XXXXXXXX" maxlength="9" inputmode="numeric"
                         oninput="this.value=this.value.replace(/\D/g,'').substring(0,9)"
                         required
-                        data-validate="required|phone">
+                        data-validate="required|phone"
+                        data-bloque="2">
                 </div>
                 @error('titular_telefono')<div class="ferr"><i class="bi bi-exclamation-circle"></i>{{ $message }}</div>@enderror
                 <div class="fhint">9 dígitos · Se usará para la confirmación por WhatsApp</div>
@@ -1562,16 +1748,13 @@ html { scroll-behavior: smooth; }
                     inputmode="tel"
                     oninput="this.value=this.value.replace(/[^0-9\-]/g,'')">
             </div>
-            <div class="fhint">Si no se indica, las notificaciones van solo al número principal.</div>
         </div>
 
         <div class="st">Notificaciones</div>
         <div class="notif-checks">
             <label class="notif-item" id="p-wa">
                 <input type="checkbox" name="notif_whatsapp" value="1" checked id="cb-wa">
-                <span class="notif-box">
-                    <i class="bi bi-check2" style="font-size:.85rem"></i>
-                </span>
+                <span class="notif-box"><i class="bi bi-check2" style="font-size:.85rem"></i></span>
                 <span class="notif-ico">
                     <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="#25d366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                 </span>
@@ -1579,16 +1762,12 @@ html { scroll-behavior: smooth; }
             </label>
             <label class="notif-item" id="p-em">
                 <input type="checkbox" name="notif_email" value="1" id="cb-em">
-                <span class="notif-box">
-                    <i class="bi bi-check2" style="font-size:.85rem"></i>
-                </span>
-                <span class="notif-ico">
-                    <i class="bi bi-envelope-fill" style="color:var(--blue);font-size:.95rem"></i>
-                </span>
+                <span class="notif-box"><i class="bi bi-check2" style="font-size:.85rem"></i></span>
+                <span class="notif-ico"><i class="bi bi-envelope-fill" style="color:var(--blue);font-size:.95rem"></i></span>
                 <span class="notif-text">Correo electrónico</span>
             </label>
         </div>
-        <div class="fhint" style="margin-top:.5rem"><i class="bi bi-info-circle me-1"></i>Puedes seleccionar uno o ambos canales. La confirmación se enviará al guardar.</div>
+        <div class="fhint" style="margin-top:.5rem"><i class="bi bi-info-circle me-1"></i>Puedes seleccionar uno o ambos canales.</div>
 
     </div>
 </div>
@@ -1603,14 +1782,14 @@ html { scroll-behavior: smooth; }
             <h3>Pasajeros adicionales</h3>
             <p>Añade el resto del grupo (el titular ya está incluido)</p>
         </div>
-        <div class="fb-num">3</div>
+        <div class="fb-status" id="fb-status-3" title="Estado de sección">3</div>
     </div>
     <div class="fb-body">
         <div class="alerta info">
             <i class="bi bi-info-circle ai"></i>
             <div class="at">
                 <strong>El titular se registra como pasajero principal automáticamente.</strong>
-                Agrega aquí a los demás viajeros del grupo. El documento es opcional.
+                Agrega aquí a los demás viajeros del grupo. Si no hay pasajeros adicionales, esta sección se considera completa.
             </div>
         </div>
         <div id="pax-lista"></div>
@@ -1631,16 +1810,17 @@ html { scroll-behavior: smooth; }
             <h3>Salud y seguridad de los pasajeros</h3>
             <p>Información médica de cada integrante del grupo</p>
         </div>
-        <div class="fb-num">4</div>
+        <div class="fb-status" id="fb-status-4" title="Estado de sección">4</div>
     </div>
     <div class="fb-body">
         <div id="salud-lista">
-            <div class="salud-pasajero" id="salud-titular">
+            <div class="salud-pasajero salud-ok" id="salud-titular">
                 <div class="salud-pasajero-head">
                     <i class="bi bi-person-badge" style="color:var(--blue)"></i>
                     <span>Titular —
                         <span id="salud-titular-nombre" style="font-style:italic;color:var(--ink-3)">nombre del titular</span>
                     </span>
+                    <span class="salud-status-dot" title="Estado: completo"></span>
                 </div>
                 <div class="salud-pasajero-body">
                     <div class="salud-grid">
@@ -1658,7 +1838,8 @@ html { scroll-behavior: smooth; }
                             </div>
                             <div id="alerg-titular-wrap" style="{{ old('titular_tiene_alergias')=='si'?'':'display:none' }}">
                                 <textarea name="titular_alergias_detalle" id="alerg-titular" class="fi" rows="3"
-                                    placeholder="Describe alergias, medicamentos o condiciones...">{{ old('titular_alergias_detalle') }}</textarea>
+                                    placeholder="Describe alergias, medicamentos o condiciones..."
+                                    data-bloque="4" data-alerg-conditional="titular">{{ old('titular_alergias_detalle') }}</textarea>
                             </div>
                         </div>
                         <div class="salud-restrict-col">
@@ -1670,7 +1851,7 @@ html { scroll-behavior: smooth; }
                     <div class="field" style="margin-top:.75rem;margin-bottom:0">
                         <label class="lbl">Observaciones médicas adicionales</label>
                         <textarea name="titular_obs_medicas" class="fi" rows="2"
-                            placeholder="Discapacidades, movilidad reducida, condiciones que el guía deba conocer...">{{ old('titular_obs_medicas') }}</textarea>
+                            placeholder="Discapacidades, movilidad reducida...">{{ old('titular_obs_medicas') }}</textarea>
                     </div>
                 </div>
             </div>
@@ -1692,7 +1873,7 @@ html { scroll-behavior: smooth; }
             <h3>Pago y comprobante</h3>
             <p>Método de pago, monto y comprobante adjunto</p>
         </div>
-        <div class="fb-num">5</div>
+        <div class="fb-status" id="fb-status-5" title="Estado de sección">5</div>
     </div>
     <div class="fb-body">
         <div class="alerta">
@@ -1707,7 +1888,8 @@ html { scroll-behavior: smooth; }
         <div class="g2">
             <div class="field">
                 <label class="lbl" for="tipo_comprobante">Tipo de comprobante <span class="req">*</span></label>
-                <select name="tipo_comprobante" id="tipo_comprobante" class="fi" required onchange="togFactura()">
+                <select name="tipo_comprobante" id="tipo_comprobante" class="fi" required
+                        onchange="togFactura()" data-validate="required" data-bloque="5">
                     <option value="boleta"  {{ old('tipo_comprobante','boleta')=='boleta' ?'selected':'' }}>Boleta de venta</option>
                     <option value="factura" {{ old('tipo_comprobante')=='factura'         ?'selected':'' }}>Factura</option>
                 </select>
@@ -1735,7 +1917,9 @@ html { scroll-behavior: smooth; }
         <div class="g2">
             <div class="field">
                 <label class="lbl" for="metodo_pago">Método de pago <span class="req">*</span></label>
-                <select name="metodo_pago" id="metodo_pago" class="fi" required onchange="updOpHint()" data-validate="required">
+                <select name="metodo_pago" id="metodo_pago" class="fi" required
+                        onchange="updOpHint();updateProgressSteps()"
+                        data-validate="required" data-bloque="5">
                     <option value="">Seleccionar método...</option>
                     <optgroup label="Efectivo">
                         <option value="efectivo" {{ old('metodo_pago')=='efectivo'?'selected':'' }}>Efectivo</option>
@@ -1783,10 +1967,11 @@ html { scroll-behavior: smooth; }
                     <input type="number" name="monto_pagado_inicial" id="monto_pagado_inicial"
                         value="{{ old('monto_pagado_inicial') }}"
                         class="fi {{ $errors->has('monto_pagado_inicial')?'err':'' }}"
-                        step="0.01" min="0" placeholder="0.00"
+                        step="0.01" min="0.01" placeholder="0.00"
                         required inputmode="decimal"
-                        oninput="this.value=this.value.replace(/[^0-9.]/g,'');calcTotal()"
-                        data-validate="required|numeric">
+                        oninput="this.value=this.value.replace(/[^0-9.]/g,'');calcTotal();updateProgressSteps()"
+                        data-validate="required|numeric|positive"
+                        data-bloque="5">
                 </div>
                 <div class="fhint" id="hint-adel"></div>
                 @error('monto_pagado_inicial')<div class="ferr"><i class="bi bi-exclamation-circle"></i>{{ $message }}</div>@enderror
@@ -1803,7 +1988,7 @@ html { scroll-behavior: smooth; }
 
         <div class="field">
             <label class="lbl">N° operación / referencia
-                <span class="opt">(opcional — identificable con el comprobante)</span>
+                <span class="opt">(opcional)</span>
             </label>
             <input type="text" name="numero_operacion"
                 value="{{ old('numero_operacion') }}"
@@ -1812,7 +1997,14 @@ html { scroll-behavior: smooth; }
             <div class="fhint" id="op-hint">Código visible en Yape, Plin o constancia bancaria</div>
         </div>
 
-        <div class="st">Comprobante adjunto</div>
+        <div class="st">Comprobante adjunto <span class="req">*</span></div>
+        {{-- Indicador de comprobante --}}
+        <div id="voucher-status" style="display:none;margin-bottom:.75rem">
+            <div class="cr ok v">
+                <i class="bi bi-check-circle-fill"></i>
+                <span>Comprobante adjunto correctamente.</span>
+            </div>
+        </div>
         <div class="uz" id="uz"
              ondragover="event.preventDefault();this.classList.add('over')"
              ondragleave="this.classList.remove('over')"
@@ -1839,7 +2031,6 @@ html { scroll-behavior: smooth; }
 
 {{-- ══════════════════════════════════
      BLOQUE 6 · LOGÍSTICA
-     (eliminado: N° de confirmación del proveedor)
 ══════════════════════════════════ --}}
 <div class="fb" id="bloque-6">
     <div class="fb-head">
@@ -1848,17 +2039,26 @@ html { scroll-behavior: smooth; }
             <h3>Logística del viaje</h3>
             <p>Punto de encuentro, recojo, guía y observaciones finales</p>
         </div>
-        <div class="fb-num">6</div>
+        <div class="fb-status" id="fb-status-6" title="Estado de sección">6</div>
     </div>
     <div class="fb-body">
+        <div class="alerta info">
+            <i class="bi bi-info-circle ai"></i>
+            <div class="at">
+                <strong>Sección opcional.</strong>
+                Completa los datos de logística si están disponibles. La sección se marcará completa solo cuando al menos un campo esté rellenado.
+            </div>
+        </div>
         <div class="g2">
             <div class="field">
                 <label class="lbl">Punto de encuentro</label>
                 <div class="ig">
                     <span class="ia"><i class="bi bi-pin-map"></i></span>
-                    <input type="text" name="punto_encuentro"
+                    <input type="text" name="punto_encuentro" id="punto_encuentro"
                         value="{{ old('punto_encuentro') }}"
-                        class="fi" placeholder="Hotel, terminal, dirección..." maxlength="200">
+                        class="fi" placeholder="Hotel, terminal, dirección..." maxlength="200"
+                        oninput="updateProgressSteps()"
+                        data-bloque="6" data-logistica="true">
                 </div>
             </div>
             <div class="field">
@@ -1868,7 +2068,8 @@ html { scroll-behavior: smooth; }
                     <input type="time" name="hora_recojo" id="hora_recojo_24"
                         value="{{ old('hora_recojo') }}"
                         class="fi fi-hora"
-                        oninput="syncAmPmRecojo()">
+                        oninput="syncAmPmRecojo();updateProgressSteps()"
+                        data-bloque="6" data-logistica="true">
                     <select class="ampm-sel" id="ampm-sel-recojo" onchange="syncHoraRecojo()">
                         <option value="AM">AM</option>
                         <option value="PM">PM</option>
@@ -1877,22 +2078,89 @@ html { scroll-behavior: smooth; }
             </div>
         </div>
 
-        {{-- Solo guía asignado — eliminado: N° de confirmación del proveedor --}}
         <div class="field" style="max-width:400px">
             <label class="lbl">Guía / asesor asignado</label>
             <div class="ig">
                 <span class="ia"><i class="bi bi-person-badge"></i></span>
-                <input type="text" name="guia_asignado"
+                <input type="text" name="guia_asignado" id="guia_asignado"
                     value="{{ old('guia_asignado') }}"
-                    class="fi" placeholder="Nombre del guía o asesor..." maxlength="150">
+                    class="fi" placeholder="Nombre del guía o asesor..." maxlength="150"
+                    oninput="updateProgressSteps()"
+                    data-bloque="6" data-logistica="true">
             </div>
         </div>
 
         <div class="field">
             <label class="lbl">Observaciones generales</label>
-            <textarea name="observaciones" class="fi" rows="3"
-                placeholder="Notas internas, requerimientos especiales, indicaciones para el guía, información adicional del viaje...">{{ old('observaciones') }}</textarea>
+            <textarea name="observaciones" id="observaciones_generales" class="fi" rows="3"
+                placeholder="Notas internas, requerimientos especiales, indicaciones para el guía..."
+                oninput="updateProgressSteps()"
+                data-bloque="6" data-logistica="true">{{ old('observaciones') }}</textarea>
         </div>
+    </div>
+</div>
+
+{{-- ══════════════════════════════════
+     BLOQUE 7 · POLÍTICAS Y PRIVACIDAD
+══════════════════════════════════ --}}
+<div class="fb" id="bloque-7">
+    <div class="fb-head">
+        <div class="ico green"><i class="bi bi-shield-check"></i></div>
+        <div>
+            <h3>Políticas y Privacidad</h3>
+            <p>Selecciona y personaliza las políticas aplicables a esta reserva</p>
+        </div>
+        <div class="fb-status" id="fb-status-7" title="Estado de sección">7</div>
+    </div>
+    <div class="fb-body">
+
+        <div class="alerta info">
+            <i class="bi bi-info-circle ai"></i>
+            <div class="at">
+                <strong>Selecciona el tipo de servicio para autocompletar las políticas.</strong>
+                Puedes editar el contenido antes de guardar. El texto se incluirá en el PDF enviado al cliente.
+            </div>
+        </div>
+
+        <div class="st">Tipo de política</div>
+
+        <div class="politica-btns">
+            <button type="button" class="btn-politica" id="btn-politica-tour" onclick="cargarPolitica('tours')">
+                <span class="bp-ico"><i class="bi bi-map"></i></span>
+                Políticas y Privacidad – Tours
+            </button>
+            <button type="button" class="btn-politica" id="btn-politica-viaje" onclick="cargarPolitica('viajes')">
+                <span class="bp-ico"><i class="bi bi-airplane"></i></span>
+                Políticas y Privacidad – Viajes
+            </button>
+        </div>
+
+        <div class="field">
+            <label class="lbl" for="politica_descripcion">
+                Descripción de Políticas y Privacidad <span class="req">*</span>
+            </label>
+            <div class="politica-textarea-wrap">
+                <span class="politica-loaded-badge" id="politica-loaded-badge">
+                    <i class="bi bi-check-circle-fill"></i> Cargado automáticamente
+                </span>
+                <textarea name="politica_descripcion" id="politica_descripcion"
+                    class="fi" rows="10"
+                    placeholder="Selecciona un tipo de política arriba, o escribe el contenido manualmente..."
+                    required
+                    data-validate="required"
+                    data-bloque="7"
+                    oninput="updateProgressSteps()">{{ old('politica_descripcion') }}</textarea>
+            </div>
+            <div class="fhint">
+                <i class="bi bi-info-circle me-1"></i>
+                Puedes agregar información adicional o editar el texto antes de guardar.
+            </div>
+            @error('politica_descripcion')<div class="ferr"><i class="bi bi-exclamation-circle"></i>{{ $message }}</div>@enderror
+        </div>
+
+        {{-- Campo oculto para guardar el tipo de política seleccionada --}}
+        <input type="hidden" name="politica_tipo" id="politica_tipo" value="{{ old('politica_tipo') }}">
+
     </div>
 </div>
 
@@ -1918,7 +2186,83 @@ html { scroll-behavior: smooth; }
 @endsection
 
 @push('scripts')
+{{-- Cargar políticas desde archivo externo --}}
+<script src="{{ asset('js/politicas.js') }}"></script>
 <script>
+/* ══════════════════════════════════════════════════════
+   POLÍTICAS Y PRIVACIDAD
+   Las políticas se cargan desde /public/js/politicas.js
+   que debe exportar window.POLITICAS_RESERVA = { tours: '...', viajes: '...' }
+══════════════════════════════════════════════════════ */
+
+/**
+ * Carga el texto de política según el tipo seleccionado.
+ * Las políticas se leen de window.POLITICAS_RESERVA (politicas.js).
+ * Si no se encuentra el archivo, se muestra un aviso.
+ */
+function cargarPolitica(tipo) {
+    const ta    = document.getElementById('politica_descripcion');
+    const badge = document.getElementById('politica-loaded-badge');
+    const hid   = document.getElementById('politica_tipo');
+    const btnT  = document.getElementById('btn-politica-tour');
+    const btnV  = document.getElementById('btn-politica-viaje');
+
+    // Activar botón seleccionado
+    btnT.classList.toggle('active', tipo === 'tours');
+    btnV.classList.toggle('active', tipo === 'viajes');
+
+    // Intentar cargar desde el objeto global (politicas.js)
+    if (typeof window.POLITICAS_RESERVA !== 'undefined' && window.POLITICAS_RESERVA[tipo]) {
+        ta.value = window.POLITICAS_RESERVA[tipo];
+        hid.value = tipo;
+        badge.classList.add('visible');
+        ta.style.height = 'auto';
+        ta.style.height = ta.scrollHeight + 'px';
+        ta.classList.add('ok-val');
+        updateProgressSteps();
+
+        // Quitar badge después de 3 segundos
+        setTimeout(() => badge.classList.remove('visible'), 3000);
+    } else {
+        // Fallback: intentar cargar desde el backend vía fetch
+        fetch(`/api/politicas/${tipo}`)
+            .then(r => r.ok ? r.json() : null)
+            .then(data => {
+                if (data && data.contenido) {
+                    ta.value = data.contenido;
+                    hid.value = tipo;
+                    badge.classList.add('visible');
+                    ta.style.height = 'auto';
+                    ta.style.height = ta.scrollHeight + 'px';
+                    ta.classList.add('ok-val');
+                    updateProgressSteps();
+                    setTimeout(() => badge.classList.remove('visible'), 3000);
+                } else {
+                    // Último fallback: texto de aviso
+                    ta.value = `[No se encontró el archivo politicas.js o la ruta /api/politicas/${tipo}]\n\nPor favor escribe manualmente las políticas para este tipo de reserva.`;
+                    hid.value = tipo;
+                    updateProgressSteps();
+                }
+            })
+            .catch(() => {
+                ta.value = `[Error al cargar políticas de tipo: ${tipo}]\n\nVerifica que el archivo /public/js/politicas.js exista y contenga window.POLITICAS_RESERVA.`;
+                hid.value = tipo;
+                updateProgressSteps();
+            });
+    }
+}
+
+/* Restaurar tipo de política si viene de old() */
+document.addEventListener('DOMContentLoaded', () => {
+    const tipoOld = document.getElementById('politica_tipo').value;
+    if (tipoOld) {
+        const btnT = document.getElementById('btn-politica-tour');
+        const btnV = document.getElementById('btn-politica-viaje');
+        btnT.classList.toggle('active', tipoOld === 'tours');
+        btnV.classList.toggle('active', tipoOld === 'viajes');
+    }
+});
+
 /* ══════════════════════════════════════════════════════
    CÁLCULO DE TOTALES
 ══════════════════════════════════════════════════════ */
@@ -1944,6 +2288,7 @@ function onTipoPago() {
     const c      = document.getElementById('monto_pagado_inicial');
     c.value = tipo === 'pago_completo' ? precio.toFixed(2) : (precio * 0.5).toFixed(2);
     calcTotal();
+    updateProgressSteps();
 }
 
 /* ══════════════════════════════════════════════════════
@@ -2020,21 +2365,12 @@ function handleEmailPaste(event) {
         if (parts.length === 2 && parts[0] && parts[1]) {
             document.getElementById('email-user').value   = parts[0];
             document.getElementById('email-domain').value = parts[1];
-            joinEmail();
-            closeDomains();
+            joinEmail(); closeDomains();
         }
     }
 }
-
-function pickDomain(v) {
-    document.getElementById('email-domain').value = v;
-    closeDomains();
-    joinEmail();
-}
-function closeDomains() {
-    document.getElementById('domain-list').classList.remove('open');
-    joinEmail();
-}
+function pickDomain(v) { document.getElementById('email-domain').value = v; closeDomains(); joinEmail(); }
+function closeDomains() { document.getElementById('domain-list').classList.remove('open'); joinEmail(); }
 function joinEmail() {
     const u = document.getElementById('email-user').value.trim();
     const d = document.getElementById('email-domain').value.trim();
@@ -2082,7 +2418,8 @@ function addPax() {
                 <label class="lbl">Nombre completo <span class="req">*</span></label>
                 <input type="text" name="pasajeros[${i}][nombre_completo]" id="pax-nombre-${i}" class="fi"
                     placeholder="NOMBRES APELLIDOS"
-                    oninput="this.value=this.value.toUpperCase();updateSaludNombre(${i},this.value)"
+                    oninput="this.value=this.value.toUpperCase();updateSaludNombre(${i},this.value);updateProgressSteps()"
+                    data-pax-idx="${i}" data-pax-required="true"
                     required>
             </div>
             <div class="field">
@@ -2094,7 +2431,9 @@ function addPax() {
             </div>
             <div class="field">
                 <label class="lbl">Edad</label>
-                <input type="number" name="pasajeros[${i}][edad]" class="fi" min="0" max="120" placeholder="—" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'').substring(0,3)">
+                <input type="number" name="pasajeros[${i}][edad]" class="fi" min="0" max="120" placeholder="—"
+                    inputmode="numeric"
+                    oninput="this.value=this.value.replace(/[^0-9]/g,'').substring(0,3)">
             </div>
             <div class="field">
                 <label class="lbl">Tipo de doc.</label>
@@ -2130,7 +2469,7 @@ function removePax(i) {
 function addSaludPax(i) {
     const lista = document.getElementById('salud-lista');
     const s = document.createElement('div');
-    s.className = 'salud-pasajero';
+    s.className = 'salud-pasajero salud-ok';
     s.id = `salud-pax-${i}`;
     s.innerHTML = `
         <div class="salud-pasajero-head">
@@ -2138,6 +2477,7 @@ function addSaludPax(i) {
             <span>Pasajero ${i + 1} —
                 <span id="salud-nombre-${i}" style="font-style:italic;color:var(--ink-3)">sin nombre</span>
             </span>
+            <span class="salud-status-dot" title="Estado"></span>
         </div>
         <div class="salud-pasajero-body">
             <div class="salud-grid">
@@ -2167,7 +2507,7 @@ function addSaludPax(i) {
             <div class="field" style="margin-top:.75rem;margin-bottom:0">
                 <label class="lbl">Observaciones médicas adicionales</label>
                 <textarea name="pasajeros[${i}][obs_medicas]" class="fi" rows="2"
-                    placeholder="Discapacidades, movilidad reducida, condiciones que el guía deba conocer..."></textarea>
+                    placeholder="Discapacidades, movilidad reducida..."></textarea>
             </div>
         </div>`;
     lista.appendChild(s);
@@ -2182,14 +2522,14 @@ function paxDoc(sel, i) {
     const inp = document.getElementById(`pd-${i}`);
     if (!inp) return;
     const t = sel.value;
-    if (t === 'DNI')       { inp.maxLength = 8;  inp.placeholder = '8 dígitos';  inp.oninput = () => { inp.value = inp.value.replace(/\D/g,'').substring(0, 8); }; }
-    else if (t === 'CE')   { inp.maxLength = 12; inp.placeholder = 'Hasta 12';   inp.oninput = () => { inp.value = inp.value.replace(/\D/g,'').substring(0,12); }; }
-    else if (t === 'PASAPORTE') { inp.maxLength = 15; inp.placeholder = 'Alfanumér.'; inp.oninput = () => { inp.value = inp.value.toUpperCase().substring(0,15); }; }
-    else { inp.maxLength = 20; inp.placeholder = 'Opcional'; inp.oninput = null; }
+    if (t === 'DNI')            { inp.maxLength = 8;  inp.placeholder = '8 dígitos';   inp.oninput = () => { inp.value = inp.value.replace(/\D/g,'').substring(0, 8); }; }
+    else if (t === 'CE')        { inp.maxLength = 12; inp.placeholder = 'Hasta 12';    inp.oninput = () => { inp.value = inp.value.replace(/\D/g,'').substring(0,12); }; }
+    else if (t === 'PASAPORTE') { inp.maxLength = 15; inp.placeholder = 'Alfanumér.';  inp.oninput = () => { inp.value = inp.value.toUpperCase().substring(0,15); }; }
+    else                        { inp.maxLength = 20; inp.placeholder = 'Opcional';    inp.oninput = null; }
 }
 
 function paxCnt() {
-    const n = document.querySelectorAll('#pax-lista .pax-card').length;
+    const n  = document.querySelectorAll('#pax-lista .pax-card').length;
     const el = document.getElementById('pax-cnt');
     el.textContent = n > 0 ? `${n} pasajero(s) adicional(es) registrado(s).` : '';
     const sb = document.getElementById('sb-pasajeros');
@@ -2206,17 +2546,14 @@ function togAlergPax(lbl, taId) {
     if (radio) radio.checked = true;
 
     const wrapId = taId + '-wrap';
-    const wrap = document.getElementById(wrapId);
-    const ta   = document.getElementById(taId);
+    const wrap   = document.getElementById(wrapId);
+    const ta     = document.getElementById(taId);
     if (wrap) {
         const show = radio && radio.value === 'si';
         wrap.style.display = show ? 'block' : 'none';
         if (ta && !show) ta.value = '';
-    } else if (ta) {
-        const show = radio && radio.value === 'si';
-        ta.style.display = show ? 'block' : 'none';
-        if (!show) ta.value = '';
     }
+    updateProgressSteps();
 }
 
 /* ══════════════════════════════════════════════════════
@@ -2224,19 +2561,12 @@ function togAlergPax(lbl, taId) {
 ══════════════════════════════════════════════════════ */
 function restricDocTitular(inp) {
     const tipo = document.getElementById('titular_tipo_documento')?.value || 'DNI';
-    if (tipo === 'DNI' || tipo === 'RUC') {
-        inp.value = inp.value.replace(/\D/g, '');
-        if (tipo === 'DNI') inp.value = inp.value.substring(0, 8);
-        if (tipo === 'RUC') inp.value = inp.value.substring(0, 11);
-    } else if (tipo === 'CE') {
-        inp.value = inp.value.replace(/\D/g, '').substring(0, 12);
-    } else {
-        /* Pasaporte — alfanumérico, solo mayúsculas */
-        inp.value = inp.value.toUpperCase().substring(0, 15);
-    }
+    if (tipo === 'DNI')       inp.value = inp.value.replace(/\D/g,'').substring(0,8);
+    else if (tipo === 'RUC')  inp.value = inp.value.replace(/\D/g,'').substring(0,11);
+    else if (tipo === 'CE')   inp.value = inp.value.replace(/\D/g,'').substring(0,12);
+    else                      inp.value = inp.value.toUpperCase().substring(0,15);
 }
 
-/* Sincronizar placeholder/inputmode al cambiar tipo doc titular */
 document.addEventListener('DOMContentLoaded', () => {
     const tipoSel = document.getElementById('titular_tipo_documento');
     const docInp  = document.getElementById('titular_numero_documento');
@@ -2260,6 +2590,7 @@ function togFactura() {
     document.getElementById('campos-factura').style.display = es ? 'grid' : 'none';
     document.getElementById('ruc_factura').required  = es;
     document.getElementById('razon_social').required = es;
+    updateProgressSteps();
 }
 
 /* ══════════════════════════════════════════════════════
@@ -2284,15 +2615,17 @@ function updOpHint() {
     const v = document.getElementById('metodo_pago').value;
     const h = document.getElementById('op-hint');
     if (!h) return;
-    if      (v === 'yape' || v === 'plin' || v === 'tunki')  h.textContent = 'Número de operación visible en la app (opcional si adjunta imagen)';
-    else if (v.startsWith('transf') || v.startsWith('dep'))  h.textContent = 'N° de constancia o código bancario (opcional si adjunta imagen)';
-    else if (v.startsWith('tarjeta'))                         h.textContent = 'Últimos 4 dígitos o N° de voucher (opcional)';
-    else                                                       h.textContent = 'Código de referencia (opcional — identificable con el comprobante adjunto)';
+    if      (v === 'yape' || v === 'plin' || v === 'tunki') h.textContent = 'Número de operación visible en la app';
+    else if (v.startsWith('transf') || v.startsWith('dep')) h.textContent = 'N° de constancia o código bancario';
+    else if (v.startsWith('tarjeta'))                        h.textContent = 'Últimos 4 dígitos o N° de voucher';
+    else                                                      h.textContent = 'Código de referencia (opcional)';
 }
 
 /* ══════════════════════════════════════════════════════
    UPLOAD DE COMPROBANTE
 ══════════════════════════════════════════════════════ */
+let voucherAdjunto = false;
+
 function onFile(e) {
     const f = e.target.files[0];
     if (f) showPrev(f);
@@ -2307,7 +2640,7 @@ function onDrop(e) {
 }
 function showPrev(f) {
     if (f.size > 5 * 1024 * 1024) {
-        alert('El archivo supera el límite de 5 MB. Por favor selecciona un archivo más pequeño.');
+        alert('El archivo supera el límite de 5 MB.');
         return;
     }
     document.getElementById('uz').style.display = 'none';
@@ -2321,12 +2654,18 @@ function showPrev(f) {
         img.style.display = 'none';
     }
     document.getElementById('fprev').classList.add('v');
+    document.getElementById('voucher-status').style.display = 'block';
+    voucherAdjunto = true;
+    updateProgressSteps();
 }
 function removeFile() {
     document.getElementById('archivo_baucher').value = '';
     document.getElementById('fprev').classList.remove('v');
     document.getElementById('uz').style.display = '';
     document.getElementById('prev-img').src = '';
+    document.getElementById('voucher-status').style.display = 'none';
+    voucherAdjunto = false;
+    updateProgressSteps();
 }
 
 /* ══════════════════════════════════════════════════════
@@ -2336,7 +2675,6 @@ function scrollToBloque(n) {
     const bloque = document.getElementById(`bloque-${n}`);
     if (bloque) {
         bloque.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        /* Highlight visual temporal */
         bloque.style.transition = 'box-shadow .3s';
         bloque.style.boxShadow  = '0 0 0 3px rgba(26,79,160,.25), var(--sh-md)';
         setTimeout(() => { bloque.style.boxShadow = ''; }, 1200);
@@ -2344,90 +2682,194 @@ function scrollToBloque(n) {
 }
 
 /* ══════════════════════════════════════════════════════
-   BARRA DE PROGRESO LATERAL — LÓGICA COMPLETA
+   SISTEMA DE PROGRESO — LÓGICA CORREGIDA Y COMPLETA
 ══════════════════════════════════════════════════════ */
 
-/* Campos obligatorios por bloque — los bloques sin lista son 100% opcionales */
-const BLOQUE_REQS = {
-    1: ['nombre_tour', 'precio_tour', 'ciudad_procedencia', 'fecha_tour', 'hora_salida'],
-    2: ['titular_nombre', 'titular_telefono'],
-    3: null,   /* completamente opcional */
-    4: null,   /* completamente opcional */
-    5: ['metodo_pago', 'monto_pagado_inicial'],
-    6: null,   /* completamente opcional */
-};
+const TOTAL_BLOQUES = 7;
 
-function getBloqueStatus(bloqueNum) {
-    const reqs = BLOQUE_REQS[bloqueNum];
+/**
+ * Evalúa el estado de cada bloque.
+ * Retorna: 'done' | 'error' | 'incomplete'
+ */
+function getBloqueStatus(n) {
+    switch(n) {
 
-    /* Bloques opcionales (null): siempre "done" — se pintan azul desde el inicio */
-    if (reqs === null) return 'done';
-
-    let hasError   = false;
-    let allFilled  = true;
-
-    reqs.forEach(name => {
-        const el = document.querySelector(`[name="${name}"]`) || document.getElementById(name);
-        if (!el) return;
-        const val = el.value ? el.value.trim() : '';
-        if (!val) {
-            allFilled = false;
-        } else {
-            if (name === 'titular_telefono' && !/^9\d{8}$/.test(val)) hasError = true;
-            if ((name === 'precio_tour' || name === 'monto_pagado_inicial') && isNaN(parseFloat(val))) hasError = true;
+        /* ── BLOQUE 1: Datos del viaje (obligatorio) ── */
+        case 1: {
+            const campos = [
+                document.getElementById('nombre_servicio'),
+                document.getElementById('precio_tour'),
+                document.getElementById('ciudad_procedencia'),
+                document.getElementById('fecha_tour'),
+                document.getElementById('hora_salida_24'),
+            ];
+            const todoLleno = campos.every(el => el && el.value.trim() !== '');
+            if (!todoLleno) return 'incomplete';
+            const precioOk = parseFloat(document.getElementById('precio_tour')?.value) > 0;
+            if (!precioOk) return 'error';
+            return 'done';
         }
-    });
 
-    if (hasError) return 'error';
-    if (!allFilled) return 'incomplete';
-    return 'done';
+        /* ── BLOQUE 2: Titular (obligatorio) ── */
+        case 2: {
+            const nombre = document.getElementById('titular_nombre')?.value.trim() || '';
+            const tel    = document.getElementById('titular_telefono')?.value.trim() || '';
+            if (!nombre || !tel) return 'incomplete';
+            if (!/^9\d{8}$/.test(tel)) return 'error';
+            return 'done';
+        }
+
+        /* ── BLOQUE 3: Pasajeros adicionales ──
+           - Sin pasajeros → done (sección opcional completa)
+           - Con pasajeros → todos deben tener nombre
+        ── */
+        case 3: {
+            const cards = document.querySelectorAll('#pax-lista .pax-card');
+            if (cards.length === 0) return 'done'; // sin adicionales → OK
+
+            let todosCompletos = true;
+            cards.forEach(card => {
+                const idx   = card.id.replace('pax-','');
+                const inp   = document.getElementById(`pax-nombre-${idx}`);
+                const val   = inp ? inp.value.trim() : '';
+                if (!val) {
+                    todosCompletos = false;
+                    card.classList.add('pax-incomplete');
+                } else {
+                    card.classList.remove('pax-incomplete');
+                }
+            });
+            return todosCompletos ? 'done' : 'incomplete';
+        }
+
+        /* ── BLOQUE 4: Salud ──
+           - El titular siempre existe → siempre done
+           - Si hay pasajeros adicionales con "Sí tiene alergias"
+             pero campo vacío → error
+        ── */
+        case 4: {
+            // Verificar si el titular marcó "si" pero no escribió nada
+            const titularRadio = document.querySelector('[name="titular_tiene_alergias"]:checked');
+            if (titularRadio && titularRadio.value === 'si') {
+                const detalle = document.getElementById('alerg-titular')?.value.trim() || '';
+                if (!detalle) return 'error';
+            }
+            // Verificar pasajeros adicionales
+            const cards = document.querySelectorAll('#pax-lista .pax-card');
+            for (const card of cards) {
+                const idx   = card.id.replace('pax-','');
+                const radio = document.querySelector(`[name="pasajeros[${idx}][tiene_alergias]"]:checked`);
+                if (radio && radio.value === 'si') {
+                    const det = document.getElementById(`alerg-pax-${idx}`)?.value.trim() || '';
+                    if (!det) {
+                        // Marcar sección como error visual
+                        const sp = document.getElementById(`salud-pax-${idx}`);
+                        if (sp) { sp.classList.add('salud-error'); sp.classList.remove('salud-ok'); }
+                        return 'error';
+                    } else {
+                        const sp = document.getElementById(`salud-pax-${idx}`);
+                        if (sp) { sp.classList.remove('salud-error'); sp.classList.add('salud-ok'); }
+                    }
+                }
+            }
+            return 'done';
+        }
+
+        /* ── BLOQUE 5: Pago y comprobante ──
+           CORREGIDO: requiere método + monto + voucher adjunto
+        ── */
+        case 5: {
+            const metodo = document.getElementById('metodo_pago')?.value.trim() || '';
+            const monto  = parseFloat(document.getElementById('monto_pagado_inicial')?.value) || 0;
+
+            if (!metodo) return 'incomplete';
+            if (monto <= 0) return 'incomplete';
+            if (!voucherAdjunto) return 'incomplete';
+            return 'done';
+        }
+
+        /* ── BLOQUE 6: Logística ──
+           CORREGIDO: solo completo si al menos un campo tiene datos.
+           Si ninguno tiene datos → incomplete (no marcado como done automáticamente)
+        ── */
+        case 6: {
+            const campos = [
+                document.getElementById('punto_encuentro')?.value.trim()       || '',
+                document.getElementById('hora_recojo_24')?.value.trim()         || '',
+                document.getElementById('guia_asignado')?.value.trim()          || '',
+                document.getElementById('observaciones_generales')?.value.trim()|| '',
+            ];
+            const alguno = campos.some(v => v !== '');
+            return alguno ? 'done' : 'incomplete';
+        }
+
+        /* ── BLOQUE 7: Políticas y Privacidad ── */
+        case 7: {
+            const texto = document.getElementById('politica_descripcion')?.value.trim() || '';
+            if (!texto) return 'incomplete';
+            if (texto.length < 20) return 'error';
+            return 'done';
+        }
+
+        default: return 'incomplete';
+    }
 }
 
+/**
+ * Actualiza la barra lateral y los indicadores de cada bloque.
+ */
 function updateProgressSteps() {
-    let doneCount = 0;
-    const total   = 6;
-
-    /* Detectar bloque activo ANTES de asignar clases */
+    let doneCount  = 0;
     const activeIdx = getActiveBloqueIdx();
 
-    for (let i = 1; i <= total; i++) {
-        const psItem = document.getElementById(`ps-${i}`);
-        const bloque = document.getElementById(`bloque-${i}`);
-        if (!psItem) continue;
+    for (let i = 1; i <= TOTAL_BLOQUES; i++) {
+        const psItem  = document.getElementById(`ps-${i}`);
+        const bloque  = document.getElementById(`bloque-${i}`);
+        const fbStat  = document.getElementById(`fb-status-${i}`);
+        if (!psItem || !bloque) continue;
 
         const status = getBloqueStatus(i);
 
-        /* Limpiar clases anteriores */
+        // Limpiar clases
         psItem.classList.remove('done', 'has-error', 'active');
-        if (bloque) bloque.classList.remove('has-errors');
+        bloque.classList.remove('has-errors', 'is-complete');
+        if (fbStat) { fbStat.textContent = i; }
 
-        if (status === 'done') {
-            psItem.classList.add('done');
-            doneCount++;
-        } else if (status === 'error') {
-            psItem.classList.add('has-error');
-            if (bloque) bloque.classList.add('has-errors');
+        switch(status) {
+            case 'done':
+                psItem.classList.add('done');
+                bloque.classList.add('is-complete');
+                if (fbStat) fbStat.innerHTML = '<i class="bi bi-check2"></i>';
+                doneCount++;
+                break;
+            case 'error':
+                psItem.classList.add('has-error');
+                bloque.classList.add('has-errors');
+                if (fbStat) fbStat.innerHTML = '<i class="bi bi-exclamation-lg"></i>';
+                break;
+            case 'incomplete':
+                // Sin clases especiales (gris neutro)
+                break;
         }
-        /* 'incomplete' → sin clase especial (gris neutro, aún no completado) */
 
-        /* Bloque activo: marcarlo aunque ya esté done o error */
-        if (i === activeIdx) {
-            psItem.classList.add('active');
-        }
+        // Marcar bloque activo
+        if (i === activeIdx) psItem.classList.add('active');
     }
 
-    /* Barra de progreso total */
-    const pct   = Math.round((doneCount / total) * 100);
-    const fill  = document.getElementById('ps-fill');
-    const pctEl = document.getElementById('ps-pct');
-    if (fill)  fill.style.width   = pct + '%';
-    if (pctEl) pctEl.textContent  = pct + '%';
+    // Actualizar barra de progreso
+    const pct      = Math.round((doneCount / TOTAL_BLOQUES) * 100);
+    const fill     = document.getElementById('ps-fill');
+    const pctEl    = document.getElementById('ps-pct');
+    const doneEl   = document.getElementById('ps-done-count');
+    if (fill)   fill.style.width    = pct + '%';
+    if (pctEl)  pctEl.textContent   = pct + '%';
+    if (doneEl) doneEl.textContent  = `${doneCount}/${TOTAL_BLOQUES}`;
 }
 
 function getActiveBloqueIdx() {
     let closestIdx = 1;
     let closestTop = Infinity;
-    for (let i = 1; i <= 6; i++) {
+    for (let i = 1; i <= TOTAL_BLOQUES; i++) {
         const el = document.getElementById(`bloque-${i}`);
         if (!el) continue;
         const rect = el.getBoundingClientRect();
@@ -2448,16 +2890,16 @@ function validateField(input) {
 
     for (const rule of rules) {
         if (rule === 'required' && !input.value.trim()) {
-            error = 'Este campo es obligatorio.';
-            break;
+            error = 'Este campo es obligatorio.'; break;
         }
         if (rule === 'numeric' && input.value && isNaN(parseFloat(input.value))) {
-            error = 'Ingresa un valor numérico válido.';
-            break;
+            error = 'Ingresa un valor numérico válido.'; break;
+        }
+        if (rule === 'positive' && input.value && parseFloat(input.value) <= 0) {
+            error = 'El valor debe ser mayor a cero.'; break;
         }
         if (rule === 'phone' && input.value && !/^9\d{8}$/.test(input.value)) {
-            error = 'Debe ser 9 dígitos comenzando con 9.';
-            break;
+            error = 'Debe ser 9 dígitos comenzando con 9.'; break;
         }
     }
 
@@ -2485,7 +2927,6 @@ function validateField(input) {
         errEl.style.display = 'none';
     }
 
-    /* Actualizar barra de progreso tras validar */
     updateProgressSteps();
 }
 
@@ -2505,12 +2946,17 @@ document.getElementById('form-reserva').addEventListener('submit', function(e) {
         }
     });
 
-    /* Actualizar sidebar con errores antes de abortar */
+    // Validar voucher
+    if (!voucherAdjunto) {
+        formValid = false;
+        document.getElementById('uz').style.border = '2px solid var(--red)';
+    }
+
     updateProgressSteps();
 
     if (!formValid) {
         e.preventDefault();
-        const firstErr = this.querySelector('.err');
+        const firstErr = this.querySelector('.err, .has-errors');
         if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
     }
@@ -2544,6 +2990,7 @@ document.addEventListener('DOMContentLoaded', () => {
         actualizarNombreTitularSalud(titularInput.value);
     }
 
+    // Auto-resize textareas
     document.querySelectorAll('textarea.fi').forEach(ta => {
         ta.addEventListener('input', function() {
             this.style.height = 'auto';
@@ -2551,6 +2998,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Validación blur
     document.querySelectorAll('[data-validate]').forEach(input => {
         input.addEventListener('blur', () => validateField(input));
         input.addEventListener('input', () => {
@@ -2559,23 +3007,21 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    /* Actualizar progreso al cambiar cualquier campo */
+    // Progreso en cambios
     document.querySelectorAll('input, select, textarea').forEach(el => {
         el.addEventListener('change', updateProgressSteps);
-        el.addEventListener('input', updateProgressSteps);
+        el.addEventListener('input',  updateProgressSteps);
     });
 
-    /* Actualizar bloque activo al hacer scroll */
-    window.addEventListener('scroll', () => {
-        updateProgressSteps();
-    }, { passive: true });
+    // Progreso al hacer scroll
+    window.addEventListener('scroll', updateProgressSteps, { passive: true });
 
-    /* Spinner CSS */
+    // Spinner CSS
     const style = document.createElement('style');
     style.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
     document.head.appendChild(style);
 
-    /* Inicializar progreso */
+    // Inicializar progreso
     updateProgressSteps();
 });
 </script>
