@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('estados_reserva', function (Blueprint $table) {
             $table->id();
             $table->string('nombre');
-            $table->string('color_hex', 10);
+            $table->string('color_hex', 7)->default('#6b7280');
             $table->timestamps();
         });
     }

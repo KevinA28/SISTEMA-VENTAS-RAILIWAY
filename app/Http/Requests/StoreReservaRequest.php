@@ -50,7 +50,7 @@ class StoreReservaRequest extends FormRequest
             'fecha_tour'               => 'required|date',
             'hora_salida'              => 'required|date_format:H:i',
             'ciudad_procedencia'       => 'required|string|max:100',
-            'canal_contacto'           => 'required|in:whatsapp,presencial,llamada,redes_sociales,web',
+            'canal_contacto' => 'required|in:whatsapp,presencial,llamada,redes_sociales,web,referido',
             'estado_inicial'           => 'required|in:mitad_pago,pagado,cancelada',
 
             // Calculados en prepareForValidation — nunca fallan por falta de input

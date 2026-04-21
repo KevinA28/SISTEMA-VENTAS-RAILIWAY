@@ -292,7 +292,7 @@
                 <td><span class="cod">{{ $r->codigo_reserva }}</span></td>
                 <td style="font-weight:600;color:#0f172a;">{{ $r->cliente->nombre_completo ?? '—' }}</td>
                 <td style="color:#64748b;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                    {{ $r->fechaTour->tour->nombre ?? ($r->nombre_tour ?? '—') }}
+                    {{ $r->nombre_tour ?? ($r->fechaTour?->tour?->nombre ?? '—') }}
                 </td>
                 <td>
                     <span class="badge-est est-{{ $slug }}">

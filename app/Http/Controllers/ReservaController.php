@@ -52,12 +52,15 @@ class ReservaController extends Controller
         return view('reservas.create', compact('fechas', 'estados'));
     }
 
-    public function store(StoreReservaRequest $request)
+   public function store(StoreReservaRequest $request)
     {
-        $this->reservaService->crear($request->validated());
-
-        return redirect()->route('reservas.index')
-            ->with('success', 'Reserva creada correctamente.');
+       try {
+            $this->reservaService->crear($request->validated());
+            return redirect()->route('reservas.index')
+                ->with('success', 'Reserva creada correctamente.');
+        } catch (\Exception $e) {
+            dd($e->getMessage(), $e->getTrace());
+        }
     }
 
     public function show(Reserva $reserva)

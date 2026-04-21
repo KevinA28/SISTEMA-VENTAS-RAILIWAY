@@ -16,16 +16,18 @@ class DatabaseSeeder extends Seeder
     {
         // Estados de reserva
         $estados = [
-            ['nombre' => 'consulta',     'color_hex' => '#6b7280'],
-            ['nombre' => 'pre-reserva',  'color_hex' => '#f59e0b'],
-            ['nombre' => 'confirmada',   'color_hex' => '#10b981'],
-            ['nombre' => 'lista espera', 'color_hex' => '#8b5cf6'],
-            ['nombre' => 'cancelada',    'color_hex' => '#ef4444'],
-            ['nombre' => 'no show',      'color_hex' => '#f97316'],
-            ['nombre' => 'finalizada',   'color_hex' => '#1d4ed8'],
-        ];
+                     ['nombre' => 'consulta',     'color_hex' => '#6b7280'],
+                     ['nombre' => 'pre-reserva',  'color_hex' => '#f59e0b'],
+                     ['nombre' => 'confirmada',   'color_hex' => '#10b981'],
+                     ['nombre' => 'lista espera', 'color_hex' => '#8b5cf6'],
+                     ['nombre' => 'cancelada',    'color_hex' => '#ef4444'],
+                     ['nombre' => 'no show',      'color_hex' => '#f97316'],
+                     ['nombre' => 'finalizada',   'color_hex' => '#1d4ed8'],
+                     ['nombre' => 'mitad_pago',   'color_hex' => '#f59e0b'],
+                     ['nombre' => 'pagado',       'color_hex' => '#10b981'],
+                   ];
         foreach ($estados as $e) {
-            DB::table('estados_reserva')->insert([...$e, 'created_at' => now(), 'updated_at' => now()]);
+            DB::table('estados_reserva')->insertOrIgnore([...$e, 'created_at' => now(), 'updated_at' => now()]);
         }
 
         // Métodos de pago
@@ -33,7 +35,7 @@ class DatabaseSeeder extends Seeder
         $this->call(MetodoPagoSeeder::class);
 
         // Usuario administrador inicial
-        DB::table('usuarios_admin')->insert([
+        DB::table('usuarios_admin')->insertOrIgnore([
             'nombre'     => 'Admin',
             'apellido'   => 'ADVENTUR',
             'email'      => 'admin@adventur.pe',
@@ -52,7 +54,7 @@ class DatabaseSeeder extends Seeder
             ['nombre' => 'Granja Porcón',         'precio_adulto' => 40.00, 'precio_nino' => 25.00, 'duracion_horas' => 6],
         ];
         foreach ($tours as $t) {
-            DB::table('tours')->insert([...$t, 'activo' => true, 'created_at' => now(), 'updated_at' => now()]);
+            DB::table('tours')->insertOrIgnore([...$t, 'activo' => true, 'created_at' => now(), 'updated_at' => now()]);
         }
     }
 }

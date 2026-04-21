@@ -337,13 +337,17 @@ body { font-family: 'DM Sans', sans-serif; }
                     </div>
                     <div class="info-card-body">
                         <div class="dato">
-                            <div class="lbl">Tour</div>
-                            <div class="val">{{ $reserva->fechaTour->tour->nombre }}</div>
+                    <div class="lbl">Tour</div>
+                        <div class="val">{{ $reserva->nombre_tour ?? ($reserva->fechaTour?->tour?->nombre ?? '—') }}</div>
+                    </div>
+                    <div class="dato">
+                        <div class="lbl">Fecha y hora de salida</div>
+                        <div class="val mono">
+                            {{ $reserva->fecha_tour ? \Carbon\Carbon::parse($reserva->fecha_tour)->format('d/m/Y') : ($reserva->fechaTour?->fecha ? \Carbon\Carbon::parse($reserva->fechaTour->fecha)->format('d/m/Y') : '—') }}
+                              —
+                            {{ $reserva->hora_salida ?? $reserva->fechaTour?->hora_salida ?? '—' }}
                         </div>
-                        <div class="dato">
-                            <div class="lbl">Fecha y hora de salida</div>
-                            <div class="val mono">{{ $reserva->fechaTour->fecha->format('d/m/Y') }} — {{ $reserva->fechaTour->hora_salida }}</div>
-                        </div>
+                    </div>
                         <div class="dato">
                             <div class="lbl">Pasajeros</div>
                             <div class="val">

@@ -211,12 +211,12 @@ body { font-family: 'DM Sans', sans-serif; }
                 </td>
                 <td style="max-width:180px;">
                     <div style="font-weight:500;font-size:.84rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                        {{ $reserva->nombre_tour ?? ($reserva->fechaTour->tour->nombre ?? '—') }}
+                        {{ $reserva->nombre_tour ?? ($reserva->fechaTour?->tour?->nombre ?? '—') }}
                     </div>
                 </td>
                 <td style="white-space:nowrap;">
                     <div style="font-size:.84rem;font-weight:600;">
-                        {{ optional($reserva->fecha_tour)->format('d/m/Y') ?? optional($reserva->fechaTour?->fecha)->format('d/m/Y') ?? '—' }}
+                        {{ $reserva->fecha_tour ? \Carbon\Carbon::parse($reserva->fecha_tour)->format('d/m/Y') : ($reserva->fechaTour?->fecha ? \Carbon\Carbon::parse($reserva->fechaTour->fecha)->format('d/m/Y') : '—') }}
                     </div>
                     <div style="font-size:.72rem;color:var(--ink-4);">
                         {{ $reserva->hora_salida ?? $reserva->fechaTour?->hora_salida ?? '' }}

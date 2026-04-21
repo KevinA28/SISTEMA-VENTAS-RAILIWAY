@@ -59,14 +59,16 @@ class ReservaService
             $estadoInicial = EstadoReserva::where('nombre', $nombreEstado)->firstOrFail();
 
             // ── 3. Calcular precio total ───────────────────────────
-            $precioTotal = (float) $datos['precio_tour']
-                         * ((int) $datos['cantidad_adultos'] + (int) $datos['cantidad_ninos']);
+            $precioTotal = (float) $datos['precio_tour'];
 
             // ── 4. Crear la reserva ───────────────────────────────
             $reserva = Reserva::create([
                 'codigo_reserva'                     => Reserva::generarCodigo(),
+                'nombre_tour'                        => $datos['nombre_tour'],
+                'fecha_tour'                         => $datos['fecha_tour'],
+                'hora_salida'                        => $datos['hora_salida'],
                 'cliente_id'                         => $clienteId,
-                'fecha_tour_id'                      => null, // entrada manual, no usa FechaTour
+                'fecha_tour_id'                      => null,
                 'estado_id'                          => $estadoInicial->id,
                 'usuario_admin_id'                   => Auth::id(),
                 'cantidad_adultos'                   => $datos['cantidad_adultos'],
@@ -96,7 +98,7 @@ class ReservaService
                 'tipo_documento'   => $datos['titular_tipo_documento']   ?? null,
                 'numero_documento' => $datos['titular_numero_documento'] ?? null,
                 'edad'             => null,
-                'es_titular'       => true,
+                'es_titular'       => false,
             ]);
 
             // ── 6. Crear pasajeros adicionales ────────────────────
