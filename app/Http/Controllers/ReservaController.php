@@ -65,8 +65,9 @@ class ReservaController extends Controller
     public function show(Reserva $reserva)
     {
         $reserva = $this->reservaService->cargarDetalle($reserva);
+        $estados = EstadoReserva::all(); // ya está importado arriba, no necesita el namespace completo
 
-        return view('reservas.show', compact('reserva'));
+        return view('reservas.show', compact('reserva', 'estados')); // ← agregar 'estados'
     }
 
     public function edit(Reserva $reserva)
