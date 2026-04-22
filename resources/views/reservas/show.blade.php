@@ -316,14 +316,23 @@ body { font-family: 'DM Sans', sans-serif; }
                             <div class="val mono">{{ $reserva->cliente->tipo_documento }}: {{ $reserva->cliente->numero_documento }}</div>
                         </div>
                         <div class="dato">
-                            <div class="lbl">WhatsApp</div>
-                            <div class="val">
-                                @if($reserva->cliente->telefono_whatsapp)
-                                    <a href="https://wa.me/51{{ $reserva->cliente->telefono_whatsapp }}" target="_blank"
-                                       style="color:var(--green);text-decoration:none;font-weight:600;">
-                                        <i class="bi bi-whatsapp"></i> +51 {{ $reserva->cliente->telefono_whatsapp }}
-                                    </a>
-                                @else — @endif
+                          <div class="dato">
+                             <div class="lbl">Celular / WhatsApp</div>
+                              <div class="val">
+                                @if($reserva->cliente->telefono)
+                                <a href="https://wa.me/51{{ $reserva->cliente->telefono }}" target="_blank"
+                                style="color:var(--green);text-decoration:none;font-weight:600;">
+                            <i class="bi bi-whatsapp"></i> +51 {{ $reserva->cliente->telefono }}
+                       </a>
+                 @else — @endif
+            </div>
+        </div>
+            @if($reserva->cliente->telefono2 ?? false)
+                <div class="dato">
+                   <div class="lbl">Teléfono alternativo</div>
+                    <div class="val">{{ $reserva->cliente->telefono2 }}</div>
+            </div>
+            @endif
                             </div>
                         </div>
                         <div class="dato" style="margin-bottom:0">
@@ -532,8 +541,9 @@ body { font-family: 'DM Sans', sans-serif; }
                 <div class="hdr-left"><i class="bi bi-arrow-repeat"></i> Cambiar estado</div>
             </div>
             <div class="info-card-body">
-                <form method="POST" action="{{ route('reservas.cambiarEstado', $reserva) }}"
-                    @csrf @method('PATCH')
+                <form method="POST" action="{{ route('reservas.cambiarEstado', $reserva) }}">
+                    @csrf
+                    @method('PATCH')
                     <div class="estado-grid">
                         @foreach($estados ?? \App\Models\EstadoReserva::all() as $estado)
                         @php
@@ -647,66 +657,4 @@ body { font-family: 'DM Sans', sans-serif; }
 
     </div>
 </div>
-
-{{-- ── MODAL REGISTRAR PAGO ── --}}
-<div class="modal fade" id="modalPago" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="border-radius:12px;border:none;box-shadow:0 20px 60px rgba(0,0,0,.15);">
-            <form method="POST" action="#" enctype="multipart/form-data">
-                @csrf
-                <input type="hidden" name="reserva_id" value="{{ $reserva->id }}">
-                <div class="modal-header" style="border-bottom:1px solid var(--line);padding:1.25rem 1.5rem;">
-                    <h5 class="modal-title" style="font-size:.95rem;font-weight:700;color:var(--ink);">
-                        <i class="bi bi-credit-card me-2" style="color:var(--blue);"></i>
-                        Registrar Pago
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body" style="padding:1.5rem;">
-                    <div class="row g-3">
-                        <div class="col-6">
-                            <label style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-4);display:block;margin-bottom:.35rem;">Método de pago</label>
-                            <select name="metodo_pago_id" class="f-input" required style="margin-bottom:0;">
-                                @foreach(\App\Models\MetodoPago::where('activo',true)->get() as $metodo)
-                                    <option value="{{ $metodo->id }}">{{ $metodo->nombre }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-6">
-                            <label style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-4);display:block;margin-bottom:.35rem;">Tipo de pago</label>
-                            <select name="tipo_pago" class="f-input" style="margin-bottom:0;">
-                                <option value="adelanto">Adelanto (50%)</option>
-                                <option value="saldo">Saldo</option>
-                                <option value="pago_completo">Pago completo</option>
-                            </select>
-                        </div>
-                        <div class="col-6">
-                            <label style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-4);display:block;margin-bottom:.35rem;">Monto (S/)</label>
-                            <input type="number" name="monto" step="0.01" class="f-input" required placeholder="0.00" style="margin-bottom:0;">
-                        </div>
-                        <div class="col-6">
-                            <label style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-4);display:block;margin-bottom:.35rem;">Fecha de pago</label>
-                            <input type="date" name="fecha_pago" class="f-input" value="{{ date('Y-m-d') }}" required style="margin-bottom:0;">
-                        </div>
-                        <div class="col-12">
-                            <label style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-4);display:block;margin-bottom:.35rem;">N° Operación (opcional)</label>
-                            <input type="text" name="numero_operacion" class="f-input" placeholder="Código de la transacción" style="margin-bottom:0;">
-                        </div>
-                        <div class="col-12">
-                            <label style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-4);display:block;margin-bottom:.35rem;">Baucher (imagen o PDF)</label>
-                            <input type="file" name="archivo_baucher" class="f-input" accept=".jpg,.jpeg,.png,.pdf" style="margin-bottom:0;">
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer" style="border-top:1px solid var(--line);padding:.875rem 1.5rem;gap:.5rem;">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn-sm-green" style="padding:8px 18px;font-size:.84rem;">
-                        <i class="bi bi-check-lg"></i> Registrar pago
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 @endsection
