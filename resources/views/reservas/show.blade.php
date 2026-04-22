@@ -289,6 +289,9 @@ body { font-family: 'DM Sans', sans-serif; }
             {{ ucfirst(str_replace('_',' ',$reserva->estado->nombre)) }}
         </span>
     </div>
+    <a href="{{ route('reservas.edit', $reserva) }}" class="btn-sm-green" style="margin-top:.5rem;">
+       <i class="bi bi-pencil"></i> Editar
+    </a>
 </div>
 
 <div class="row g-3">
@@ -487,16 +490,7 @@ body { font-family: 'DM Sans', sans-serif; }
                                 <span style="color:var(--ink-4);font-size:.75rem;">—</span>
                             @endif
                         </td>
-                        <td>
-                            @if($pago->estado_validacion === 'pendiente')
-                            <form method="POST" action="{{ route('pagos.verificar', $pago) }}" class="d-inline">
-                                @csrf @method('PATCH')
-                                <button type="submit" class="btn-sm-green" title="Verificar pago">
-                                    <i class="bi bi-check-lg"></i>
-                                </button>
-                            </form>
-                            @endif
-                        </td>
+                        <td></td>
                     </tr>
                     @empty
                     <tr>
@@ -538,7 +532,7 @@ body { font-family: 'DM Sans', sans-serif; }
                 <div class="hdr-left"><i class="bi bi-arrow-repeat"></i> Cambiar estado</div>
             </div>
             <div class="info-card-body">
-                <form method="POST" action="{{ route('reservas.cambiar-estado', $reserva) }}">
+                <form method="POST" action="{{ route('reservas.cambiarEstado', $reserva) }}"
                     @csrf @method('PATCH')
                     <div class="estado-grid">
                         @foreach($estados ?? \App\Models\EstadoReserva::all() as $estado)
@@ -658,7 +652,7 @@ body { font-family: 'DM Sans', sans-serif; }
 <div class="modal fade" id="modalPago" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" style="border-radius:12px;border:none;box-shadow:0 20px 60px rgba(0,0,0,.15);">
-            <form method="POST" action="{{ route('pagos.store') }}" enctype="multipart/form-data">
+            <form method="POST" action="#" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" name="reserva_id" value="{{ $reserva->id }}">
                 <div class="modal-header" style="border-bottom:1px solid var(--line);padding:1.25rem 1.5rem;">

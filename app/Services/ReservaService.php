@@ -187,4 +187,122 @@ class ReservaService
 
         return $reserva;
     }
+    public function actualizar(Reserva $reserva, array $datos): Reserva
+  {
+    return DB::transaction(function () use ($reserva, $datos) {
+
+        // ── 1. Actualizar cliente ─────────────────────────────
+        $cliente = $reserva->cliente;
+        if ($cliente) {
+            $cliente->update([
+                'nombre_completo'  => $datos['titular_nombre']           ?? $cliente->nombre_completo,
+                'email'            => $datos['titular_email']            ?? $cliente->email,
+                'tipo_documento'   => $datos['titular_tipo_documento']   ?? $cliente->tipo_documento,
+                'numero_documento' => $datos['titular_numero_documento'] ?? $cliente->numero_documento,
+                'fecha_nacimiento' => $datos['titular_fecha_nacimiento'] ?? $cliente->fecha_nacimiento,
+                'genero'           => $datos['titular_genero']           ?? $cliente->genero,
+                'nacionalidad'     => $datos['titular_nacionalidad']     ?? $cliente->nacionalidad,
+                'telefono2'        => $datos['titular_telefono2']        ?? $cliente->telefono2,
+            ]);
+        }
+
+        // ── 2. Resolver estado ────────────────────────────────
+        $mapaEstados = [
+            'mitad_pago' => 'mitad_pago',
+            'pagado'     => 'pagado',
+            'cancelada'  => 'cancelada',
+        ];
+        $nombreEstado = $mapaEstados[$datos['estado_inicial']] ?? 'mitad_pago';
+        $estado       = EstadoReserva::where('nombre', $nombreEstado)->firstOrFail();
+        $estadoCambio = $estado->id !== $reserva->estado_id;
+
+        // ── 3. Actualizar la reserva ──────────────────────────
+        $reserva->update([
+            'nombre_tour'                        => $datos['nombre_tour'],
+            'fecha_tour'                         => $datos['fecha_tour'],
+            'hora_salida'                        => $datos['hora_salida'],
+            'estado_id'                          => $estado->id,
+            'cantidad_adultos'                   => $datos['cantidad_adultos'],
+            'cantidad_ninos'                     => $datos['cantidad_ninos'],
+            'precio_total'                       => (float) $datos['precio_tour'],
+            'canal_contacto'                     => $datos['canal_contacto'],
+            'ciudad_procedencia'                 => $datos['ciudad_procedencia'],
+            'tipo_comprobante'                   => $datos['tipo_comprobante'],
+            'ruc_factura'                        => $datos['ruc_factura']         ?? null,
+            'razon_social'                       => $datos['razon_social']        ?? null,
+            'punto_encuentro'                    => $datos['punto_encuentro']     ?? null,
+            'hora_recojo'                        => $datos['hora_recojo']         ?? null,
+            'alergias_titular'                   => ($datos['titular_tiene_alergias'] ?? '') === 'si'
+                                                    ? ($datos['titular_alergias_detalle'] ?? null)
+                                                    : null,
+            'restricciones_alimentarias_titular' => $datos['titular_restricciones'] ?? null,
+            'politica_descripcion'               => $datos['politica_descripcion'] ?? null,
+            'politica_tipo'                      => $datos['politica_tipo']        ?? null,
+            'observaciones'                      => $datos['observaciones']        ?? null,
+        ]);
+
+        // ── 4. Reemplazar pasajeros ───────────────────────────
+        $reserva->pasajeros()->delete();
+
+        $reserva->pasajeros()->create([
+            'nombre_completo'  => $datos['titular_nombre'],
+            'tipo'             => 'adulto',
+            'tipo_documento'   => $datos['titular_tipo_documento']   ?? null,
+            'numero_documento' => $datos['titular_numero_documento'] ?? null,
+            'edad'             => null,
+            'es_titular'       => false,
+        ]);
+
+        foreach ($datos['pasajeros'] ?? [] as $p) {
+            $reserva->pasajeros()->create([
+                'nombre_completo'  => $p['nombre_completo'],
+                'tipo'             => $p['tipo']             ?? 'adulto',
+                'tipo_documento'   => $p['tipo_documento']   ?? null,
+                'numero_documento' => $p['numero_documento'] ?? null,
+                'edad'             => $p['edad']             ?? null,
+                'es_titular'       => false,
+            ]);
+        }
+
+        // ── 5. Registrar nuevo pago si viene uno ──────────────
+        if (!empty($datos['metodo_pago']) && !empty($datos['monto_pagado_inicial'])) {
+            $metodoPago = MetodoPago::where('nombre', $datos['metodo_pago'])->firstOrFail();
+
+            $rutaBaucher = null;
+            if (!empty($datos['archivo_baucher']) && $datos['archivo_baucher'] instanceof UploadedFile) {
+                $rutaBaucher = $datos['archivo_baucher']->store('baucherss', 'public');
+            }
+
+            $reserva->pagos()->create([
+                'metodo_pago_id'    => $metodoPago->id,
+                'registrado_por'    => Auth::id(),
+                'monto'             => $datos['monto_pagado_inicial'],
+                'numero_operacion'  => $datos['numero_operacion'] ?? null,
+                'archivo_baucher'   => $rutaBaucher,
+                'tipo_pago'         => $datos['tipo_pago'] ?? 'adelanto',
+                'estado_validacion' => 'pendiente',
+                'fecha_pago'        => $datos['fecha_pago'] ?? now(),
+            ]);
+
+            // Actualizar monto pagado acumulado
+            $reserva->update([
+                'monto_pagado' => $reserva->pagos()->sum('monto'),
+            ]);
+        }
+
+        // ── 6. Historial si cambió el estado ──────────────────
+        if ($estadoCambio) {
+            HistorialEstado::create([
+                'reserva_id'         => $reserva->id,
+                'estado_anterior_id' => $reserva->getOriginal('estado_id'),
+                'estado_nuevo_id'    => $estado->id,
+                'cambiado_por'       => Auth::id(),
+                'motivo'             => 'Reserva editada — estado actualizado',
+                'fecha_cambio'       => now(),
+            ]);
+        }
+
+        return $reserva->fresh();
+    });
+  }
 }

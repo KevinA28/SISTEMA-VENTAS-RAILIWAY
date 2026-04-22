@@ -1,11 +1,11 @@
 {{-- =====================================================================
-     ARCHIVO: create.blade.php
-     UBICACIÓN: resources/views/reservas/create.blade.php
-     SERVICIO: Agencia de Viajes — Formulario de Nueva Reserva
-     VERSIÓN MEJORADA v2: Progreso real, Políticas dinámicas, Validación corregida
+     ARCHIVO: edit.blade.php
+     UBICACIÓN: resources/views/reservas/edit.blade.php
+     SERVICIO: Agencia de Viajes — Formulario de Edición de Reserva
+     Basado en create.blade.php — valores precargados desde $reserva
      ===================================================================== --}}
 @extends('layouts.app')
-@section('titulo', 'Nueva Reserva de Viaje')
+@section('titulo', 'Editar Reserva #' . $reserva->codigo_reserva)
 
 @push('styles')
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
@@ -40,6 +40,10 @@
     --red:       #c0292e;
     --red-l:     #fef1f1;
     --red-m:     #fca5a5;
+
+    --orange:    #d97706;
+    --orange-l:  #fff7ed;
+    --orange-m:  #fed7aa;
 
     --r:         8px;
     --r-lg:      14px;
@@ -218,7 +222,6 @@ body {
 .ps-item.has-error { background: var(--red-l); }
 .ps-item.has-error::after { background: var(--red-m); }
 
-/* Tooltip de error en sidebar */
 .ps-err-badge {
     width: 8px;
     height: 8px;
@@ -230,7 +233,6 @@ body {
 }
 .ps-item.has-error .ps-err-badge { display: block; }
 
-/* Check de completado */
 .ps-ok-badge {
     width: 14px;
     height: 14px;
@@ -247,7 +249,6 @@ body {
 .ps-item.done .ps-ok-badge { display: flex; }
 .ps-item.has-error .ps-ok-badge { display: none; }
 
-/* Mini progreso total */
 .ps-footer {
     margin-top: 1rem;
     padding-top: .75rem;
@@ -285,19 +286,6 @@ body {
     text-align: right;
 }
 
-/* Sección de seguridad con indicador circular */
-.section-status-indicator {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--border);
-    margin-left: auto;
-    flex-shrink: 0;
-    transition: background .3s;
-}
-.ps-item.done .section-status-indicator { background: var(--blue); display: none; }
-.ps-item.has-error .section-status-indicator { background: var(--red); display: none; }
-
 @keyframes shakeNum {
     0%,100% { transform: translateX(0); }
     25% { transform: translateX(-3px); }
@@ -316,10 +304,10 @@ body {
 }
 
 /* ═══════════════════════════════
-   HEADER DE PÁGINA
+   HEADER DE PÁGINA — modo edición (ámbar/naranja)
 ═══════════════════════════════ */
 .ph {
-    background: linear-gradient(135deg, var(--blue-d) 0%, var(--blue) 55%, #2255b0 100%);
+    background: linear-gradient(135deg, #7c3a00 0%, #b45309 55%, #d97706 100%);
     border-radius: var(--r-lg);
     padding: 1.75rem 2rem;
     margin-bottom: 1.25rem;
@@ -333,7 +321,7 @@ body {
     overflow: hidden;
 }
 .ph::before {
-    content: '\F2F8';
+    content: '\F4CA';
     font-family: 'bootstrap-icons';
     position: absolute;
     right: 2rem; top: 50%;
@@ -368,6 +356,25 @@ body {
     margin-top: .4rem;
     line-height: 1.5;
 }
+.ph-meta {
+    display: flex;
+    gap: .5rem;
+    flex-wrap: wrap;
+    margin-top: .6rem;
+}
+.ph-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: .7rem;
+    font-weight: 700;
+    background: rgba(255,255,255,.15);
+    color: #fff;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,.25);
+}
 .btn-back {
     display: inline-flex; align-items: center; gap: .4rem;
     color: rgba(255,255,255,.8);
@@ -388,6 +395,80 @@ body {
     border-color: rgba(255,255,255,.5);
     color: #fff;
 }
+
+/* ═══════════════════════════════
+   ALERTA MODO EDICIÓN
+═══════════════════════════════ */
+.alerta-edit {
+    display: flex;
+    gap: .75rem;
+    align-items: flex-start;
+    background: var(--orange-l);
+    border: 1.5px solid var(--orange-m);
+    border-left: 4px solid var(--orange);
+    border-radius: var(--r);
+    padding: .85rem 1rem;
+    margin-bottom: 1.25rem;
+}
+.alerta-edit .ae-ico { font-size: 1.1rem; color: var(--orange); flex-shrink: 0; margin-top: .1rem; }
+.alerta-edit .ae-txt { font-size: .8rem; color: #92400e; line-height: 1.5; }
+.alerta-edit .ae-txt strong { display: block; margin-bottom: .1rem; font-weight: 700; font-size: .82rem; }
+
+/* ═══════════════════════════════
+   BLOQUE NUEVO PAGO (solo edición)
+═══════════════════════════════ */
+.pago-extra-toggle {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: 1rem;
+    background: var(--green-l);
+    border: 1.5px solid var(--green-m);
+    border-radius: var(--r);
+    margin-bottom: 1rem;
+    cursor: pointer;
+    user-select: none;
+    transition: all .2s;
+}
+.pago-extra-toggle:hover { background: #d1fae5; }
+.pago-extra-toggle .pet-check {
+    width: 22px; height: 22px;
+    border: 2px solid var(--green-m);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    background: white;
+    flex-shrink: 0;
+    transition: all .15s;
+    font-size: .85rem;
+    color: transparent;
+}
+.pago-extra-toggle.active .pet-check {
+    background: var(--green);
+    border-color: var(--green);
+    color: white;
+}
+.pago-extra-toggle .pet-txt {
+    font-size: .84rem;
+    font-weight: 700;
+    color: var(--green);
+}
+.pago-extra-toggle .pet-sub {
+    font-size: .74rem;
+    color: #065f46;
+    font-weight: 400;
+}
+.pago-extra-panel {
+    display: none;
+    background: var(--green-l);
+    border: 1.5px solid var(--green-m);
+    border-top: none;
+    border-radius: 0 0 var(--r) var(--r);
+    padding: 1rem;
+    margin-top: -1px;
+    margin-bottom: 1rem;
+    animation: slideDown .25s ease;
+}
+.pago-extra-panel.open { display: block; }
 
 /* ═══════════════════════════════
    BLOQUES DE SECCIÓN
@@ -444,7 +525,6 @@ body {
     color: var(--ink-4);
     margin-top: 2px;
 }
-/* Indicador de estado en cabecera del bloque */
 .fb-status {
     width: 28px; height: 28px;
     border-radius: 50%;
@@ -714,9 +794,7 @@ select.fi {
     gap: .7rem;
     margin-top: .5rem;
 }
-.eg-cancel-row {
-    margin-top: .5rem;
-}
+.eg-cancel-row { margin-top: .5rem; }
 .eo {
     border: 2px solid var(--border);
     border-radius: var(--r);
@@ -751,6 +829,13 @@ select.fi {
     box-shadow: 0 0 0 3px rgba(232,168,32,.2), 0 4px 16px rgba(232,168,32,.12);
     transform: translateY(-2px);
 }
+.eo.e-confirmada.sel {
+    border-color: var(--blue);
+    background: var(--blue-l);
+    color: var(--blue-d);
+    box-shadow: 0 0 0 3px rgba(26,79,160,.18), 0 4px 16px rgba(26,79,160,.12);
+    transform: translateY(-2px);
+}
 .eo.e-cancel {
     border-color: var(--border);
     color: var(--ink-4);
@@ -773,9 +858,10 @@ select.fi {
     display: flex; align-items: center; justify-content: center;
     font-size: .6rem;
 }
-.eo.e-pagado.sel .eo-check { opacity: 1; background: var(--green); color: white; }
-.eo.e-mitad.sel  .eo-check { opacity: 1; background: var(--gold); color: white; }
-.eo.e-cancel.sel .eo-check { opacity: 1; background: var(--red); color: white; }
+.eo.e-pagado.sel .eo-check   { opacity: 1; background: var(--green); color: white; }
+.eo.e-confirmada.sel .eo-check { opacity: 1; background: var(--blue); color: white; }
+.eo.e-mitad.sel  .eo-check   { opacity: 1; background: var(--gold); color: white; }
+.eo.e-cancel.sel .eo-check   { opacity: 1; background: var(--red); color: white; }
 
 .cancel-label {
     font-size: .69rem;
@@ -839,25 +925,6 @@ select.fi {
 .domain-list li:hover { background: var(--blue-l); color: var(--blue); }
 
 /* ═══════════════════════════════
-   RESULTADO BÚSQUEDA CLIENTE
-═══════════════════════════════ */
-.cr {
-    display: none;
-    align-items: center;
-    gap: .55rem;
-    padding: .65rem 1rem;
-    border-radius: var(--r);
-    font-size: .81rem;
-    font-weight: 500;
-    margin-top: .75rem;
-}
-.cr.v  { display: flex; }
-.cr.ok { background: var(--blue-l);  color: #065f46; border: 1.5px solid var(--green-m); }
-.cr.wa { background: var(--gold-l);   color: var(--gold-d); border: 1.5px solid var(--gold-m); }
-.cr.er { background: var(--red-l);    color: #991b1b; border: 1.5px solid var(--red-m); }
-.cr.ld { background: var(--bg);       color: var(--ink-3); border: 1.5px solid var(--border); }
-
-/* ═══════════════════════════════
    PASAJEROS
 ═══════════════════════════════ */
 .pax-card {
@@ -869,9 +936,7 @@ select.fi {
     position: relative;
     animation: fu .2s ease;
 }
-.pax-card.pax-incomplete {
-    border-color: var(--red-m);
-}
+.pax-card.pax-incomplete { border-color: var(--red-m); }
 .pax-head {
     font-size: .69rem;
     font-weight: 700;
@@ -911,20 +976,12 @@ select.fi {
     transition: all .15s;
     margin-top: .5rem;
 }
-.btn-add:hover {
-    border-color: var(--blue);
-    color: var(--blue);
-    background: var(--blue-l);
-}
+.btn-add:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-l); }
 
 /* ═══════════════════════════════
    CHECKBOXES DE NOTIFICACIÓN
 ═══════════════════════════════ */
-.notif-checks {
-    display: flex;
-    gap: .65rem;
-    flex-wrap: wrap;
-}
+.notif-checks { display: flex; gap: .65rem; flex-wrap: wrap; }
 .notif-item {
     display: flex;
     align-items: center;
@@ -955,15 +1012,8 @@ select.fi {
 }
 .notif-ico { display: flex; align-items: center; flex-shrink: 0; }
 .notif-text { line-height: 1; }
-.notif-item:hover {
-    border-color: var(--blue);
-    color: var(--ink-2);
-}
-.notif-item.checked {
-    border-color: var(--blue);
-    background: var(--blue-l);
-    color: var(--blue);
-}
+.notif-item:hover { border-color: var(--blue); color: var(--ink-2); }
+.notif-item.checked { border-color: var(--blue); background: var(--blue-l); color: var(--blue); }
 .notif-item.checked .notif-box {
     border-color: var(--blue);
     background: var(--blue);
@@ -990,7 +1040,6 @@ select.fi {
     color: var(--ink-2);
     display: flex; align-items: center; gap: .45rem;
 }
-/* Indicador visual salud/seguridad */
 .salud-status-dot {
     width: 10px;
     height: 10px;
@@ -1002,44 +1051,19 @@ select.fi {
 }
 .salud-pasajero.salud-error .salud-status-dot { background: var(--red); }
 .salud-pasajero.salud-ok    .salud-status-dot { background: var(--green); }
-
 .salud-pasajero-body { padding: 1rem; }
-.salud-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    align-items: start;
-}
-.salud-alerg-col,
-.salud-restrict-col {
-    display: flex;
-    flex-direction: column;
-}
-.salud-alerg-col .lbl,
-.salud-restrict-col .lbl {
-    height: 1rem;
-    margin-bottom: .45rem;
-}
-.salud-alerg-col .pg {
-    margin-bottom: .5rem;
-    min-height: 34px;
-}
-.salud-alerg-col textarea.fi,
-.salud-restrict-col textarea.fi {
+.salud-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
+.salud-alerg-col, .salud-restrict-col { display: flex; flex-direction: column; }
+.salud-alerg-col .lbl, .salud-restrict-col .lbl { height: 1rem; margin-bottom: .45rem; }
+.salud-alerg-col .pg { margin-bottom: .5rem; min-height: 34px; }
+.salud-alerg-col textarea.fi, .salud-restrict-col textarea.fi {
     flex: 1;
     min-height: 76px;
     height: 76px;
     resize: none;
     overflow: hidden;
-    word-break: break-word;
-    overflow-wrap: break-word;
-    white-space: pre-wrap;
 }
-.salud-restrict-col::before {
-    content: '';
-    display: block;
-    height: calc(34px + .5rem);
-}
+.salud-restrict-col::before { content: ''; display: block; height: calc(34px + .5rem); }
 @media(max-width: 680px) {
     .salud-grid { grid-template-columns: 1fr; }
     .salud-restrict-col::before { display: none; }
@@ -1058,40 +1082,49 @@ select.fi {
     background: var(--bg);
     position: relative;
 }
-.uz:hover, .uz.over {
-    border-color: var(--blue);
-    background: var(--blue-l);
-}
-.uz input {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    cursor: pointer;
-    width: 100%;
-    height: 100%;
-}
+.uz:hover, .uz.over { border-color: var(--blue); background: var(--blue-l); }
+.uz input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
 .uz .uzi { font-size: 1.9rem; color: var(--ink-4); margin-bottom: .4rem; }
 .uz .uzt { font-size: .82rem; color: var(--ink-3); font-weight: 500; }
 .uz .uzs { font-size: .69rem; color: var(--ink-4); margin-top: .2rem; }
-.fprev {
-    display: none;
-    margin-top: .75rem;
-    border: 1.5px solid var(--border);
-    border-radius: var(--r);
-    overflow: hidden;
-}
+.fprev { display: none; margin-top: .75rem; border: 1.5px solid var(--border); border-radius: var(--r); overflow: hidden; }
 .fprev.v { display: block; }
 .fprev img { width: 100%; max-height: 200px; object-fit: contain; background: var(--bg); display: block; }
-.fprev-ft {
-    background: var(--ink);
-    padding: .5rem .9rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
+.fprev-ft { background: var(--ink); padding: .5rem .9rem; display: flex; justify-content: space-between; align-items: center; }
 .fprev-ft .fn { font-size: .72rem; color: rgba(255,255,255,.7); font-family: 'DM Mono', monospace; }
 .fprev-ft .fr { background: none; border: none; color: rgba(255,255,255,.45); cursor: pointer; font-size: .72rem; transition: color .15s; }
 .fprev-ft .fr:hover { color: #f87171; }
+
+/* Voucher existente (en edición) */
+.voucher-actual {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .85rem 1rem;
+    background: var(--blue-l);
+    border: 1.5px solid var(--blue-m);
+    border-radius: var(--r);
+    margin-bottom: .75rem;
+}
+.voucher-actual .va-ico { font-size: 1.3rem; color: var(--blue); flex-shrink: 0; }
+.voucher-actual .va-info { flex: 1; }
+.voucher-actual .va-label { font-size: .73rem; font-weight: 700; color: var(--blue-d); }
+.voucher-actual .va-sub { font-size: .7rem; color: var(--ink-3); margin-top: 2px; }
+.voucher-actual .va-link {
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--blue);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: 4px 10px;
+    border: 1px solid var(--blue-m);
+    border-radius: 6px;
+    background: white;
+    transition: all .15s;
+}
+.voucher-actual .va-link:hover { background: var(--blue); color: white; }
 
 /* ═══════════════════════════════
    ALERTAS INFORMATIVAS
@@ -1144,8 +1177,8 @@ select.fi {
    BOTONES PRINCIPALES
 ═══════════════════════════════ */
 .btn-p {
-    background: var(--gold);
-    color: var(--ink);
+    background: var(--orange);
+    color: #fff;
     border: none;
     border-radius: var(--r);
     padding: 10px 28px;
@@ -1159,10 +1192,9 @@ select.fi {
     letter-spacing: -.01em;
 }
 .btn-p:hover {
-    background: var(--gold-d);
-    color: #fff;
+    background: #b45309;
     transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(232,168,32,.35);
+    box-shadow: 0 4px 16px rgba(217,119,6,.35);
 }
 .btn-p:disabled { opacity: .6; cursor: not-allowed; transform: none; box-shadow: none; }
 
@@ -1185,12 +1217,7 @@ select.fi {
 /* ═══════════════════════════════
    BOTONES DE POLÍTICA
 ═══════════════════════════════ */
-.politica-btns {
-    display: flex;
-    gap: .75rem;
-    flex-wrap: wrap;
-    margin-bottom: 1rem;
-}
+.politica-btns { display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: 1rem; }
 .btn-politica {
     display: inline-flex;
     align-items: center;
@@ -1208,26 +1235,10 @@ select.fi {
     user-select: none;
     flex-shrink: 0;
 }
-.btn-politica:hover {
-    background: var(--blue);
-    color: #fff;
-    border-color: var(--blue);
-    transform: translateY(-1px);
-    box-shadow: var(--sh-md);
-}
-.btn-politica.active {
-    background: var(--blue);
-    color: #fff;
-    border-color: var(--blue-d);
-    box-shadow: 0 0 0 3px rgba(26,79,160,.2);
-}
-.btn-politica .bp-ico {
-    font-size: 1.1rem;
-    flex-shrink: 0;
-}
-.politica-textarea-wrap {
-    position: relative;
-}
+.btn-politica:hover { background: var(--blue); color: #fff; border-color: var(--blue); transform: translateY(-1px); box-shadow: var(--sh-md); }
+.btn-politica.active { background: var(--blue); color: #fff; border-color: var(--blue-d); box-shadow: 0 0 0 3px rgba(26,79,160,.2); }
+.btn-politica .bp-ico { font-size: 1.1rem; flex-shrink: 0; }
+.politica-textarea-wrap { position: relative; }
 .politica-loaded-badge {
     display: none;
     align-items: center;
@@ -1245,12 +1256,7 @@ select.fi {
     z-index: 1;
 }
 .politica-loaded-badge.visible { display: inline-flex; }
-#politica_descripcion {
-    min-height: 180px;
-    font-size: .82rem;
-    line-height: 1.65;
-}
-.politica-tipo-hidden { /* hidden input para enviar tipo */ }
+#politica_descripcion { min-height: 180px; font-size: .82rem; line-height: 1.65; }
 
 /* ═══════════════════════════════
    BARRA DE SUBMIT
@@ -1273,7 +1279,7 @@ select.fi {
 .sbar-left { display: flex; flex-direction: column; gap: .2rem; }
 .sbar .si-label { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-4); }
 .sbar .si-val { font-family: 'DM Mono', monospace; font-size: 1.2rem; font-weight: 500; color: var(--ink); }
-.sbar .si-val span { color: var(--gold-d); font-size: .75rem; font-weight: 700; margin-left: .3rem; }
+.sbar .si-val span { color: var(--orange); font-size: .75rem; font-weight: 700; margin-left: .3rem; }
 .sbar .sr { display: flex; gap: .65rem; align-items: center; flex-wrap: wrap; }
 
 /* ═══════════════════════════════
@@ -1293,18 +1299,9 @@ select.fi {
 .lerr ul { padding-left: 1.25rem; }
 .lerr li { margin-bottom: .2rem; line-height: 1.5; }
 
-/* ═══════════════════════════════
-   VALIDACIÓN EN TIEMPO REAL
-═══════════════════════════════ */
+/* Validación en tiempo real */
 .fi.validating { border-color: var(--gold); }
-.field-status {
-    font-size: .69rem;
-    margin-top: .3rem;
-    display: flex;
-    align-items: center;
-    gap: .25rem;
-    font-weight: 600;
-}
+.field-status { font-size: .69rem; margin-top: .3rem; display: flex; align-items: center; gap: .25rem; font-weight: 600; }
 .field-status.s-ok  { color: var(--blue); }
 .field-status.s-err { color: var(--red); }
 
@@ -1319,16 +1316,33 @@ select.fi {
     from { opacity: 0; max-height: 0; }
     to   { opacity: 1; max-height: 400px; }
 }
-.salud-collapsible {
-    transition: max-height .3s ease, opacity .3s ease;
-}
 
-/* Scroll suave al navegar desde sidebar */
 html { scroll-behavior: smooth; }
 </style>
 @endpush
 
 @section('contenido')
+
+{{-- Preparar datos del titular desde $reserva->cliente --}}
+@php
+    $cliente      = $reserva->cliente;
+    $estadoSlug   = $reserva->estado?->slug ?? 'mitad_pago';
+    $tienePago    = $reserva->pagos?->first();
+    $metodoSlug   = $tienePago?->metodoPago?->slug ?? '';
+    $pasajeros    = $reserva->pasajeros ?? collect();
+    // Email split para widget
+    $emailCompleto = $cliente?->email ?? '';
+    $emailParts    = explode('@', $emailCompleto, 2);
+    $emailUser     = $emailParts[0] ?? '';
+    $emailDomain   = $emailParts[1] ?? '';
+    // Voucher existente
+    $voucherExiste = $reserva->archivo_baucher ?? null;
+    $voucherUrl    = $voucherExiste ? Storage::url($voucherExiste) : null;
+    // Alergias titular
+    $titularAlergias = $reserva->alergias_titular ?? '';
+    $titularTieneAlergias = !empty($titularAlergias) ? 'si' : 'no';
+@endphp
+
 <div class="page-layout">
 
 {{-- ══════════════════════════════════
@@ -1336,7 +1350,7 @@ html { scroll-behavior: smooth; }
 ══════════════════════════════════ --}}
 <aside class="progress-sidebar">
     <div class="progress-sidebar-inner">
-        <div class="ps-title"><i class="bi bi-list-check"></i> Progreso</div>
+        <div class="ps-title"><i class="bi bi-pencil-square"></i> Editando</div>
         <div class="progress-steps-v">
 
             <div class="ps-item active" id="ps-1" onclick="scrollToBloque(1)" title="Datos del viaje">
@@ -1428,16 +1442,38 @@ html { scroll-behavior: smooth; }
 ══════════════════════════════════ --}}
 <div class="pw">
 
-{{-- HEADER DE PÁGINA --}}
+{{-- HEADER DE PÁGINA — modo edición --}}
 <div class="ph">
     <div>
-        <div class="ph-eyebrow"><i class="bi bi-airplane"></i> Agencia de Viajes — Nueva Reserva</div>
-        <h1>Registro de Reserva</h1>
-        <p>Completa los datos del viaje, pasajeros, pago y logística para crear la reserva.</p>
+        <div class="ph-eyebrow"><i class="bi bi-pencil-square"></i> Agencia de Viajes — Editar Reserva</div>
+        <h1>Editar Reserva</h1>
+        <p>Modifica los datos del viaje, pasajeros, pago y logística.</p>
+        <div class="ph-meta">
+            <span class="ph-badge"><i class="bi bi-hash"></i> {{ $reserva->codigo_reserva }}</span>
+            <span class="ph-badge"><i class="bi bi-person"></i> {{ $cliente?->nombre_completo ?? 'Sin titular' }}</span>
+            <span class="ph-badge"><i class="bi bi-calendar3"></i> {{ \Carbon\Carbon::parse($reserva->fecha_tour)->format('d/m/Y') }}</span>
+            <span class="ph-badge"><i class="bi bi-circle-fill" style="font-size:.5rem"></i> {{ ucfirst(str_replace('_', ' ', $estadoSlug)) }}</span>
+        </div>
     </div>
-    <a href="{{ route('reservas.index') }}" class="btn-back">
-        <i class="bi bi-arrow-left"></i> Volver a Reservas
-    </a>
+    <div style="display:flex;flex-direction:column;gap:.5rem;align-items:flex-end">
+        <a href="{{ route('reservas.show', $reserva) }}" class="btn-back">
+            <i class="bi bi-arrow-left"></i> Ver detalle
+        </a>
+        <a href="{{ route('reservas.index') }}" class="btn-back" style="font-size:.73rem;padding:6px 12px;opacity:.8">
+            <i class="bi bi-list-ul"></i> Todas las reservas
+        </a>
+    </div>
+</div>
+
+{{-- ALERTA MODO EDICIÓN --}}
+<div class="alerta-edit">
+    <i class="bi bi-pencil-square ae-ico"></i>
+    <div class="ae-txt">
+        <strong>Modo edición — Reserva #{{ $reserva->codigo_reserva }}</strong>
+        Estás modificando una reserva existente. Los campos precargados provienen de los datos guardados.
+        Si agregas un nuevo pago, este se registrará en el historial de pagos.
+        El comprobante solo es obligatorio si adjuntas uno nuevo.
+    </div>
 </div>
 
 @if($errors->any())
@@ -1447,8 +1483,13 @@ html { scroll-behavior: smooth; }
 </div>
 @endif
 
-<form method="POST" action="{{ route('reservas.store') }}" enctype="multipart/form-data" id="form-reserva" novalidate>
+<form method="POST"
+      action="{{ route('reservas.update', $reserva) }}"
+      enctype="multipart/form-data"
+      id="form-reserva"
+      novalidate>
 @csrf
+@method('PUT')
 
 {{-- ══════════════════════════════════
      BLOQUE 1 · DATOS DEL VIAJE
@@ -1472,7 +1513,7 @@ html { scroll-behavior: smooth; }
                 <div class="ig {{ $errors->has('nombre_tour')?'err-group':'' }}">
                     <span class="ia"><i class="bi bi-briefcase"></i></span>
                     <input type="text" name="nombre_tour" id="nombre_servicio"
-                        value="{{ old('nombre_tour') }}"
+                        value="{{ old('nombre_tour', $reserva->nombre_tour) }}"
                         class="fi {{ $errors->has('nombre_tour')?'err':'' }}"
                         placeholder="Ej: Paquete Lima – Cusco 5D/4N"
                         required maxlength="200"
@@ -1487,7 +1528,7 @@ html { scroll-behavior: smooth; }
                 <div class="ig {{ $errors->has('precio_tour')?'err-group':'' }}">
                     <span class="ia">S/</span>
                     <input type="number" name="precio_tour" id="precio_tour"
-                        value="{{ old('precio_tour') }}"
+                        value="{{ old('precio_tour', $reserva->precio_total) }}"
                         class="fi {{ $errors->has('precio_tour')?'err':'' }}"
                         step="0.01" min="0" placeholder="0.00"
                         required inputmode="decimal"
@@ -1503,7 +1544,7 @@ html { scroll-behavior: smooth; }
                 <div class="ig {{ $errors->has('ciudad_procedencia')?'err-group':'' }}">
                     <span class="ia"><i class="bi bi-geo-alt"></i></span>
                     <input type="text" name="ciudad_procedencia" id="ciudad_procedencia"
-                        value="{{ old('ciudad_procedencia') }}"
+                        value="{{ old('ciudad_procedencia', $reserva->ciudad_procedencia) }}"
                         class="fi {{ $errors->has('ciudad_procedencia')?'err':'' }}"
                         placeholder="Lima, Cusco, Arequipa..."
                         required maxlength="100"
@@ -1517,15 +1558,15 @@ html { scroll-behavior: smooth; }
         <div class="pp">
             <div class="pp-item">
                 <div class="pp-l">Precio total</div>
-                <div class="pp-v" id="pp-total">S/ 0.00</div>
+                <div class="pp-v" id="pp-total">S/ {{ number_format($reserva->precio_total, 2) }}</div>
             </div>
             <div class="pp-item">
-                <div class="pp-l">Adelanto mínimo (50%)</div>
-                <div class="pp-v a" id="pp-adel">S/ 0.00</div>
+                <div class="pp-l">Ya pagado</div>
+                <div class="pp-v a" id="pp-adel">S/ {{ number_format($reserva->monto_pagado, 2) }}</div>
             </div>
             <div class="pp-item">
-                <div class="pp-l">Saldo al embarque</div>
-                <div class="pp-v r" id="pp-saldo">S/ 0.00</div>
+                <div class="pp-l">Saldo pendiente</div>
+                <div class="pp-v r" id="pp-saldo">S/ {{ number_format(max(0, $reserva->precio_total - $reserva->monto_pagado), 2) }}</div>
             </div>
         </div>
 
@@ -1537,7 +1578,7 @@ html { scroll-behavior: smooth; }
                 <div class="ig {{ $errors->has('fecha_tour')?'err-group':'' }}">
                     <span class="ia"><i class="bi bi-calendar3"></i></span>
                     <input type="date" name="fecha_tour" id="fecha_tour"
-                        value="{{ old('fecha_tour') }}"
+                        value="{{ old('fecha_tour', \Carbon\Carbon::parse($reserva->fecha_tour)->format('Y-m-d')) }}"
                         class="fi {{ $errors->has('fecha_tour')?'err':'' }}"
                         required
                         data-validate="required"
@@ -1551,7 +1592,7 @@ html { scroll-behavior: smooth; }
                 <div class="hora-wrap">
                     <span class="ia"><i class="bi bi-clock"></i></span>
                     <input type="time" name="hora_salida" id="hora_salida_24"
-                        value="{{ old('hora_salida') }}"
+                        value="{{ old('hora_salida', $reserva->hora_salida) }}"
                         class="fi fi-hora {{ $errors->has('hora_salida')?'err':'' }}"
                         required oninput="syncAmPm()"
                         data-validate="required"
@@ -1569,40 +1610,49 @@ html { scroll-behavior: smooth; }
             <label class="lbl" for="canal_contacto">Canal de venta <span class="req">*</span></label>
             <select name="canal_contacto" id="canal_contacto" class="fi" required
                     data-validate="required" data-bloque="1">
-                <option value="whatsapp"       {{ old('canal_contacto','whatsapp')=='whatsapp'       ?'selected':'' }}>WhatsApp</option>
-                <option value="presencial"     {{ old('canal_contacto')=='presencial'     ?'selected':'' }}>Presencial</option>
-                <option value="llamada"        {{ old('canal_contacto')=='llamada'        ?'selected':'' }}>Llamada telefónica</option>
-                <option value="redes_sociales" {{ old('canal_contacto')=='redes_sociales' ?'selected':'' }}>Redes Sociales</option>
-                <option value="web"            {{ old('canal_contacto')=='web'            ?'selected':'' }}>Página web</option>
-                <option value="referido"       {{ old('canal_contacto')=='referido'       ?'selected':'' }}>Referido / Recomendación</option>
+                @php $canalActual = old('canal_contacto', $reserva->canal_contacto); @endphp
+                <option value="whatsapp"       {{ $canalActual=='whatsapp'       ?'selected':'' }}>WhatsApp</option>
+                <option value="presencial"     {{ $canalActual=='presencial'     ?'selected':'' }}>Presencial</option>
+                <option value="llamada"        {{ $canalActual=='llamada'        ?'selected':'' }}>Llamada telefónica</option>
+                <option value="redes_sociales" {{ $canalActual=='redes_sociales' ?'selected':'' }}>Redes Sociales</option>
+                <option value="web"            {{ $canalActual=='web'            ?'selected':'' }}>Página web</option>
+                <option value="referido"       {{ $canalActual=='referido'       ?'selected':'' }}>Referido / Recomendación</option>
             </select>
         </div>
 
-        <div class="st">Estado inicial de la reserva</div>
+        <div class="st">Estado de la reserva</div>
+
+        @php $estadoActual = old('estado_inicial', $estadoSlug); @endphp
 
         <div class="eg">
-            <label class="eo e-mitad {{ old('estado_inicial','mitad_pago')=='mitad_pago'?'sel':'' }}" onclick="selEst(this)">
-                <input type="radio" name="estado_inicial" value="mitad_pago" {{ old('estado_inicial','mitad_pago')=='mitad_pago'?'checked':'' }}>
+            <label class="eo e-mitad {{ $estadoActual=='mitad_pago'?'sel':'' }}" onclick="selEst(this)">
+                <input type="radio" name="estado_inicial" value="mitad_pago" {{ $estadoActual=='mitad_pago'?'checked':'' }}>
                 <span class="eo-check"><i class="bi bi-check-lg"></i></span>
                 <span class="eo-icon"><i class="bi bi-hourglass-split" style="font-size:1.1rem;color:var(--gold-d)"></i></span>
                 50% Pagado
             </label>
-            <label class="eo e-pagado {{ old('estado_inicial')=='pagado'?'sel':'' }}" onclick="selEst(this)">
-                <input type="radio" name="estado_inicial" value="pagado" {{ old('estado_inicial')=='pagado'?'checked':'' }}>
+            <label class="eo e-pagado {{ $estadoActual=='pagado'?'sel':'' }}" onclick="selEst(this)">
+                <input type="radio" name="estado_inicial" value="pagado" {{ $estadoActual=='pagado'?'checked':'' }}>
                 <span class="eo-check"><i class="bi bi-check-lg"></i></span>
                 <span class="eo-icon"><i class="bi bi-patch-check-fill" style="font-size:1.1rem;color:var(--blue)"></i></span>
                 Pagado completo
             </label>
+            <label class="eo e-confirmada {{ $estadoActual=='confirmada'?'sel':'' }}" onclick="selEst(this)">
+                <input type="radio" name="estado_inicial" value="confirmada" {{ $estadoActual=='confirmada'?'checked':'' }}>
+                <span class="eo-check"><i class="bi bi-check-lg"></i></span>
+                <span class="eo-icon"><i class="bi bi-send-check-fill" style="font-size:1.1rem;color:var(--blue-d)"></i></span>
+                Confirmada
+            </label>
         </div>
 
-        <div class="eg-cancel-row">
-            <label class="eo e-cancel {{ old('estado_inicial')=='cancelada'?'sel':'' }}" onclick="selEst(this)">
-                <input type="radio" name="estado_inicial" value="cancelada" {{ old('estado_inicial')=='cancelada'?'checked':'' }}>
+        <div class="eg-cancel-row" style="margin-top:.5rem">
+            <label class="eo e-cancel {{ $estadoActual=='cancelada'?'sel':'' }}" onclick="selEst(this)">
+                <input type="radio" name="estado_inicial" value="cancelada" {{ $estadoActual=='cancelada'?'checked':'' }}>
                 <span class="eo-check"><i class="bi bi-check-lg"></i></span>
                 <span class="eo-icon"><i class="bi bi-x-circle-fill" style="font-size:1.1rem;color:var(--red)"></i></span>
                 Cancelada
             </label>
-            <p class="cancel-label">Selecciona solo si la reserva fue anulada antes de confirmarse.</p>
+            <p class="cancel-label">Selecciona solo si la reserva fue anulada.</p>
         </div>
 
     </div>
@@ -1622,7 +1672,7 @@ html { scroll-behavior: smooth; }
     </div>
     <div class="fb-body">
 
-        <input type="hidden" name="cliente_id" id="cliente_id" value="{{ old('cliente_id') }}">
+        <input type="hidden" name="cliente_id" id="cliente_id" value="{{ old('cliente_id', $reserva->cliente_id) }}">
 
         <div class="st">Información personal</div>
 
@@ -1631,7 +1681,7 @@ html { scroll-behavior: smooth; }
             <div class="ig {{ $errors->has('titular_nombre')?'err-group':'' }}">
                 <span class="ia"><i class="bi bi-person"></i></span>
                 <input type="text" name="titular_nombre" id="titular_nombre"
-                    value="{{ old('titular_nombre') }}"
+                    value="{{ old('titular_nombre', $cliente?->nombre_completo) }}"
                     class="fi {{ $errors->has('titular_nombre')?'err':'' }}"
                     placeholder="NOMBRES Y APELLIDOS COMPLETOS"
                     required maxlength="200"
@@ -1645,17 +1695,18 @@ html { scroll-behavior: smooth; }
         <div class="g13">
             <div class="field">
                 <label class="lbl" for="titular_tipo_documento">Tipo de doc.</label>
+                @php $tipoDoc = old('titular_tipo_documento', $cliente?->tipo_documento ?? 'DNI'); @endphp
                 <select name="titular_tipo_documento" id="titular_tipo_documento" class="fi">
-                    <option value="DNI"       {{ old('titular_tipo_documento','DNI')=='DNI'       ?'selected':'' }}>DNI</option>
-                    <option value="CE"        {{ old('titular_tipo_documento')=='CE'        ?'selected':'' }}>C. Extranjería</option>
-                    <option value="PASAPORTE" {{ old('titular_tipo_documento')=='PASAPORTE' ?'selected':'' }}>Pasaporte</option>
-                    <option value="RUC"       {{ old('titular_tipo_documento')=='RUC'       ?'selected':'' }}>RUC</option>
+                    <option value="DNI"       {{ $tipoDoc=='DNI'       ?'selected':'' }}>DNI</option>
+                    <option value="CE"        {{ $tipoDoc=='CE'        ?'selected':'' }}>C. Extranjería</option>
+                    <option value="PASAPORTE" {{ $tipoDoc=='PASAPORTE' ?'selected':'' }}>Pasaporte</option>
+                    <option value="RUC"       {{ $tipoDoc=='RUC'       ?'selected':'' }}>RUC</option>
                 </select>
             </div>
             <div class="field">
                 <label class="lbl" for="titular_numero_documento">Número de documento</label>
                 <input type="text" name="titular_numero_documento" id="titular_numero_documento"
-                    value="{{ old('titular_numero_documento') }}"
+                    value="{{ old('titular_numero_documento', $cliente?->numero_documento) }}"
                     class="fi" placeholder="Número de documento" maxlength="15"
                     inputmode="numeric"
                     oninput="restricDocTitular(this)">
@@ -1668,22 +1719,24 @@ html { scroll-behavior: smooth; }
                 <div class="ig">
                     <span class="ia"><i class="bi bi-calendar2-heart"></i></span>
                     <input type="date" name="titular_fecha_nacimiento"
-                        value="{{ old('titular_fecha_nacimiento') }}" class="fi">
+                        value="{{ old('titular_fecha_nacimiento', $cliente?->fecha_nacimiento ? \Carbon\Carbon::parse($cliente->fecha_nacimiento)->format('Y-m-d') : '') }}"
+                        class="fi">
                 </div>
             </div>
             <div class="field">
                 <label class="lbl" for="titular_genero">Género</label>
+                @php $genero = old('titular_genero', $cliente?->genero ?? ''); @endphp
                 <select name="titular_genero" id="titular_genero" class="fi">
                     <option value="">— No especificar —</option>
-                    <option value="M"    {{ old('titular_genero')=='M'   ?'selected':'' }}>Masculino</option>
-                    <option value="F"    {{ old('titular_genero')=='F'   ?'selected':'' }}>Femenino</option>
-                    <option value="otro" {{ old('titular_genero')=='otro'?'selected':'' }}>Otro</option>
+                    <option value="M"    {{ $genero=='M'   ?'selected':'' }}>Masculino</option>
+                    <option value="F"    {{ $genero=='F'   ?'selected':'' }}>Femenino</option>
+                    <option value="otro" {{ $genero=='otro'?'selected':'' }}>Otro</option>
                 </select>
             </div>
             <div class="field">
                 <label class="lbl" for="titular_nacionalidad">Nacionalidad</label>
                 <input type="text" name="titular_nacionalidad" id="titular_nacionalidad"
-                    value="{{ old('titular_nacionalidad', 'Peruana') }}"
+                    value="{{ old('titular_nacionalidad', $cliente?->nacionalidad ?? 'Peruana') }}"
                     class="fi" placeholder="Peruana, Americana..." maxlength="80">
             </div>
         </div>
@@ -1699,7 +1752,7 @@ html { scroll-behavior: smooth; }
                 <div class="ig {{ $errors->has('titular_telefono')?'err-group':'' }}">
                     <span class="ia">+51</span>
                     <input type="text" name="titular_telefono" id="titular_telefono"
-                        value="{{ old('titular_telefono') }}"
+                        value="{{ old('titular_telefono', $cliente?->telefono) }}"
                         class="fi {{ $errors->has('titular_telefono')?'err':'' }}"
                         placeholder="9XXXXXXXX" maxlength="9" inputmode="numeric"
                         oninput="this.value=this.value.replace(/\D/g,'').substring(0,9)"
@@ -1717,20 +1770,22 @@ html { scroll-behavior: smooth; }
                     <div class="email-row">
                         <span class="ea"><i class="bi bi-envelope" style="color:var(--blue)"></i></span>
                         <input type="text" id="email-user" class="fi email-user"
+                            value="{{ $emailUser }}"
                             placeholder="usuario" maxlength="80" autocomplete="off"
                             oninput="emailInput()" onfocus="emailInput()"
                             onblur="setTimeout(closeDomains,200)"
                             onpaste="handleEmailPaste(event)">
                         <span class="at-sign">@</span>
                         <input type="text" id="email-domain" class="fi email-domain"
+                            value="{{ $emailDomain }}"
                             placeholder="dominio.com" maxlength="80" autocomplete="off"
                             oninput="joinEmail()"
                             onblur="setTimeout(closeDomains,200)">
                     </div>
                     <ul class="domain-list" id="domain-list"></ul>
-                    <input type="hidden" name="titular_email" id="titular_email" value="{{ old('titular_email') }}">
+                    <input type="hidden" name="titular_email" id="titular_email" value="{{ old('titular_email', $emailCompleto) }}">
                 </div>
-                <div class="fhint">Escribe el usuario y elige o escribe el dominio. Puedes pegar el correo completo.</div>
+                <div class="fhint">Puedes pegar el correo completo o editarlo parte a parte.</div>
             </div>
         </div>
 
@@ -1743,7 +1798,7 @@ html { scroll-behavior: smooth; }
             <div class="ig">
                 <span class="ia"><i class="bi bi-telephone"></i></span>
                 <input type="text" name="titular_telefono2"
-                    value="{{ old('titular_telefono2') }}"
+                    value="{{ old('titular_telefono2', $cliente?->telefono2) }}"
                     class="fi" placeholder="076-XXXXXX o 9XXXXXXXX" maxlength="15"
                     inputmode="tel"
                     oninput="this.value=this.value.replace(/[^0-9\-]/g,'')">
@@ -1780,7 +1835,7 @@ html { scroll-behavior: smooth; }
         <div class="ico"><i class="bi bi-people"></i></div>
         <div>
             <h3>Pasajeros adicionales</h3>
-            <p>Añade el resto del grupo (el titular ya está incluido)</p>
+            <p>Grupo de viaje (el titular ya está incluido). Al guardar, se reemplazarán por los que aparecen aquí.</p>
         </div>
         <div class="fb-status" id="fb-status-3" title="Estado de sección">3</div>
     </div>
@@ -1788,8 +1843,8 @@ html { scroll-behavior: smooth; }
         <div class="alerta info">
             <i class="bi bi-info-circle ai"></i>
             <div class="at">
-                <strong>El titular se registra como pasajero principal automáticamente.</strong>
-                Agrega aquí a los demás viajeros del grupo. Si no hay pasajeros adicionales, esta sección se considera completa.
+                <strong>Los pasajeros actuales se reemplazarán al guardar.</strong>
+                Si necesitas conservar los mismos pasajeros, vuelve a agregarlos. El titular siempre se registra como pasajero principal automáticamente.
             </div>
         </div>
         <div id="pax-lista"></div>
@@ -1808,7 +1863,7 @@ html { scroll-behavior: smooth; }
         <div class="ico gold"><i class="bi bi-heart-pulse"></i></div>
         <div>
             <h3>Salud y seguridad de los pasajeros</h3>
-            <p>Información médica de cada integrante del grupo</p>
+            <p>Información médica del titular del viaje</p>
         </div>
         <div class="fb-status" id="fb-status-4" title="Estado de sección">4</div>
     </div>
@@ -1818,7 +1873,7 @@ html { scroll-behavior: smooth; }
                 <div class="salud-pasajero-head">
                     <i class="bi bi-person-badge" style="color:var(--blue)"></i>
                     <span>Titular —
-                        <span id="salud-titular-nombre" style="font-style:italic;color:var(--ink-3)">nombre del titular</span>
+                        <span id="salud-titular-nombre" style="font-style:italic;color:var(--ink-3)">{{ $cliente?->nombre_completo ?? 'nombre del titular' }}</span>
                     </span>
                     <span class="salud-status-dot" title="Estado: completo"></span>
                 </div>
@@ -1827,31 +1882,32 @@ html { scroll-behavior: smooth; }
                         <div class="salud-alerg-col">
                             <label class="lbl">Alergias o condiciones médicas</label>
                             <div class="pg" style="margin-bottom:.5rem">
-                                <label class="pill sel" onclick="togAlergPax(this,'alerg-titular')">
-                                    <input type="radio" name="titular_tiene_alergias" value="no" {{ old('titular_tiene_alergias','no')=='no'?'checked':'' }}>
+                                @php $tieneAlerg = old('titular_tiene_alergias', $titularTieneAlergias); @endphp
+                                <label class="pill {{ $tieneAlerg=='no'?'sel':'' }}" onclick="togAlergPax(this,'alerg-titular')">
+                                    <input type="radio" name="titular_tiene_alergias" value="no" {{ $tieneAlerg=='no'?'checked':'' }}>
                                     <i class="bi bi-check-circle"></i> No tiene
                                 </label>
-                                <label class="pill {{ old('titular_tiene_alergias')=='si'?'sel':'' }}" onclick="togAlergPax(this,'alerg-titular')">
-                                    <input type="radio" name="titular_tiene_alergias" value="si" {{ old('titular_tiene_alergias')=='si'?'checked':'' }}>
+                                <label class="pill {{ $tieneAlerg=='si'?'sel':'' }}" onclick="togAlergPax(this,'alerg-titular')">
+                                    <input type="radio" name="titular_tiene_alergias" value="si" {{ $tieneAlerg=='si'?'checked':'' }}>
                                     <i class="bi bi-exclamation-triangle"></i> Sí, tiene
                                 </label>
                             </div>
-                            <div id="alerg-titular-wrap" style="{{ old('titular_tiene_alergias')=='si'?'':'display:none' }}">
+                            <div id="alerg-titular-wrap" style="{{ $tieneAlerg=='si'?'':'display:none' }}">
                                 <textarea name="titular_alergias_detalle" id="alerg-titular" class="fi" rows="3"
                                     placeholder="Describe alergias, medicamentos o condiciones..."
-                                    data-bloque="4" data-alerg-conditional="titular">{{ old('titular_alergias_detalle') }}</textarea>
+                                    data-bloque="4">{{ old('titular_alergias_detalle', $reserva->alergias_titular) }}</textarea>
                             </div>
                         </div>
                         <div class="salud-restrict-col">
                             <label class="lbl">Restricciones alimentarias</label>
                             <textarea name="titular_restricciones" class="fi" rows="3"
-                                placeholder="Vegetariano, vegano, sin gluten, halal...">{{ old('titular_restricciones') }}</textarea>
+                                placeholder="Vegetariano, vegano, sin gluten, halal...">{{ old('titular_restricciones', $reserva->restricciones_alimentarias_titular) }}</textarea>
                         </div>
                     </div>
                     <div class="field" style="margin-top:.75rem;margin-bottom:0">
                         <label class="lbl">Observaciones médicas adicionales</label>
                         <textarea name="titular_obs_medicas" class="fi" rows="2"
-                            placeholder="Discapacidades, movilidad reducida...">{{ old('titular_obs_medicas') }}</textarea>
+                            placeholder="Discapacidades, movilidad reducida...">{{ old('titular_obs_medicas', $reserva->observaciones_medicas_titular ?? '') }}</textarea>
                     </div>
                 </div>
             </div>
@@ -1871,34 +1927,28 @@ html { scroll-behavior: smooth; }
         <div class="ico gold"><i class="bi bi-credit-card"></i></div>
         <div>
             <h3>Pago y comprobante</h3>
-            <p>Método de pago, monto y comprobante adjunto</p>
+            <p>Comprobante fiscal y registro de nuevo pago (opcional en edición)</p>
         </div>
         <div class="fb-status" id="fb-status-5" title="Estado de sección">5</div>
     </div>
     <div class="fb-body">
-        <div class="alerta">
-            <i class="bi bi-info-circle ai"></i>
-            <div class="at">
-                <strong>Se requiere el 50% de adelanto para confirmar la reserva.</strong>
-                El saldo restante se abona antes o al inicio del servicio.
-            </div>
-        </div>
 
         <div class="st">Comprobante fiscal</div>
         <div class="g2">
             <div class="field">
                 <label class="lbl" for="tipo_comprobante">Tipo de comprobante <span class="req">*</span></label>
+                @php $tipoComp = old('tipo_comprobante', $reserva->tipo_comprobante ?? 'boleta'); @endphp
                 <select name="tipo_comprobante" id="tipo_comprobante" class="fi" required
                         onchange="togFactura()" data-validate="required" data-bloque="5">
-                    <option value="boleta"  {{ old('tipo_comprobante','boleta')=='boleta' ?'selected':'' }}>Boleta de venta</option>
-                    <option value="factura" {{ old('tipo_comprobante')=='factura'         ?'selected':'' }}>Factura</option>
+                    <option value="boleta"  {{ $tipoComp=='boleta' ?'selected':'' }}>Boleta de venta</option>
+                    <option value="factura" {{ $tipoComp=='factura'?'selected':'' }}>Factura</option>
                 </select>
             </div>
-            <div id="campos-factura" style="display:{{ old('tipo_comprobante')=='factura'?'grid':'none' }};grid-template-columns:1fr 2fr;gap:1rem;align-items:start">
+            <div id="campos-factura" style="display:{{ $tipoComp=='factura'?'grid':'none' }};grid-template-columns:1fr 2fr;gap:1rem;align-items:start">
                 <div class="field" id="campo-ruc">
                     <label class="lbl" for="ruc_factura">RUC <span class="req">*</span></label>
                     <input type="text" name="ruc_factura" id="ruc_factura"
-                        value="{{ old('ruc_factura') }}"
+                        value="{{ old('ruc_factura', $reserva->ruc_factura) }}"
                         class="fi" placeholder="20XXXXXXXXX" maxlength="11"
                         inputmode="numeric"
                         oninput="this.value=this.value.replace(/\D/g,'').substring(0,11)">
@@ -1906,105 +1956,133 @@ html { scroll-behavior: smooth; }
                 <div class="field" id="campo-razon">
                     <label class="lbl" for="razon_social">Razón social <span class="req">*</span></label>
                     <input type="text" name="razon_social" id="razon_social"
-                        value="{{ old('razon_social') }}"
+                        value="{{ old('razon_social', $reserva->razon_social) }}"
                         class="fi" placeholder="EMPRESA S.A.C." maxlength="200"
                         oninput="this.value=this.value.toUpperCase()">
                 </div>
             </div>
         </div>
 
-        <div class="st">Registro del pago</div>
-        <div class="g2">
-            <div class="field">
-                <label class="lbl" for="metodo_pago">Método de pago <span class="req">*</span></label>
-                <select name="metodo_pago" id="metodo_pago" class="fi" required
-                        onchange="updOpHint();updateProgressSteps()"
-                        data-validate="required" data-bloque="5">
-                    <option value="">Seleccionar método...</option>
-                    <optgroup label="Efectivo">
-                        <option value="efectivo" {{ old('metodo_pago')=='efectivo'?'selected':'' }}>Efectivo</option>
-                    </optgroup>
-                    <optgroup label="Pagos digitales">
-                        <option value="yape"  {{ old('metodo_pago')=='yape' ?'selected':'' }}>Yape</option>
-                        <option value="plin"  {{ old('metodo_pago')=='plin' ?'selected':'' }}>Plin</option>
-                        <option value="tunki" {{ old('metodo_pago')=='tunki'?'selected':'' }}>Tunki</option>
-                    </optgroup>
-                    <optgroup label="Transferencia bancaria">
-                        <option value="transf_bcp"   {{ old('metodo_pago')=='transf_bcp'  ?'selected':'' }}>Transferencia BCP</option>
-                        <option value="transf_bbva"  {{ old('metodo_pago')=='transf_bbva' ?'selected':'' }}>Transferencia BBVA</option>
-                        <option value="transf_inter" {{ old('metodo_pago')=='transf_inter'?'selected':'' }}>Transferencia Interbank</option>
-                        <option value="transf_sc"    {{ old('metodo_pago')=='transf_sc'   ?'selected':'' }}>Transferencia Scotiabank</option>
-                        <option value="transf_bn"    {{ old('metodo_pago')=='transf_bn'   ?'selected':'' }}>Transferencia Banco Nación</option>
-                        <option value="transf_otros" {{ old('metodo_pago')=='transf_otros'?'selected':'' }}>Otro banco</option>
-                    </optgroup>
-                    <optgroup label="Depósito bancario">
-                        <option value="dep_bcp"   {{ old('metodo_pago')=='dep_bcp'  ?'selected':'' }}>Depósito BCP</option>
-                        <option value="dep_bbva"  {{ old('metodo_pago')=='dep_bbva' ?'selected':'' }}>Depósito BBVA</option>
-                        <option value="dep_inter" {{ old('metodo_pago')=='dep_inter'?'selected':'' }}>Depósito Interbank</option>
-                        <option value="dep_otros" {{ old('metodo_pago')=='dep_otros'?'selected':'' }}>Depósito otro banco</option>
-                    </optgroup>
-                    <optgroup label="Tarjeta">
-                        <option value="tarjeta_credito" {{ old('metodo_pago')=='tarjeta_credito'?'selected':'' }}>Tarjeta crédito</option>
-                        <option value="tarjeta_debito"  {{ old('metodo_pago')=='tarjeta_debito' ?'selected':'' }}>Tarjeta débito</option>
-                    </optgroup>
-                </select>
-                @error('metodo_pago')<div class="ferr"><i class="bi bi-exclamation-circle"></i>{{ $message }}</div>@enderror
-            </div>
-            <div class="field">
-                <label class="lbl" for="tipo_pago">Tipo de pago</label>
-                <select name="tipo_pago" id="tipo_pago" class="fi" onchange="onTipoPago()">
-                    <option value="adelanto">Adelanto (50%)</option>
-                    <option value="pago_completo">Pago completo (100%)</option>
-                </select>
+        {{-- ── NUEVO PAGO (opcional en edición) ── --}}
+        <div class="st">Registrar nuevo pago <span style="font-weight:400;color:var(--ink-4);text-transform:none;letter-spacing:0;font-size:.72rem">(opcional)</span></div>
+
+        <div class="pago-extra-toggle" id="toggle-nuevo-pago" onclick="toggleNuevoPago()">
+            <span class="pet-check" id="toggle-check"><i class="bi bi-check2"></i></span>
+            <div>
+                <div class="pet-txt">¿Agregar un nuevo pago?</div>
+                <div class="pet-sub">Actívalo si el cliente realizó un pago adicional que deseas registrar.</div>
             </div>
         </div>
 
-        <div class="g2">
-            <div class="field">
-                <label class="lbl" for="monto_pagado_inicial">Monto pagado (S/) <span class="req">*</span></label>
-                <div class="ig {{ $errors->has('monto_pagado_inicial')?'err-group':'' }}">
-                    <span class="ia">S/</span>
-                    <input type="number" name="monto_pagado_inicial" id="monto_pagado_inicial"
-                        value="{{ old('monto_pagado_inicial') }}"
-                        class="fi {{ $errors->has('monto_pagado_inicial')?'err':'' }}"
-                        step="0.01" min="0.01" placeholder="0.00"
-                        required inputmode="decimal"
-                        oninput="this.value=this.value.replace(/[^0-9.]/g,'');calcTotal();updateProgressSteps()"
-                        data-validate="required|numeric|positive"
-                        data-bloque="5">
-                </div>
-                <div class="fhint" id="hint-adel"></div>
-                @error('monto_pagado_inicial')<div class="ferr"><i class="bi bi-exclamation-circle"></i>{{ $message }}</div>@enderror
-            </div>
-            <div class="field">
-                <label class="lbl">Fecha de pago</label>
-                <div class="ig">
-                    <span class="ia"><i class="bi bi-calendar3"></i></span>
-                    <input type="date" name="fecha_pago"
-                        value="{{ old('fecha_pago', date('Y-m-d')) }}" class="fi">
+        <div class="pago-extra-panel" id="panel-nuevo-pago">
+            <div class="alerta">
+                <i class="bi bi-info-circle ai"></i>
+                <div class="at">
+                    <strong>Este pago se sumará al monto ya pagado.</strong>
+                    Monto actual pagado: <strong>S/ {{ number_format($reserva->monto_pagado, 2) }}</strong>
                 </div>
             </div>
-        </div>
-
-        <div class="field">
-            <label class="lbl">N° operación / referencia
-                <span class="opt">(opcional)</span>
-            </label>
-            <input type="text" name="numero_operacion"
-                value="{{ old('numero_operacion') }}"
-                class="fi" placeholder="Código de transacción..." maxlength="100"
-                style="max-width:380px">
-            <div class="fhint" id="op-hint">Código visible en Yape, Plin o constancia bancaria</div>
-        </div>
-
-        <div class="st">Comprobante adjunto <span class="req">*</span></div>
-        {{-- Indicador de comprobante --}}
-        <div id="voucher-status" style="display:none;margin-bottom:.75rem">
-            <div class="cr ok v">
-                <i class="bi bi-check-circle-fill"></i>
-                <span>Comprobante adjunto correctamente.</span>
+            <div class="g2" style="margin-bottom:1rem">
+                <div class="field">
+                    <label class="lbl" for="metodo_pago">Método de pago</label>
+                    <select name="metodo_pago" id="metodo_pago" class="fi"
+                            onchange="updOpHint();updateProgressSteps()">
+                        <option value="">Sin nuevo pago</option>
+                        <optgroup label="Efectivo">
+                            <option value="efectivo" {{ old('metodo_pago')=='efectivo'?'selected':'' }}>Efectivo</option>
+                        </optgroup>
+                        <optgroup label="Pagos digitales">
+                            <option value="yape"  {{ old('metodo_pago')=='yape' ?'selected':'' }}>Yape</option>
+                            <option value="plin"  {{ old('metodo_pago')=='plin' ?'selected':'' }}>Plin</option>
+                            <option value="tunki" {{ old('metodo_pago')=='tunki'?'selected':'' }}>Tunki</option>
+                        </optgroup>
+                        <optgroup label="Transferencia bancaria">
+                            <option value="transf_bcp"   {{ old('metodo_pago')=='transf_bcp'  ?'selected':'' }}>Transferencia BCP</option>
+                            <option value="transf_bbva"  {{ old('metodo_pago')=='transf_bbva' ?'selected':'' }}>Transferencia BBVA</option>
+                            <option value="transf_inter" {{ old('metodo_pago')=='transf_inter'?'selected':'' }}>Transferencia Interbank</option>
+                            <option value="transf_sc"    {{ old('metodo_pago')=='transf_sc'   ?'selected':'' }}>Transferencia Scotiabank</option>
+                            <option value="transf_bn"    {{ old('metodo_pago')=='transf_bn'   ?'selected':'' }}>Transferencia Banco Nación</option>
+                            <option value="transf_otros" {{ old('metodo_pago')=='transf_otros'?'selected':'' }}>Otro banco</option>
+                        </optgroup>
+                        <optgroup label="Depósito bancario">
+                            <option value="dep_bcp"   {{ old('metodo_pago')=='dep_bcp'  ?'selected':'' }}>Depósito BCP</option>
+                            <option value="dep_bbva"  {{ old('metodo_pago')=='dep_bbva' ?'selected':'' }}>Depósito BBVA</option>
+                            <option value="dep_inter" {{ old('metodo_pago')=='dep_inter'?'selected':'' }}>Depósito Interbank</option>
+                            <option value="dep_otros" {{ old('metodo_pago')=='dep_otros'?'selected':'' }}>Depósito otro banco</option>
+                        </optgroup>
+                        <optgroup label="Tarjeta">
+                            <option value="tarjeta_credito" {{ old('metodo_pago')=='tarjeta_credito'?'selected':'' }}>Tarjeta crédito</option>
+                            <option value="tarjeta_debito"  {{ old('metodo_pago')=='tarjeta_debito' ?'selected':'' }}>Tarjeta débito</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div class="field">
+                    <label class="lbl" for="tipo_pago">Tipo de pago</label>
+                    <select name="tipo_pago" id="tipo_pago" class="fi" onchange="onTipoPago()">
+                        <option value="adelanto">Adelanto parcial</option>
+                        <option value="pago_completo">Pago completo (saldo)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="g2">
+                <div class="field">
+                    <label class="lbl" for="monto_pagado_inicial">Monto del nuevo pago (S/)</label>
+                    <div class="ig {{ $errors->has('monto_pagado_inicial')?'err-group':'' }}">
+                        <span class="ia">S/</span>
+                        <input type="number" name="monto_pagado_inicial" id="monto_pagado_inicial"
+                            value="{{ old('monto_pagado_inicial') }}"
+                            class="fi {{ $errors->has('monto_pagado_inicial')?'err':'' }}"
+                            step="0.01" min="0.01" placeholder="0.00"
+                            inputmode="decimal"
+                            oninput="this.value=this.value.replace(/[^0-9.]/g,'');calcTotal();updateProgressSteps()">
+                    </div>
+                    <div class="fhint" id="hint-adel">Saldo pendiente: S/ {{ number_format(max(0, $reserva->precio_total - $reserva->monto_pagado), 2) }}</div>
+                    @error('monto_pagado_inicial')<div class="ferr"><i class="bi bi-exclamation-circle"></i>{{ $message }}</div>@enderror
+                </div>
+                <div class="field">
+                    <label class="lbl">Fecha del pago</label>
+                    <div class="ig">
+                        <span class="ia"><i class="bi bi-calendar3"></i></span>
+                        <input type="date" name="fecha_pago"
+                            value="{{ old('fecha_pago', date('Y-m-d')) }}" class="fi">
+                    </div>
+                </div>
+            </div>
+            <div class="field">
+                <label class="lbl">N° operación / referencia <span class="opt">(opcional)</span></label>
+                <input type="text" name="numero_operacion"
+                    value="{{ old('numero_operacion') }}"
+                    class="fi" placeholder="Código de transacción..." maxlength="100"
+                    style="max-width:380px">
+                <div class="fhint" id="op-hint">Código visible en Yape, Plin o constancia bancaria</div>
             </div>
         </div>
+
+        {{-- Voucher existente --}}
+        <div class="st">Comprobante adjunto</div>
+
+        @if($voucherUrl)
+        <div class="voucher-actual">
+            <i class="bi bi-file-earmark-check-fill va-ico"></i>
+            <div class="va-info">
+                <div class="va-label">Comprobante actual guardado</div>
+                <div class="va-sub">{{ basename($reserva->archivo_baucher) }}</div>
+            </div>
+            <a href="{{ $voucherUrl }}" target="_blank" class="va-link">
+                <i class="bi bi-eye"></i> Ver
+            </a>
+        </div>
+        @endif
+
+        <div class="fhint" style="margin-bottom:.75rem">
+            <i class="bi bi-info-circle me-1"></i>
+            @if($voucherUrl)
+                Para reemplazar el comprobante, sube uno nuevo. Si no subes ninguno, se conserva el actual.
+            @else
+                Esta reserva no tiene comprobante. Puedes adjuntar uno aquí.
+            @endif
+        </div>
+
         <div class="uz" id="uz"
              ondragover="event.preventDefault();this.classList.add('over')"
              ondragleave="this.classList.remove('over')"
@@ -2013,7 +2091,7 @@ html { scroll-behavior: smooth; }
                 accept=".jpg,.jpeg,.png,.pdf,.webp"
                 onchange="onFile(event)">
             <div class="uzi"><i class="bi bi-cloud-arrow-up"></i></div>
-            <div class="uzt">Arrastra el comprobante aquí o <strong style="color:var(--blue)">haz clic para seleccionar</strong></div>
+            <div class="uzt">Arrastra el nuevo comprobante aquí o <strong style="color:var(--blue)">haz clic para seleccionar</strong></div>
             <div class="uzs">JPG · PNG · PDF · WEBP — máx. 5 MB</div>
         </div>
         <div class="fprev" id="fprev">
@@ -2042,20 +2120,13 @@ html { scroll-behavior: smooth; }
         <div class="fb-status" id="fb-status-6" title="Estado de sección">6</div>
     </div>
     <div class="fb-body">
-        <div class="alerta info">
-            <i class="bi bi-info-circle ai"></i>
-            <div class="at">
-                <strong>Sección opcional.</strong>
-                Completa los datos de logística si están disponibles. La sección se marcará completa solo cuando al menos un campo esté rellenado.
-            </div>
-        </div>
         <div class="g2">
             <div class="field">
                 <label class="lbl">Punto de encuentro</label>
                 <div class="ig">
                     <span class="ia"><i class="bi bi-pin-map"></i></span>
                     <input type="text" name="punto_encuentro" id="punto_encuentro"
-                        value="{{ old('punto_encuentro') }}"
+                        value="{{ old('punto_encuentro', $reserva->punto_encuentro) }}"
                         class="fi" placeholder="Hotel, terminal, dirección..." maxlength="200"
                         oninput="updateProgressSteps()"
                         data-bloque="6" data-logistica="true">
@@ -2066,7 +2137,7 @@ html { scroll-behavior: smooth; }
                 <div class="hora-wrap">
                     <span class="ia"><i class="bi bi-clock"></i></span>
                     <input type="time" name="hora_recojo" id="hora_recojo_24"
-                        value="{{ old('hora_recojo') }}"
+                        value="{{ old('hora_recojo', $reserva->hora_recojo) }}"
                         class="fi fi-hora"
                         oninput="syncAmPmRecojo();updateProgressSteps()"
                         data-bloque="6" data-logistica="true">
@@ -2083,7 +2154,7 @@ html { scroll-behavior: smooth; }
             <div class="ig">
                 <span class="ia"><i class="bi bi-person-badge"></i></span>
                 <input type="text" name="guia_asignado" id="guia_asignado"
-                    value="{{ old('guia_asignado') }}"
+                    value="{{ old('guia_asignado', $reserva->guia_asignado ?? '') }}"
                     class="fi" placeholder="Nombre del guía o asesor..." maxlength="150"
                     oninput="updateProgressSteps()"
                     data-bloque="6" data-logistica="true">
@@ -2093,9 +2164,9 @@ html { scroll-behavior: smooth; }
         <div class="field">
             <label class="lbl">Observaciones generales</label>
             <textarea name="observaciones" id="observaciones_generales" class="fi" rows="3"
-                placeholder="Notas internas, requerimientos especiales, indicaciones para el guía..."
+                placeholder="Notas internas, requerimientos especiales..."
                 oninput="updateProgressSteps()"
-                data-bloque="6" data-logistica="true">{{ old('observaciones') }}</textarea>
+                data-bloque="6" data-logistica="true">{{ old('observaciones', $reserva->observaciones) }}</textarea>
         </div>
     </div>
 </div>
@@ -2108,7 +2179,7 @@ html { scroll-behavior: smooth; }
         <div class="ico green"><i class="bi bi-shield-check"></i></div>
         <div>
             <h3>Políticas y Privacidad</h3>
-            <p>Selecciona y personaliza las políticas aplicables a esta reserva</p>
+            <p>Edita o reemplaza las políticas aplicables a esta reserva</p>
         </div>
         <div class="fb-status" id="fb-status-7" title="Estado de sección">7</div>
     </div>
@@ -2117,19 +2188,20 @@ html { scroll-behavior: smooth; }
         <div class="alerta info">
             <i class="bi bi-info-circle ai"></i>
             <div class="at">
-                <strong>Selecciona el tipo de servicio para autocompletar las políticas.</strong>
-                Puedes editar el contenido antes de guardar. El texto se incluirá en el PDF enviado al cliente.
+                <strong>Las políticas actuales están precargadas.</strong>
+                Puedes editar el contenido manualmente o reemplazarlo usando los botones de tipo de política.
             </div>
         </div>
 
         <div class="st">Tipo de política</div>
 
         <div class="politica-btns">
-            <button type="button" class="btn-politica" id="btn-politica-tour" onclick="cargarPolitica('tours')">
+            @php $politicaTipo = old('politica_tipo', $reserva->politica_tipo ?? ''); @endphp
+            <button type="button" class="btn-politica {{ $politicaTipo=='tours'?'active':'' }}" id="btn-politica-tour" onclick="cargarPolitica('tours')">
                 <span class="bp-ico"><i class="bi bi-map"></i></span>
                 Políticas y Privacidad – Tours
             </button>
-            <button type="button" class="btn-politica" id="btn-politica-viaje" onclick="cargarPolitica('viajes')">
+            <button type="button" class="btn-politica {{ $politicaTipo=='viajes'?'active':'' }}" id="btn-politica-viaje" onclick="cargarPolitica('viajes')">
                 <span class="bp-ico"><i class="bi bi-airplane"></i></span>
                 Políticas y Privacidad – Viajes
             </button>
@@ -2149,17 +2221,16 @@ html { scroll-behavior: smooth; }
                     required
                     data-validate="required"
                     data-bloque="7"
-                    oninput="updateProgressSteps()">{{ old('politica_descripcion') }}</textarea>
+                    oninput="updateProgressSteps()">{{ old('politica_descripcion', $reserva->politica_descripcion) }}</textarea>
             </div>
             <div class="fhint">
                 <i class="bi bi-info-circle me-1"></i>
-                Puedes agregar información adicional o editar el texto antes de guardar.
+                Puedes editar este texto antes de guardar. Se incluirá en el PDF enviado al cliente.
             </div>
             @error('politica_descripcion')<div class="ferr"><i class="bi bi-exclamation-circle"></i>{{ $message }}</div>@enderror
         </div>
 
-        {{-- Campo oculto para guardar el tipo de política seleccionada --}}
-        <input type="hidden" name="politica_tipo" id="politica_tipo" value="{{ old('politica_tipo') }}">
+        <input type="hidden" name="politica_tipo" id="politica_tipo" value="{{ old('politica_tipo', $reserva->politica_tipo) }}">
 
     </div>
 </div>
@@ -2168,14 +2239,14 @@ html { scroll-behavior: smooth; }
 <div class="sbar">
     <div class="sbar-left">
         <div class="si-label">Total de la reserva</div>
-        <div class="si-val" id="sb-total">S/ 0.00 <span id="sb-pasajeros"></span></div>
+        <div class="si-val" id="sb-total">S/ {{ number_format($reserva->precio_total, 2) }} <span id="sb-pasajeros"></span></div>
     </div>
     <div class="sr">
-        <a href="{{ route('reservas.index') }}" class="btn-s">
+        <a href="{{ route('reservas.show', $reserva) }}" class="btn-s">
             <i class="bi bi-x"></i> Cancelar
         </a>
         <button type="submit" class="btn-p" id="btn-submit">
-            <i class="bi bi-check-circle"></i> Guardar reserva
+            <i class="bi bi-pencil-square"></i> Guardar cambios
         </button>
     </div>
 </div>
@@ -2186,20 +2257,43 @@ html { scroll-behavior: smooth; }
 @endsection
 
 @push('scripts')
-{{-- Cargar políticas desde archivo externo --}}
 <script src="{{ asset('js/politicas.js') }}"></script>
 <script>
 /* ══════════════════════════════════════════════════════
-   POLÍTICAS Y PRIVACIDAD
-   Las políticas se cargan desde /public/js/politicas.js
-   que debe exportar window.POLITICAS_RESERVA = { tours: '...', viajes: '...' }
+   MODO EDICIÓN — Variables globales
 ══════════════════════════════════════════════════════ */
 
-/**
- * Carga el texto de política según el tipo seleccionado.
- * Las políticas se leen de window.POLITICAS_RESERVA (politicas.js).
- * Si no se encuentra el archivo, se muestra un aviso.
- */
+// El comprobante es opcional en edición si ya existe uno
+const VOUCHER_EXISTENTE = {{ $voucherUrl ? 'true' : 'false' }};
+let voucherAdjunto = false; // nuevo voucher subido en esta sesión
+
+/* ══════════════════════════════════════════════════════
+   TOGGLE NUEVO PAGO
+══════════════════════════════════════════════════════ */
+let nuevoPagoActivo = false;
+
+function toggleNuevoPago() {
+    nuevoPagoActivo = !nuevoPagoActivo;
+    const toggle  = document.getElementById('toggle-nuevo-pago');
+    const panel   = document.getElementById('panel-nuevo-pago');
+    const check   = document.getElementById('toggle-check');
+
+    toggle.classList.toggle('active', nuevoPagoActivo);
+    panel.classList.toggle('open', nuevoPagoActivo);
+
+    if (!nuevoPagoActivo) {
+        // Limpiar campos de pago
+        const metodo  = document.getElementById('metodo_pago');
+        const monto   = document.getElementById('monto_pagado_inicial');
+        if (metodo) metodo.value = '';
+        if (monto)  monto.value  = '';
+    }
+    updateProgressSteps();
+}
+
+/* ══════════════════════════════════════════════════════
+   POLÍTICAS Y PRIVACIDAD
+══════════════════════════════════════════════════════ */
 function cargarPolitica(tipo) {
     const ta    = document.getElementById('politica_descripcion');
     const badge = document.getElementById('politica-loaded-badge');
@@ -2207,11 +2301,9 @@ function cargarPolitica(tipo) {
     const btnT  = document.getElementById('btn-politica-tour');
     const btnV  = document.getElementById('btn-politica-viaje');
 
-    // Activar botón seleccionado
     btnT.classList.toggle('active', tipo === 'tours');
     btnV.classList.toggle('active', tipo === 'viajes');
 
-    // Intentar cargar desde el objeto global (politicas.js)
     if (typeof window.POLITICAS_RESERVA !== 'undefined' && window.POLITICAS_RESERVA[tipo]) {
         ta.value = window.POLITICAS_RESERVA[tipo];
         hid.value = tipo;
@@ -2220,11 +2312,8 @@ function cargarPolitica(tipo) {
         ta.style.height = ta.scrollHeight + 'px';
         ta.classList.add('ok-val');
         updateProgressSteps();
-
-        // Quitar badge después de 3 segundos
         setTimeout(() => badge.classList.remove('visible'), 3000);
     } else {
-        // Fallback: intentar cargar desde el backend vía fetch
         fetch(`/api/politicas/${tipo}`)
             .then(r => r.ok ? r.json() : null)
             .then(data => {
@@ -2238,55 +2327,48 @@ function cargarPolitica(tipo) {
                     updateProgressSteps();
                     setTimeout(() => badge.classList.remove('visible'), 3000);
                 } else {
-                    // Último fallback: texto de aviso
-                    ta.value = `[No se encontró el archivo politicas.js o la ruta /api/politicas/${tipo}]\n\nPor favor escribe manualmente las políticas para este tipo de reserva.`;
+                    ta.value = `[No se encontró politicas.js para tipo: ${tipo}]\n\nEscribe las políticas manualmente.`;
                     hid.value = tipo;
                     updateProgressSteps();
                 }
             })
             .catch(() => {
-                ta.value = `[Error al cargar políticas de tipo: ${tipo}]\n\nVerifica que el archivo /public/js/politicas.js exista y contenga window.POLITICAS_RESERVA.`;
+                ta.value = `[Error al cargar políticas de tipo: ${tipo}]`;
                 hid.value = tipo;
                 updateProgressSteps();
             });
     }
 }
 
-/* Restaurar tipo de política si viene de old() */
-document.addEventListener('DOMContentLoaded', () => {
-    const tipoOld = document.getElementById('politica_tipo').value;
-    if (tipoOld) {
-        const btnT = document.getElementById('btn-politica-tour');
-        const btnV = document.getElementById('btn-politica-viaje');
-        btnT.classList.toggle('active', tipoOld === 'tours');
-        btnV.classList.toggle('active', tipoOld === 'viajes');
-    }
-});
-
 /* ══════════════════════════════════════════════════════
    CÁLCULO DE TOTALES
 ══════════════════════════════════════════════════════ */
 function calcTotal() {
-    const precio = parseFloat(document.getElementById('precio_tour')?.value) || 0;
-    const pagado = parseFloat(document.getElementById('monto_pagado_inicial')?.value) || 0;
-    const adel   = precio * 0.5;
-    const saldo  = Math.max(0, precio - pagado);
-    const fmt    = v => `S/ ${v.toFixed(2)}`;
+    const precio  = parseFloat(document.getElementById('precio_tour')?.value) || 0;
+    const pagado  = {{ $reserva->monto_pagado }};
+    const nuevo   = parseFloat(document.getElementById('monto_pagado_inicial')?.value) || 0;
+    const saldo   = Math.max(0, precio - pagado - nuevo);
+    const fmt     = v => `S/ ${v.toFixed(2)}`;
 
     document.getElementById('pp-total').textContent  = fmt(precio);
-    document.getElementById('pp-adel').textContent   = fmt(adel);
+    document.getElementById('pp-adel').textContent   = fmt(pagado + nuevo);
     document.getElementById('pp-saldo').textContent  = fmt(saldo);
-    document.getElementById('sb-total').childNodes[0].textContent = fmt(precio) + ' ';
 
-    const h = document.getElementById('hint-adel');
-    if (h) h.textContent = precio > 0 ? `Adelanto mínimo sugerido: ${fmt(adel)}` : '';
+    // Actualizar el valor visible en sbar
+    const sbTotal = document.getElementById('sb-total');
+    if (sbTotal) sbTotal.childNodes[0].textContent = fmt(precio) + ' ';
 }
 
 function onTipoPago() {
     const tipo   = document.getElementById('tipo_pago').value;
     const precio = parseFloat(document.getElementById('precio_tour')?.value) || 0;
+    const pagado = {{ $reserva->monto_pagado }};
     const c      = document.getElementById('monto_pagado_inicial');
-    c.value = tipo === 'pago_completo' ? precio.toFixed(2) : (precio * 0.5).toFixed(2);
+    if (tipo === 'pago_completo') {
+        c.value = Math.max(0, precio - pagado).toFixed(2);
+    } else {
+        c.value = '';
+    }
     calcTotal();
     updateProgressSteps();
 }
@@ -2344,7 +2426,6 @@ const DOMS = [
     {icon:'✉', v:'icloud.com'},
     {icon:'✉', v:'live.com'},
 ];
-
 function emailInput() {
     const u = document.getElementById('email-user').value.trim();
     if (!u) { closeDomains(); joinEmail(); return; }
@@ -2356,7 +2437,6 @@ function emailInput() {
     dl.classList.add('open');
     joinEmail();
 }
-
 function handleEmailPaste(event) {
     const pasted = (event.clipboardData || window.clipboardData).getData('text').trim();
     if (pasted.includes('@')) {
@@ -2375,16 +2455,6 @@ function joinEmail() {
     const u = document.getElementById('email-user').value.trim();
     const d = document.getElementById('email-domain').value.trim();
     document.getElementById('titular_email').value = (u && d) ? `${u}@${d}` : '';
-}
-function loadEmailOld() {
-    const raw = '{{ old("titular_email") }}';
-    if (!raw) return;
-    const parts = raw.split('@');
-    if (parts.length === 2 && parts[0] && parts[1]) {
-        document.getElementById('email-user').value   = parts[0];
-        document.getElementById('email-domain').value = parts[1];
-        joinEmail();
-    }
 }
 
 /* ══════════════════════════════════════════════════════
@@ -2419,8 +2489,7 @@ function addPax() {
                 <input type="text" name="pasajeros[${i}][nombre_completo]" id="pax-nombre-${i}" class="fi"
                     placeholder="NOMBRES APELLIDOS"
                     oninput="this.value=this.value.toUpperCase();updateSaludNombre(${i},this.value);updateProgressSteps()"
-                    data-pax-idx="${i}" data-pax-required="true"
-                    required>
+                    data-pax-idx="${i}" data-pax-required="true" required>
             </div>
             <div class="field">
                 <label class="lbl">Tipo</label>
@@ -2432,8 +2501,7 @@ function addPax() {
             <div class="field">
                 <label class="lbl">Edad</label>
                 <input type="number" name="pasajeros[${i}][edad]" class="fi" min="0" max="120" placeholder="—"
-                    inputmode="numeric"
-                    oninput="this.value=this.value.replace(/[^0-9]/g,'').substring(0,3)">
+                    inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'').substring(0,3)">
             </div>
             <div class="field">
                 <label class="lbl">Tipo de doc.</label>
@@ -2531,7 +2599,7 @@ function paxDoc(sel, i) {
 function paxCnt() {
     const n  = document.querySelectorAll('#pax-lista .pax-card').length;
     const el = document.getElementById('pax-cnt');
-    el.textContent = n > 0 ? `${n} pasajero(s) adicional(es) registrado(s).` : '';
+    if (el) el.textContent = n > 0 ? `${n} pasajero(s) adicional(es) registrado(s).` : '';
     const sb = document.getElementById('sb-pasajeros');
     if (sb) sb.textContent = n > 0 ? `· ${n + 1} pasajeros` : '';
 }
@@ -2544,7 +2612,6 @@ function togAlergPax(lbl, taId) {
     lbl.classList.add('sel');
     const radio = lbl.querySelector('input[type="radio"]');
     if (radio) radio.checked = true;
-
     const wrapId = taId + '-wrap';
     const wrap   = document.getElementById(wrapId);
     const ta     = document.getElementById(taId);
@@ -2612,7 +2679,7 @@ function initNotifChecks() {
    HINT OPERACIÓN POR MÉTODO
 ══════════════════════════════════════════════════════ */
 function updOpHint() {
-    const v = document.getElementById('metodo_pago').value;
+    const v = document.getElementById('metodo_pago')?.value || '';
     const h = document.getElementById('op-hint');
     if (!h) return;
     if      (v === 'yape' || v === 'plin' || v === 'tunki') h.textContent = 'Número de operación visible en la app';
@@ -2624,8 +2691,6 @@ function updOpHint() {
 /* ══════════════════════════════════════════════════════
    UPLOAD DE COMPROBANTE
 ══════════════════════════════════════════════════════ */
-let voucherAdjunto = false;
-
 function onFile(e) {
     const f = e.target.files[0];
     if (f) showPrev(f);
@@ -2654,7 +2719,6 @@ function showPrev(f) {
         img.style.display = 'none';
     }
     document.getElementById('fprev').classList.add('v');
-    document.getElementById('voucher-status').style.display = 'block';
     voucherAdjunto = true;
     updateProgressSteps();
 }
@@ -2663,7 +2727,6 @@ function removeFile() {
     document.getElementById('fprev').classList.remove('v');
     document.getElementById('uz').style.display = '';
     document.getElementById('prev-img').src = '';
-    document.getElementById('voucher-status').style.display = 'none';
     voucherAdjunto = false;
     updateProgressSteps();
 }
@@ -2676,25 +2739,19 @@ function scrollToBloque(n) {
     if (bloque) {
         bloque.scrollIntoView({ behavior: 'smooth', block: 'start' });
         bloque.style.transition = 'box-shadow .3s';
-        bloque.style.boxShadow  = '0 0 0 3px rgba(26,79,160,.25), var(--sh-md)';
+        bloque.style.boxShadow  = '0 0 0 3px rgba(217,119,6,.3), var(--sh-md)';
         setTimeout(() => { bloque.style.boxShadow = ''; }, 1200);
     }
 }
 
 /* ══════════════════════════════════════════════════════
-   SISTEMA DE PROGRESO — LÓGICA CORREGIDA Y COMPLETA
+   SISTEMA DE PROGRESO — LÓGICA ADAPTADA A EDICIÓN
 ══════════════════════════════════════════════════════ */
-
 const TOTAL_BLOQUES = 7;
 
-/**
- * Evalúa el estado de cada bloque.
- * Retorna: 'done' | 'error' | 'incomplete'
- */
 function getBloqueStatus(n) {
     switch(n) {
 
-        /* ── BLOQUE 1: Datos del viaje (obligatorio) ── */
         case 1: {
             const campos = [
                 document.getElementById('nombre_servicio'),
@@ -2710,7 +2767,6 @@ function getBloqueStatus(n) {
             return 'done';
         }
 
-        /* ── BLOQUE 2: Titular (obligatorio) ── */
         case 2: {
             const nombre = document.getElementById('titular_nombre')?.value.trim() || '';
             const tel    = document.getElementById('titular_telefono')?.value.trim() || '';
@@ -2719,42 +2775,26 @@ function getBloqueStatus(n) {
             return 'done';
         }
 
-        /* ── BLOQUE 3: Pasajeros adicionales ──
-           - Sin pasajeros → done (sección opcional completa)
-           - Con pasajeros → todos deben tener nombre
-        ── */
         case 3: {
             const cards = document.querySelectorAll('#pax-lista .pax-card');
-            if (cards.length === 0) return 'done'; // sin adicionales → OK
-
+            if (cards.length === 0) return 'done';
             let todosCompletos = true;
             cards.forEach(card => {
-                const idx   = card.id.replace('pax-','');
-                const inp   = document.getElementById(`pax-nombre-${idx}`);
-                const val   = inp ? inp.value.trim() : '';
-                if (!val) {
-                    todosCompletos = false;
-                    card.classList.add('pax-incomplete');
-                } else {
-                    card.classList.remove('pax-incomplete');
-                }
+                const idx = card.id.replace('pax-','');
+                const inp = document.getElementById(`pax-nombre-${idx}`);
+                const val = inp ? inp.value.trim() : '';
+                if (!val) { todosCompletos = false; card.classList.add('pax-incomplete'); }
+                else      { card.classList.remove('pax-incomplete'); }
             });
             return todosCompletos ? 'done' : 'incomplete';
         }
 
-        /* ── BLOQUE 4: Salud ──
-           - El titular siempre existe → siempre done
-           - Si hay pasajeros adicionales con "Sí tiene alergias"
-             pero campo vacío → error
-        ── */
         case 4: {
-            // Verificar si el titular marcó "si" pero no escribió nada
             const titularRadio = document.querySelector('[name="titular_tiene_alergias"]:checked');
             if (titularRadio && titularRadio.value === 'si') {
                 const detalle = document.getElementById('alerg-titular')?.value.trim() || '';
                 if (!detalle) return 'error';
             }
-            // Verificar pasajeros adicionales
             const cards = document.querySelectorAll('#pax-lista .pax-card');
             for (const card of cards) {
                 const idx   = card.id.replace('pax-','');
@@ -2762,7 +2802,6 @@ function getBloqueStatus(n) {
                 if (radio && radio.value === 'si') {
                     const det = document.getElementById(`alerg-pax-${idx}`)?.value.trim() || '';
                     if (!det) {
-                        // Marcar sección como error visual
                         const sp = document.getElementById(`salud-pax-${idx}`);
                         if (sp) { sp.classList.add('salud-error'); sp.classList.remove('salud-ok'); }
                         return 'error';
@@ -2775,35 +2814,30 @@ function getBloqueStatus(n) {
             return 'done';
         }
 
-        /* ── BLOQUE 5: Pago y comprobante ──
-           CORREGIDO: requiere método + monto + voucher adjunto
-        ── */
         case 5: {
-            const metodo = document.getElementById('metodo_pago')?.value.trim() || '';
-            const monto  = parseFloat(document.getElementById('monto_pagado_inicial')?.value) || 0;
+            // En edición: bloque 5 es done si tiene comprobante (existente o nuevo)
+            // y si hay nuevo pago activo, debe tener método y monto
+            const tieneVoucher = VOUCHER_EXISTENTE || voucherAdjunto;
+            if (!tieneVoucher) return 'incomplete';
 
-            if (!metodo) return 'incomplete';
-            if (monto <= 0) return 'incomplete';
-            if (!voucherAdjunto) return 'incomplete';
+            if (nuevoPagoActivo) {
+                const metodo = document.getElementById('metodo_pago')?.value.trim() || '';
+                const monto  = parseFloat(document.getElementById('monto_pagado_inicial')?.value) || 0;
+                if (!metodo || monto <= 0) return 'incomplete';
+            }
             return 'done';
         }
 
-        /* ── BLOQUE 6: Logística ──
-           CORREGIDO: solo completo si al menos un campo tiene datos.
-           Si ninguno tiene datos → incomplete (no marcado como done automáticamente)
-        ── */
         case 6: {
             const campos = [
-                document.getElementById('punto_encuentro')?.value.trim()       || '',
-                document.getElementById('hora_recojo_24')?.value.trim()         || '',
-                document.getElementById('guia_asignado')?.value.trim()          || '',
-                document.getElementById('observaciones_generales')?.value.trim()|| '',
+                document.getElementById('punto_encuentro')?.value.trim()        || '',
+                document.getElementById('hora_recojo_24')?.value.trim()          || '',
+                document.getElementById('guia_asignado')?.value.trim()           || '',
+                document.getElementById('observaciones_generales')?.value.trim() || '',
             ];
-            const alguno = campos.some(v => v !== '');
-            return alguno ? 'done' : 'incomplete';
+            return campos.some(v => v !== '') ? 'done' : 'incomplete';
         }
 
-        /* ── BLOQUE 7: Políticas y Privacidad ── */
         case 7: {
             const texto = document.getElementById('politica_descripcion')?.value.trim() || '';
             if (!texto) return 'incomplete';
@@ -2815,25 +2849,21 @@ function getBloqueStatus(n) {
     }
 }
 
-/**
- * Actualiza la barra lateral y los indicadores de cada bloque.
- */
 function updateProgressSteps() {
     let doneCount  = 0;
     const activeIdx = getActiveBloqueIdx();
 
     for (let i = 1; i <= TOTAL_BLOQUES; i++) {
-        const psItem  = document.getElementById(`ps-${i}`);
-        const bloque  = document.getElementById(`bloque-${i}`);
-        const fbStat  = document.getElementById(`fb-status-${i}`);
+        const psItem = document.getElementById(`ps-${i}`);
+        const bloque = document.getElementById(`bloque-${i}`);
+        const fbStat = document.getElementById(`fb-status-${i}`);
         if (!psItem || !bloque) continue;
 
         const status = getBloqueStatus(i);
 
-        // Limpiar clases
         psItem.classList.remove('done', 'has-error', 'active');
         bloque.classList.remove('has-errors', 'is-complete');
-        if (fbStat) { fbStat.textContent = i; }
+        if (fbStat) fbStat.textContent = i;
 
         switch(status) {
             case 'done':
@@ -2847,23 +2877,18 @@ function updateProgressSteps() {
                 bloque.classList.add('has-errors');
                 if (fbStat) fbStat.innerHTML = '<i class="bi bi-exclamation-lg"></i>';
                 break;
-            case 'incomplete':
-                // Sin clases especiales (gris neutro)
-                break;
         }
 
-        // Marcar bloque activo
         if (i === activeIdx) psItem.classList.add('active');
     }
 
-    // Actualizar barra de progreso
-    const pct      = Math.round((doneCount / TOTAL_BLOQUES) * 100);
-    const fill     = document.getElementById('ps-fill');
-    const pctEl    = document.getElementById('ps-pct');
-    const doneEl   = document.getElementById('ps-done-count');
-    if (fill)   fill.style.width    = pct + '%';
-    if (pctEl)  pctEl.textContent   = pct + '%';
-    if (doneEl) doneEl.textContent  = `${doneCount}/${TOTAL_BLOQUES}`;
+    const pct    = Math.round((doneCount / TOTAL_BLOQUES) * 100);
+    const fill   = document.getElementById('ps-fill');
+    const pctEl  = document.getElementById('ps-pct');
+    const doneEl = document.getElementById('ps-done-count');
+    if (fill)   fill.style.width   = pct + '%';
+    if (pctEl)  pctEl.textContent  = pct + '%';
+    if (doneEl) doneEl.textContent = `${doneCount}/${TOTAL_BLOQUES}`;
 }
 
 function getActiveBloqueIdx() {
@@ -2882,31 +2907,20 @@ function getActiveBloqueIdx() {
 }
 
 /* ══════════════════════════════════════════════════════
-   VALIDACIÓN AL PERDER FOCO (blur)
+   VALIDACIÓN EN TIEMPO REAL
 ══════════════════════════════════════════════════════ */
 function validateField(input) {
     const rules = (input.dataset.validate || '').split('|');
     let error   = '';
-
     for (const rule of rules) {
-        if (rule === 'required' && !input.value.trim()) {
-            error = 'Este campo es obligatorio.'; break;
-        }
-        if (rule === 'numeric' && input.value && isNaN(parseFloat(input.value))) {
-            error = 'Ingresa un valor numérico válido.'; break;
-        }
-        if (rule === 'positive' && input.value && parseFloat(input.value) <= 0) {
-            error = 'El valor debe ser mayor a cero.'; break;
-        }
-        if (rule === 'phone' && input.value && !/^9\d{8}$/.test(input.value)) {
-            error = 'Debe ser 9 dígitos comenzando con 9.'; break;
-        }
+        if (rule === 'required' && !input.value.trim()) { error = 'Este campo es obligatorio.'; break; }
+        if (rule === 'numeric' && input.value && isNaN(parseFloat(input.value))) { error = 'Ingresa un valor numérico válido.'; break; }
+        if (rule === 'positive' && input.value && parseFloat(input.value) <= 0) { error = 'El valor debe ser mayor a cero.'; break; }
+        if (rule === 'phone' && input.value && !/^9\d{8}$/.test(input.value)) { error = 'Debe ser 9 dígitos comenzando con 9.'; break; }
     }
-
     input.classList.remove('err', 'ok-val');
     const wrapper = input.closest('.ig') || input.closest('.hora-wrap');
     if (wrapper) wrapper.classList.remove('err-group');
-
     let errEl = input.closest('.field')?.querySelector('.ferr.live-err');
     if (!errEl) {
         errEl = document.createElement('div');
@@ -2914,7 +2928,6 @@ function validateField(input) {
         const parent = input.closest('.field') || input.parentElement;
         parent.appendChild(errEl);
     }
-
     if (error) {
         input.classList.add('err');
         if (wrapper) wrapper.classList.add('err-group');
@@ -2926,7 +2939,6 @@ function validateField(input) {
     } else {
         errEl.style.display = 'none';
     }
-
     updateProgressSteps();
 }
 
@@ -2946,10 +2958,15 @@ document.getElementById('form-reserva').addEventListener('submit', function(e) {
         }
     });
 
-    // Validar voucher
-    if (!voucherAdjunto) {
-        formValid = false;
-        document.getElementById('uz').style.border = '2px solid var(--red)';
+    // Validar nuevo pago si está activo
+    if (nuevoPagoActivo) {
+        const metodo = document.getElementById('metodo_pago')?.value || '';
+        const monto  = parseFloat(document.getElementById('monto_pagado_inicial')?.value) || 0;
+        if (!metodo || monto <= 0) {
+            formValid = false;
+            document.getElementById('metodo_pago')?.classList.add('err');
+            document.getElementById('monto_pagado_inicial')?.classList.add('err');
+        }
     }
 
     updateProgressSteps();
@@ -2962,7 +2979,7 @@ document.getElementById('form-reserva').addEventListener('submit', function(e) {
     }
 
     const b = document.getElementById('btn-submit');
-    b.innerHTML = '<span style="display:inline-block;width:13px;height:13px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:.3rem"></span> Guardando...';
+    b.innerHTML = '<span style="display:inline-block;width:13px;height:13px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:.3rem"></span> Guardando cambios...';
     b.disabled = true;
 });
 
@@ -2970,25 +2987,38 @@ document.getElementById('form-reserva').addEventListener('submit', function(e) {
    INICIALIZACIÓN
 ══════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
-    calcTotal();
-    loadEmailOld();
+    // Email: ya viene precargado en los inputs HTML, solo sincronizar hidden
+    joinEmail();
+
     updOpHint();
     initNotifChecks();
 
+    // Hora de salida AM/PM
     const horaVal = document.getElementById('hora_salida_24').value;
     if (horaVal) syncAmPm();
 
+    // Hora de recojo AM/PM
+    const horaRecojo = document.getElementById('hora_recojo_24')?.value;
+    if (horaRecojo) syncAmPmRecojo();
+
+    // Precio
     document.getElementById('precio_tour')?.addEventListener('input', calcTotal);
     document.getElementById('monto_pagado_inicial')?.addEventListener('input', calcTotal);
+    calcTotal();
 
+    // Estados
     const est = document.querySelector('[name="estado_inicial"]:checked');
     if (est) est.closest('.eo')?.classList.add('sel');
 
+    // Titular salud
     const titularInput = document.getElementById('titular_nombre');
     if (titularInput) {
         titularInput.addEventListener('input', () => actualizarNombreTitularSalud(titularInput.value));
         actualizarNombreTitularSalud(titularInput.value);
     }
+
+    // Factura si viene precargado
+    togFactura();
 
     // Auto-resize textareas
     document.querySelectorAll('textarea.fi').forEach(ta => {
@@ -2996,6 +3026,8 @@ document.addEventListener('DOMContentLoaded', () => {
             this.style.height = 'auto';
             this.style.height = this.scrollHeight + 'px';
         });
+        // Forzar resize inicial
+        ta.dispatchEvent(new Event('input'));
     });
 
     // Validación blur
@@ -3013,7 +3045,7 @@ document.addEventListener('DOMContentLoaded', () => {
         el.addEventListener('input',  updateProgressSteps);
     });
 
-    // Progreso al hacer scroll
+    // Progreso al scroll
     window.addEventListener('scroll', updateProgressSteps, { passive: true });
 
     // Spinner CSS

@@ -1,12 +1,9 @@
 <?php
-// =====================================================================
-// ARCHIVO: ReservaController.php
-// UBICACIÓN: app/Http/Controllers/ReservaController.php
-// =====================================================================
 
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreReservaRequest;
+use App\Http\Requests\UpdateReservaRequest;
 use App\Models\EstadoReserva;
 use App\Models\FechaTour;
 use App\Models\Reserva;
@@ -52,14 +49,16 @@ class ReservaController extends Controller
         return view('reservas.create', compact('fechas', 'estados'));
     }
 
-   public function store(StoreReservaRequest $request)
+    public function store(StoreReservaRequest $request)
     {
-       try {
+        try {
             $this->reservaService->crear($request->validated());
             return redirect()->route('reservas.index')
                 ->with('success', 'Reserva creada correctamente.');
         } catch (\Exception $e) {
-            dd($e->getMessage(), $e->getTrace());
+            return back()
+                ->withInput()
+                ->with('error', 'Ocurrió un error al crear la reserva. Por favor intenta de nuevo.');
         }
     }
 
@@ -68,6 +67,33 @@ class ReservaController extends Controller
         $reserva = $this->reservaService->cargarDetalle($reserva);
 
         return view('reservas.show', compact('reserva'));
+    }
+
+    public function edit(Reserva $reserva)
+    {
+        $reserva = $this->reservaService->cargarDetalle($reserva);
+
+        $fechas = FechaTour::with('tour')
+            ->where('estado', 'disponible')
+            ->where('fecha', '>=', now())
+            ->orderBy('fecha')
+            ->get();
+        $estados = EstadoReserva::all();
+
+        return view('reservas.edit', compact('reserva', 'fechas', 'estados'));
+    }
+
+    public function update(UpdateReservaRequest $request, Reserva $reserva)
+    {
+        try {
+            $this->reservaService->actualizar($reserva, $request->validated());
+            return redirect()->route('reservas.show', $reserva)
+                ->with('success', 'Reserva actualizada correctamente.');
+        } catch (\Exception $e) {
+            return back()
+                ->withInput()
+                ->with('error', 'Ocurrió un error al actualizar la reserva. Por favor intenta de nuevo.');
+        }
     }
 
     public function cambiarEstado(Request $request, Reserva $reserva)
