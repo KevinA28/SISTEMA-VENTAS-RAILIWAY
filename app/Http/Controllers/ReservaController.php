@@ -56,7 +56,6 @@ class ReservaController extends Controller
         return redirect()->route('reservas.index')
             ->with('success', 'Reserva creada correctamente.');
     } catch (\Exception $e) {
-        // TEMPORAL: log + mensaje detallado
         \Log::error('Error al crear reserva', [
             'message' => $e->getMessage(),
             'file'    => $e->getFile(),

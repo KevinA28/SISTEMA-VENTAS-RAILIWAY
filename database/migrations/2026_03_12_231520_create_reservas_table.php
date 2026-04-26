@@ -26,7 +26,7 @@ return new class extends Migration
             $table->integer('cantidad_ninos')->default(0);
             $table->decimal('precio_total', 10, 2)->default(0);
             $table->decimal('monto_pagado', 10, 2)->default(0);
-            $table->enum('canal_contacto', ['whatsapp','presencial','llamada','redes_sociales','web'])->default('whatsapp');
+            $table->enum('canal_contacto', ['whatsapp','presencial','llamada','redes_sociales','web','referido'])->default('whatsapp');
             $table->string('ciudad_procedencia', 100)->nullable();
             $table->enum('tipo_comprobante', ['boleta', 'factura'])->default('boleta');
             $table->string('ruc_factura', 11)->nullable();

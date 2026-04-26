@@ -991,6 +991,18 @@ html { scroll-behavior: smooth; }
     {{ session('error') }}
 </div>
 @endif
+@if(session('error'))
+<div class="lerr">
+    <strong><i class="bi bi-exclamation-triangle me-1"></i> Error al guardar:</strong>
+    {{ session('error') }}
+</div>
+@endif
+
+@if(session('success'))
+<div style="background:var(--adv-green-l);border:1.5px solid var(--adv-green-m);border-left:4px solid var(--adv-green);border-radius:var(--r);padding:1rem 1.2rem;margin-bottom:1.25rem;color:var(--adv-green);font-weight:700;">
+    <i class="bi bi-check-circle me-1"></i> {{ session('success') }}
+</div>
+@endif
 
 @if(session('success'))
 <div style="background:var(--adv-green-l);border:1.5px solid var(--adv-green-m);border-left:4px solid var(--adv-green);border-radius:var(--r);padding:1rem 1.2rem;margin-bottom:1.25rem;color:var(--adv-green);font-weight:700;">
@@ -1500,46 +1512,6 @@ html { scroll-behavior: smooth; }
                             <label class="lbl">Restricciones alimentarias</label>
                             <textarea name="titular_restricciones" class="fi" rows="3" placeholder="Vegetariano, vegano, sin gluten...">{{ old('titular_restricciones') }}</textarea>
                         </div>
-                    </div>
-
-                    <div style="margin-top:1rem; padding-top:1rem; border-top:1px solid var(--border)">
-                        <label class="lbl" style="margin-bottom:.65rem">
-                            <i class="bi bi-activity me-1" style="color:var(--adv-blue)"></i>
-                            Condición física / Movilidad
-                        </label>
-                        <div class="g2" style="gap:.75rem">
-                            <div>
-                                <label class="lbl" style="font-size:.6rem; color:var(--ink-4); margin-bottom:.35rem">Dificultad para caminar o moverse</label>
-                                <div class="sw-group">
-                                    <label class="sw-btn sw-no {{ old('titular_dificultad_movilidad','no')=='no'?'sel':'' }}" onclick="togSw(this,'titular_dificultad_movilidad')">
-                                        <input type="radio" name="titular_dificultad_movilidad" value="no" {{ old('titular_dificultad_movilidad','no')=='no'?'checked':'' }}>
-                                        <i class="bi bi-x-circle"></i> No
-                                    </label>
-                                    <label class="sw-btn sw-si {{ old('titular_dificultad_movilidad')=='si'?'sel':'' }}" onclick="togSw(this,'titular_dificultad_movilidad')">
-                                        <input type="radio" name="titular_dificultad_movilidad" value="si" {{ old('titular_dificultad_movilidad')=='si'?'checked':'' }}>
-                                        <i class="bi bi-check-circle"></i> Sí
-                                    </label>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="lbl" style="font-size:.6rem; color:var(--ink-4); margin-bottom:.35rem">Usa medicación regular</label>
-                                <div class="sw-group">
-                                    <label class="sw-btn sw-no {{ old('titular_usa_medicacion','no')=='no'?'sel':'' }}" onclick="togSw(this,'titular_usa_medicacion')">
-                                        <input type="radio" name="titular_usa_medicacion" value="no" {{ old('titular_usa_medicacion','no')=='no'?'checked':'' }}>
-                                        <i class="bi bi-x-circle"></i> No
-                                    </label>
-                                    <label class="sw-btn sw-si {{ old('titular_usa_medicacion')=='si'?'sel':'' }}" onclick="togSw(this,'titular_usa_medicacion')">
-                                        <input type="radio" name="titular_usa_medicacion" value="si" {{ old('titular_usa_medicacion')=='si'?'checked':'' }}>
-                                        <i class="bi bi-check-circle"></i> Sí
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="field" style="margin-top:.75rem;margin-bottom:0">
-                        <label class="lbl">Observaciones médicas adicionales</label>
-                        <textarea name="titular_obs_medicas" class="fi" rows="2" placeholder="Discapacidades, movilidad reducida...">{{ old('titular_obs_medicas') }}</textarea>
                     </div>
                 </div>
             </div>
