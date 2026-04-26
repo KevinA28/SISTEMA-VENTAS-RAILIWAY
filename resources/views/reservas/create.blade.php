@@ -2,17 +2,19 @@
      ARCHIVO: create.blade.php
      UBICACIÓN: resources/views/reservas/create.blade.php
      SERVICIO: Adventure — Agencia de Viajes
-     VERSIÓN 5.0 — Correcciones funcionales + diseño
-     CAMBIOS v5:
-       ✓ Grid layout corregido (panel sticky centrado, no en esquinas)
-       ✓ Icono WhatsApp alineado correctamente con texto
-       ✓ Campos numéricos alineados (input-group sin desfase)
-       ✓ Sin emojis en la interfaz (solo iconos Bootstrap Icons)
-       ✓ Sección pasajeros: switch "Viajo solo"
-       ✓ Sección salud: switches Sí/No sin preactivar
-       ✓ Campo edad guardado en BD (pasajeros[i][edad])
-       ✓ Validación metodo_pago corregida (no bloquear si está seleccionado)
-       ✓ Formulario principal más ancho, márgenes optimizados
+     VERSIÓN 7.0 — Ajustes UI/UX puntuales
+     CAMBIOS v7:
+       ✓ 1. Búsqueda de RUC corregida (listener oninput correctamente conectado)
+       ✓ 2. Progreso y Resumen Financiero CENTRADOS verticalmente y siguen scroll
+       ✓ 3. Resumen financiero SIN sección de progreso interna (bloque independiente)
+       ✓ 4. Campos "Detalla alergias" y "Restricciones alimentarias" alineados
+       ✓ 5. Switch Salud invertido: desactivado=SÍ hay alergias (muestra campos),
+              activado=NO hay alergias. Inicia desactivado y NO marca completo
+              hasta interacción/datos.
+       ✓ 6. Switch Pasajeros invertido: desactivado=hay pasajeros (muestra),
+              activado=solo titular (oculta). Inicia desactivado.
+       ✓ 7. Barra de progreso con mejor alineación/distribución/espaciado
+       ✓ NO se modificó lógica de negocio, flujo, ni colores
      ===================================================================== --}}
 @extends('layouts.app')
 @section('titulo', 'Nueva Reserva — Adventure')
@@ -71,31 +73,33 @@ body {
 }
 
 /* ═══════════════════════════════
-   PAGE LAYOUT — CORREGIDO
-   Sidebar izq: 190px | Form: 1fr | Panel der: 250px
-   Los paneles laterales son sticky y centrados dentro del grid
+   PAGE LAYOUT
+   Sidebar izq: 220px | Form: 1fr | Panel der: 290px
 ═══════════════════════════════ */
 .page-wrap {
-    max-width: 1400px;       /* más ancho para formulario más grande */
+    max-width: 1440px;
     margin: 0 auto;
     padding: 1.75rem 1.5rem 5rem;
     display: grid;
-    grid-template-columns: 190px 1fr 250px;
+    grid-template-columns: 220px 1fr 290px;
     grid-template-rows: auto 1fr;
-    gap: 1.25rem;
+    gap: 1.5rem;
     align-items: start;
 }
 
 .page-header { grid-column: 1 / -1; }
 
-/* SIDEBAR PROGRESO — sticky relativo al viewport */
+/* ─── SIDEBAR PROGRESO — centrado vertical y sigue scroll ─── */
 .progress-sidebar {
     grid-column: 1;
     grid-row: 2;
     align-self: start;
+    /* Sticky con offset que centra el contenido aprox. en mitad del viewport */
     position: sticky;
-    top: 1.5rem;
-    max-height: calc(100vh - 3rem);
+    top: 50%;
+    transform: translateY(-50%);
+    /* Limita altura para que nunca exceda viewport */
+    max-height: calc(100vh - 4rem);
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: var(--border) transparent;
@@ -105,25 +109,37 @@ body {
 
 .form-main { grid-column: 2; grid-row: 2; min-width: 0; }
 
-/* PANEL RESUMEN — sticky centrado en su columna */
+/* ─── PANEL RESUMEN — centrado vertical y sigue scroll ─── */
 .summary-panel {
     grid-column: 3;
     grid-row: 2;
     align-self: start;
     position: sticky;
-    top: 1.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,.15) transparent;
 }
+.summary-panel::-webkit-scrollbar { width: 4px; }
+.summary-panel::-webkit-scrollbar-thumb { background: rgba(0,0,0,.15); border-radius: 4px; }
 
 /* Responsive */
-@media (max-width: 1150px) {
-    .page-wrap { grid-template-columns: 180px 1fr; }
-    .summary-panel { grid-column: 1 / -1; grid-row: 3; position: static; }
+@media (max-width: 1200px) {
+    .page-wrap { grid-template-columns: 200px 1fr; }
+    .summary-panel {
+        grid-column: 1 / -1; grid-row: 3;
+        position: static; transform: none; max-height: none;
+    }
 }
 @media (max-width: 768px) {
     .page-wrap { grid-template-columns: 1fr; padding: 1rem .75rem 4rem; }
     .progress-sidebar, .form-main, .summary-panel { grid-column: 1; grid-row: auto; }
-    .progress-sidebar { position: static; }
-    .summary-panel { position: static; }
+    .progress-sidebar {
+        position: static; transform: none; max-height: none;
+    }
+    .summary-panel { position: static; transform: none; max-height: none; }
 }
 
 /* ═══════════════════════════════
@@ -168,106 +184,210 @@ body {
 .btn-back:hover { background: rgba(255,255,255,.15); color: #fff; border-color: rgba(255,255,255,.4); }
 
 /* ═══════════════════════════════
-   PROGRESS SIDEBAR
+   PROGRESS SIDEBAR — mejorado en alineación/distribución
 ═══════════════════════════════ */
 .ps-inner {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--r-xl); padding: 1rem .85rem; box-shadow: var(--sh);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-xl);
+    padding: 1.15rem 1rem 1rem;
+    box-shadow: var(--sh-md);
 }
-.ps-title { font-size: .58rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-4); padding-bottom: .65rem; border-bottom: 1px solid var(--border); margin-bottom: .75rem; display: flex; align-items: center; gap: .4rem; }
-.ps-steps { display: flex; flex-direction: column; gap: 2px; }
+.ps-title {
+    font-size: .58rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--ink-4);
+    padding-bottom: .75rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: .9rem;
+    display: flex; align-items: center; gap: .4rem;
+    justify-content: center;
+    text-align: center;
+}
+.ps-steps {
+    display: flex;
+    flex-direction: column;
+    gap: .15rem;
+}
+
+/* Item — más espacio interno y mejor balance */
 .ps-item {
-    display: flex; align-items: center; gap: .6rem;
-    padding: .55rem .5rem; border-radius: var(--r);
-    cursor: pointer; transition: all .2s; position: relative;
+    display: flex; align-items: flex-start; gap: .65rem;
+    padding: .5rem .45rem;
+    border-radius: var(--r);
+    cursor: pointer; transition: background .2s; position: relative;
 }
-.ps-item:not(:last-child) .ps-connector {
-    position: absolute; left: 18px; top: calc(50% + 14px);
-    width: 1.5px; height: calc(100% - 4px);
-    background: var(--border); z-index: 0; transition: background .3s;
+.ps-item:hover { background: var(--adv-slate-l); }
+
+.ps-connector-wrap {
+    display: flex; flex-direction: column; align-items: center;
+    flex-shrink: 0; width: 26px;
 }
-.ps-item.done .ps-connector { background: var(--adv-blue-m); }
-.ps-item.has-error .ps-connector { background: var(--adv-red-m); }
 .ps-num {
     width: 26px; height: 26px; border-radius: 50%;
     border: 2px solid var(--border); background: var(--surface);
     color: var(--ink-4); font-size: .65rem; font-weight: 800;
     display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0; z-index: 1; transition: all .25s; position: relative;
+    flex-shrink: 0; transition: all .25s; position: relative; z-index: 1;
 }
-.ps-info { flex: 1; min-width: 0; }
-.ps-label { font-size: .7rem; font-weight: 700; color: var(--ink-4); transition: color .2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
-.ps-sub { font-size: .6rem; color: var(--ink-4); opacity: 0; transition: opacity .2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ps-line {
+    width: 1.5px;
+    height: 16px;
+    background: var(--border);
+    margin: 3px 0;
+    transition: background .3s;
+    flex-shrink: 0;
+}
+.ps-item:last-child .ps-line { display: none; }
+
+.ps-info {
+    flex: 1; min-width: 0;
+    padding-top: 4px;
+    display: flex; flex-direction: column; justify-content: center;
+}
+.ps-label {
+    font-size: .73rem; font-weight: 700; color: var(--ink-4);
+    transition: color .2s;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    line-height: 1.2;
+}
+.ps-sub   {
+    font-size: .6rem; color: var(--ink-4); opacity: 0;
+    transition: opacity .2s;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    line-height: 1.3; margin-top: 2px;
+}
+
+/* States */
 .ps-item.active { background: var(--adv-amber-l); }
-.ps-item.active .ps-num { border-color: var(--adv-amber); background: var(--adv-amber); color: var(--adv-navy); box-shadow: 0 0 0 4px rgba(245,158,11,.2); }
+.ps-item.active .ps-num { border-color: var(--adv-amber); background: var(--adv-amber); color: var(--adv-navy); box-shadow: 0 0 0 3px rgba(245,158,11,.2); }
 .ps-item.active .ps-label { color: var(--ink-2); font-weight: 800; }
 .ps-item.active .ps-sub { opacity: 1; color: var(--adv-amber-d); }
+
 .ps-item.done .ps-num { border-color: var(--adv-blue); background: var(--adv-blue); color: #fff; }
-.ps-item.done .ps-label { color: var(--adv-blue); }
-.ps-item.has-error { background: var(--adv-red-l); }
+.ps-item.done .ps-label { color: var(--adv-blue); font-weight: 700; }
+.ps-item.done .ps-line { background: var(--adv-blue-m); }
+
 .ps-item.has-error .ps-num { border-color: var(--adv-red); background: var(--adv-red); color: #fff; animation: shake .35s ease; }
 .ps-item.has-error .ps-label { color: var(--adv-red); }
-.ps-badge-ok { width: 14px; height: 14px; border-radius: 50%; background: var(--adv-blue); color: #fff; font-size: .55rem; display: none; align-items: center; justify-content: center; flex-shrink: 0; margin-left: auto; }
-.ps-badge-err { width: 8px; height: 8px; border-radius: 50%; background: var(--adv-red); display: none; flex-shrink: 0; margin-left: auto; }
+.ps-item.has-error { background: var(--adv-red-l); }
+.ps-item.has-error .ps-line { background: var(--adv-red-m); }
+
+/* Badges */
+.ps-badges { display: flex; align-items: center; flex-shrink: 0; padding-top: 5px; }
+.ps-badge-ok  { width: 15px; height: 15px; border-radius: 50%; background: var(--adv-blue); color: #fff; font-size: .55rem; display: none; align-items: center; justify-content: center; }
+.ps-badge-err { width: 8px; height: 8px; border-radius: 50%; background: var(--adv-red); display: none; }
 .ps-item.done .ps-badge-ok { display: flex; }
 .ps-item.has-error .ps-badge-err { display: block; }
 .ps-item.has-error .ps-badge-ok { display: none; }
-.ps-footer { margin-top: 1rem; padding-top: .75rem; border-top: 1px solid var(--border); }
-.ps-footer-labels { display: flex; justify-content: space-between; align-items: center; margin-bottom: .35rem; }
-.ps-footer-labels span { font-size: .6rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-4); }
-.ps-footer-labels strong { font-size: .72rem; font-weight: 800; color: var(--adv-blue); }
-.ps-bar { height: 5px; background: var(--border); border-radius: 999px; overflow: hidden; }
+
+/* Footer progreso — distribución mejorada */
+.ps-footer {
+    margin-top: 1.1rem;
+    padding: .9rem .8rem .75rem;
+    border-top: 1px solid var(--border);
+    background: var(--adv-slate-l);
+    border-radius: var(--r);
+}
+.ps-footer-row {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: .55rem;
+    gap: .5rem;
+}
+.ps-footer-row .ps-f-label { font-size: .58rem; font-weight: 800; text-transform: uppercase; letter-spacing: .09em; color: var(--ink-4); }
+.ps-footer-row .ps-f-count { font-family: 'JetBrains Mono', monospace; font-size: .82rem; font-weight: 800; color: var(--adv-blue); }
+.ps-bar { height: 6px; background: var(--border); border-radius: 999px; overflow: hidden; }
 .ps-fill { height: 100%; background: linear-gradient(90deg, var(--adv-blue) 0%, var(--adv-azure) 70%, var(--adv-amber) 100%); border-radius: 999px; transition: width .5s cubic-bezier(.4,0,.2,1); width: 0%; }
-.ps-pct { font-size: .68rem; font-weight: 800; color: var(--adv-blue); text-align: right; margin-top: .25rem; font-family: 'JetBrains Mono', monospace; }
+.ps-pct {
+    font-size: .68rem; font-weight: 800; color: var(--adv-blue);
+    text-align: center;
+    margin-top: .45rem;
+    font-family: 'JetBrains Mono', monospace;
+}
 
 @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-3px)} 75%{transform:translateX(3px)} }
 
 /* ═══════════════════════════════
-   SUMMARY PANEL
+   SUMMARY PANEL — independiente, sin progreso interno
 ═══════════════════════════════ */
 .summary-panel-inner {
-    background: var(--adv-navy); border-radius: var(--r-xl);
-    padding: 1.25rem; box-shadow: var(--sh-lg); overflow: hidden; position: relative;
+    background: var(--adv-navy);
+    border-radius: var(--r-xl);
+    padding: 1.3rem 1.4rem;
+    box-shadow: var(--sh-lg);
+    overflow: hidden;
+    position: relative;
 }
 .summary-panel-inner::before {
     content: ''; position: absolute; top: -40px; right: -20px;
     width: 150px; height: 150px;
     background: radial-gradient(circle, rgba(245,158,11,.15) 0%, transparent 70%); pointer-events: none;
 }
-.sp-title { font-size: .58rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.4); margin-bottom: 1rem; padding-bottom: .65rem; border-bottom: 1px solid rgba(255,255,255,.08); display: flex; align-items: center; gap: .4rem; }
-.sp-item { margin-bottom: 1rem; position: relative; z-index: 1; }
+.sp-title {
+    font-size: .58rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
+    color: rgba(255,255,255,.4);
+    margin-bottom: 1rem;
+    padding-bottom: .7rem;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+    display: flex; align-items: center; gap: .4rem;
+    justify-content: center;
+}
+.sp-item { margin-bottom: .9rem; position: relative; z-index: 1; }
 .sp-item:last-child { margin-bottom: 0; }
 .sp-label { font-size: .58rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.38); margin-bottom: .3rem; }
 .sp-value { font-family: 'JetBrains Mono', monospace; font-size: 1.35rem; font-weight: 500; color: #fff; letter-spacing: -.02em; line-height: 1; }
 .sp-value.amber { color: var(--adv-amber-xm); }
 .sp-value.red   { color: #FCA5A5; }
-.sp-divider { height: 1px; background: rgba(255,255,255,.08); margin: .85rem 0; }
-.sp-progress-section { margin-top: .75rem; padding-top: .75rem; border-top: 1px solid rgba(255,255,255,.08); }
-.sp-progress-label { font-size: .58rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.38); margin-bottom: .4rem; display: flex; justify-content: space-between; align-items: center; }
-.sp-progress-bar { height: 4px; background: rgba(255,255,255,.1); border-radius: 999px; overflow: hidden; }
-.sp-progress-fill { height: 100%; background: linear-gradient(90deg, var(--adv-blue) 0%, var(--adv-amber) 100%); border-radius: 999px; transition: width .5s cubic-bezier(.4,0,.2,1); width: 0%; }
+.sp-divider { height: 1px; background: rgba(255,255,255,.08); margin: .8rem 0; }
+
 .sp-status-badge {
     display: inline-flex; align-items: center; gap: .4rem;
     padding: 5px 12px; border-radius: 999px; font-size: .7rem; font-weight: 700;
-    background: rgba(245,158,11,.15); color: var(--adv-amber-xm); border: 1px solid rgba(245,158,11,.25); margin-top: .5rem;
+    background: rgba(245,158,11,.15); color: var(--adv-amber-xm); border: 1px solid rgba(245,158,11,.25); margin-top: .55rem;
 }
 .sp-status-badge.paid { background: rgba(26,86,219,.2); color: #93C5FD; border-color: rgba(26,86,219,.4); }
-.sp-pax-count { font-size: .72rem; color: rgba(255,255,255,.45); margin-top: .25rem; }
+.sp-pax-count { font-size: .7rem; color: rgba(255,255,255,.4); margin-top: .35rem; }
 
 /* ═══════════════════════════════
-   FORM BLOCKS
+   FORM BLOCKS — con indicador numérico
 ═══════════════════════════════ */
 .fb {
     background: var(--surface); border: 1px solid var(--border);
     border-radius: var(--r-xl); margin-bottom: 1rem;
     overflow: hidden; box-shadow: var(--sh); transition: border-color .2s, box-shadow .2s;
+    position: relative;
 }
 .fb.is-complete { border-color: var(--adv-blue-m); }
 .fb.has-errors  { border-color: var(--adv-red-m); box-shadow: var(--sh), 0 0 0 3px rgba(220,38,38,.07); }
+
+.fb-num-badge {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--adv-blue);
+    color: #fff;
+    font-size: .7rem; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(26,86,219,.3);
+    z-index: 10; flex-shrink: 0;
+    transition: background .25s, transform .2s;
+}
+.fb.is-complete .fb-num-badge {
+    background: var(--adv-blue);
+    box-shadow: 0 2px 8px rgba(26,86,219,.35);
+}
+.fb.has-errors .fb-num-badge {
+    background: var(--adv-red);
+    box-shadow: 0 2px 8px rgba(220,38,38,.35);
+}
+
 .fb-head {
-    padding: 1rem 1.5rem; border-bottom: 1px solid var(--border);
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
     background: linear-gradient(135deg, #FAFBFD 0%, #F6F8FB 100%);
     display: flex; align-items: center; gap: .85rem;
+    padding-right: 3rem;
 }
 .fb-ico { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
 .fb-ico.blue  { background: var(--adv-blue-l); color: var(--adv-blue); }
@@ -275,15 +395,8 @@ body {
 .fb-ico.navy  { background: #E8EEF8; color: var(--adv-navy); }
 .fb-titles h3 { font-size: .9rem; font-weight: 800; color: var(--ink); letter-spacing: -.01em; }
 .fb-titles p  { font-size: .7rem; color: var(--ink-4); margin-top: 2px; }
-.fb-status {
-    width: 26px; height: 26px; border-radius: 50%;
-    background: var(--adv-slate-l); color: var(--ink-4);
-    font-size: .7rem; font-weight: 800;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0; margin-left: auto; transition: all .3s;
-}
-.fb.is-complete .fb-status { background: var(--adv-blue); color: #fff; }
-.fb.has-errors  .fb-status { background: var(--adv-red); color: #fff; }
+
+.fb-status { display: none; }
 .fb-body { padding: 1.5rem; }
 
 /* ═══════════════════════════════
@@ -330,15 +443,15 @@ select.fi {
 .fhint { font-size: .68rem; color: var(--ink-4); margin-top: .28rem; line-height: 1.45; }
 .fcalc { font-size: .7rem; color: var(--adv-blue); margin-top: .28rem; font-weight: 700; display: flex; align-items: center; gap: .25rem; font-family: 'JetBrains Mono', monospace; }
 
-/* INPUT GROUP — CORREGIDO: todos los hijos alineados verticalmente */
+/* INPUT GROUP */
 .ig {
     display: flex;
-    align-items: stretch;        /* todos la misma altura */
+    align-items: stretch;
     border: 1.5px solid var(--border);
     border-radius: var(--r);
     overflow: hidden;
     transition: border-color .15s, box-shadow .15s;
-    height: 40px;                /* altura fija para consistencia */
+    height: 40px;
 }
 .ig:focus-within { border-color: var(--adv-blue); box-shadow: 0 0 0 3px rgba(26,86,219,.1); }
 .ig.err-group { border-color: var(--adv-red); }
@@ -350,7 +463,7 @@ select.fi {
     display: flex; align-items: center; gap: .3rem;
     border-right: 1.5px solid var(--border);
     white-space: nowrap; flex-shrink: 0;
-    line-height: 1;             /* evita que el texto empuje el contenedor */
+    line-height: 1;
 }
 .ig .ia .bi { display: flex; align-items: center; line-height: 1; }
 .ig .fi {
@@ -360,13 +473,12 @@ select.fi {
     flex: 1;
     min-width: 0;
     background: transparent !important;
-    height: 100%;               /* ocupa toda la altura del grupo */
+    height: 100%;
     padding-top: 0;
     padding-bottom: 0;
     display: flex;
     align-items: center;
 }
-/* Override para textarea dentro de .ig (no usa height fija) */
 .ig textarea.fi { height: auto; padding-top: 8px; padding-bottom: 8px; }
 
 /* ═══════════════════════════════
@@ -464,7 +576,7 @@ select.fi {
 .pill.sel { border-color: var(--adv-blue); background: var(--adv-blue-l); color: var(--adv-blue); font-weight: 800; }
 
 /* ═══════════════════════════════
-   SWITCH TOGGLE — para Sí/No
+   SWITCH TOGGLE — Sí/No pills
 ═══════════════════════════════ */
 .sw-group {
     display: flex; align-items: center; gap: .5rem;
@@ -484,30 +596,50 @@ select.fi {
 .sw-btn.sw-si.sel  { border-color: var(--adv-amber); background: var(--adv-amber-l); color: var(--adv-amber-d); }
 
 /* ═══════════════════════════════
-   SOLO PASAJERO — Switch banner
+   TOGGLE SWITCH — binario (on/off)
 ═══════════════════════════════ */
-.solo-banner {
+.toggle-switch-wrap {
     display: flex; align-items: center; justify-content: space-between;
     gap: 1rem; padding: .85rem 1rem;
-    background: var(--adv-blue-l); border: 1.5px solid var(--adv-blue-m);
     border-radius: var(--r); margin-bottom: .85rem;
 }
-.solo-banner-text { font-size: .8rem; font-weight: 700; color: var(--adv-blue); display: flex; align-items: center; gap: .45rem; }
-.solo-toggle {
+.toggle-switch-wrap.blue-bg {
+    background: var(--adv-blue-l); border: 1.5px solid var(--adv-blue-m);
+}
+.toggle-switch-wrap.slate-bg {
+    background: var(--adv-slate-l); border: 1.5px solid var(--border);
+}
+.toggle-switch-text {
+    font-size: .8rem; font-weight: 700; display: flex; align-items: center; gap: .45rem;
+}
+.toggle-switch-text.blue { color: var(--adv-blue); }
+.toggle-switch-text.slate { color: var(--ink-3); }
+
+.toggle-knob {
     position: relative; display: inline-flex; align-items: center;
     width: 44px; height: 24px; flex-shrink: 0;
 }
-.solo-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
-.solo-slider {
+.toggle-knob input { opacity: 0; width: 0; height: 0; position: absolute; }
+.toggle-slider {
     position: absolute; inset: 0; background: var(--border); border-radius: 999px;
     cursor: pointer; transition: background .2s;
 }
-.solo-slider::before {
+.toggle-slider::before {
     content: ''; position: absolute; width: 18px; height: 18px;
     background: white; border-radius: 50%;
     top: 3px; left: 3px; transition: transform .2s;
     box-shadow: 0 1px 4px rgba(0,0,0,.2);
 }
+.toggle-knob input:checked + .toggle-slider { background: var(--adv-blue); }
+.toggle-knob input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+/* alias para compatibilidad con código anterior */
+.solo-banner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .85rem 1rem; background: var(--adv-blue-l); border: 1.5px solid var(--adv-blue-m); border-radius: var(--r); margin-bottom: .85rem; }
+.solo-banner-text { font-size: .8rem; font-weight: 700; color: var(--adv-blue); display: flex; align-items: center; gap: .45rem; }
+.solo-toggle { position: relative; display: inline-flex; align-items: center; width: 44px; height: 24px; flex-shrink: 0; }
+.solo-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+.solo-slider { position: absolute; inset: 0; background: var(--border); border-radius: 999px; cursor: pointer; transition: background .2s; }
+.solo-slider::before { content: ''; position: absolute; width: 18px; height: 18px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: transform .2s; box-shadow: 0 1px 4px rgba(0,0,0,.2); }
 .solo-toggle input:checked + .solo-slider { background: var(--adv-blue); }
 .solo-toggle input:checked + .solo-slider::before { transform: translateX(20px); }
 
@@ -542,22 +674,72 @@ select.fi {
 .btn-add:hover { border-color: var(--adv-blue); color: var(--adv-blue); background: var(--adv-blue-l); }
 
 /* ═══════════════════════════════
-   SALUD
+   SALUD — switch principal + layout
 ═══════════════════════════════ */
-.salud-block { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--r); overflow: hidden; margin-bottom: .65rem; }
-.salud-head { padding: .6rem 1rem; background: var(--adv-slate-l); border-bottom: 1px solid var(--border); font-size: .7rem; font-weight: 700; color: var(--ink-2); display: flex; align-items: center; gap: .4rem; }
+.salud-block {
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: var(--r); overflow: hidden; margin-bottom: .65rem;
+}
+.salud-head {
+    padding: .6rem 1rem; background: var(--adv-slate-l);
+    border-bottom: 1px solid var(--border); font-size: .7rem; font-weight: 700;
+    color: var(--ink-2); display: flex; align-items: center; gap: .4rem;
+}
 .salud-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--adv-blue); margin-left: auto; flex-shrink: 0; transition: background .3s; }
 .salud-block.error .salud-dot { background: var(--adv-red); }
 .salud-block.ok    .salud-dot { background: var(--adv-blue); }
 .salud-body { padding: 1rem; }
-.salud-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; align-items: start; }
-@media (max-width: 640px) { .salud-grid { grid-template-columns: 1fr; } }
-.alerg-expand {
-    margin-top: .5rem; padding: .75rem;
-    background: var(--adv-amber-l); border: 1.5px solid var(--adv-amber-m);
-    border-radius: var(--r); animation: fadeUp .2s ease;
+
+/* Salud grid — alineación correcta entre columnas */
+.salud-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    align-items: start;
 }
-.alerg-expand .fi { background: white; }
+@media (max-width: 640px) { .salud-grid { grid-template-columns: 1fr; } }
+
+/* Columna de cada lado del grid */
+.salud-col {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Restricciones alimentarias — textarea ocupa todo el alto disponible */
+.salud-col .lbl {
+    margin-bottom: .5rem;
+}
+
+/* Alergias expand — alineado correctamente */
+.alerg-expand {
+    margin-top: .5rem;
+    padding: .8rem;
+    background: var(--adv-amber-l);
+    border: 1.5px solid var(--adv-amber-m);
+    border-radius: var(--r);
+    animation: fadeUp .2s ease;
+    width: 100%;
+}
+.alerg-expand .lbl {
+    color: var(--adv-amber-d);
+    font-size: .6rem;
+    margin-bottom: .45rem;
+}
+.alerg-expand .fi {
+    background: white;
+    width: 100%;
+    padding: 9px 12px;
+    min-height: 70px;
+    resize: vertical;
+    line-height: 1.5;
+    font-size: .85rem;
+}
+
+/* Restricciones — textarea con misma estética */
+.salud-col textarea.fi {
+    min-height: 90px;
+    line-height: 1.5;
+}
 
 /* ═══════════════════════════════
    EMAIL WIDGET
@@ -576,7 +758,6 @@ select.fi {
     border-right: 1.5px solid var(--border); white-space: nowrap; flex-shrink: 0;
     gap: .3rem;
 }
-/* CORREGIDO: icono bi dentro de .ea alineado */
 .email-row .ea .bi { display: flex; align-items: center; line-height: 1; }
 .email-row .email-user { flex: 0 0 auto; min-width: 80px; max-width: 150px; border: none !important; box-shadow: none !important; border-radius: 0 !important; background: transparent !important; height: 100%; padding-top: 0; padding-bottom: 0; }
 .email-row .at-sign { padding: 0 5px; display: flex; align-items: center; color: var(--ink-4); font-size: .9rem; font-weight: 700; flex-shrink: 0; user-select: none; }
@@ -587,8 +768,7 @@ select.fi {
 .domain-list li:hover { background: var(--adv-blue-l); color: var(--adv-blue); }
 
 /* ═══════════════════════════════
-   WHATSAPP LABEL — CORREGIDO
-   El SVG y el texto ahora usan flex con alineación central
+   WHATSAPP LABEL
 ═══════════════════════════════ */
 .lbl-wa {
     display: flex;
@@ -691,7 +871,6 @@ select.fi {
 .lerr ul { padding-left: 1.25rem; }
 .lerr li { margin-bottom: .18rem; line-height: 1.5; }
 
-/* FACTURA */
 #campos-factura { display: none; }
 
 /* SPINNER */
@@ -706,6 +885,33 @@ html { scroll-behavior: smooth; }
 .flatpickr-calendar { box-shadow: var(--sh-lg) !important; border-radius: var(--r-lg) !important; border: 1px solid var(--border) !important; font-family: 'Plus Jakarta Sans', sans-serif !important; }
 .flatpickr-day.selected { background: var(--adv-blue) !important; border-color: var(--adv-blue) !important; }
 .flatpickr-day.today { border-color: var(--adv-amber) !important; }
+
+/* ═══════════════════════════════
+   SALUD — switch principal banner
+═══════════════════════════════ */
+.salud-master-banner {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1rem; padding: .9rem 1.1rem;
+    background: var(--adv-slate-l); border: 1.5px solid var(--border);
+    border-radius: var(--r); margin-bottom: 1rem;
+    transition: background .2s, border-color .2s;
+}
+.salud-master-banner.has-conditions {
+    background: var(--adv-amber-l); border-color: var(--adv-amber-m);
+}
+.salud-master-text {
+    font-size: .8rem; font-weight: 700; color: var(--ink-3);
+    display: flex; align-items: center; gap: .5rem; flex: 1;
+}
+.salud-master-banner.has-conditions .salud-master-text { color: var(--adv-amber-d); }
+.salud-master-badge {
+    font-size: .65rem; font-weight: 800; padding: 2px 9px;
+    border-radius: 999px; background: var(--border); color: var(--ink-4);
+    transition: background .2s, color .2s; white-space: nowrap;
+}
+.salud-master-banner.has-conditions .salud-master-badge {
+    background: var(--adv-amber-m); color: var(--adv-amber-d);
+}
 </style>
 @endpush
 
@@ -732,7 +938,7 @@ html { scroll-behavior: smooth; }
 {{-- PROGRESS SIDEBAR --}}
 <aside class="progress-sidebar">
     <div class="ps-inner">
-        <div class="ps-title"><i class="bi bi-list-check"></i> Progreso</div>
+        <div class="ps-title"><i class="bi bi-list-check"></i> Progreso del formulario</div>
         <div class="ps-steps">
             @foreach([
                 [1,'Titular','Datos personales'],
@@ -744,21 +950,25 @@ html { scroll-behavior: smooth; }
                 [7,'Políticas','Términos'],
             ] as [$n,$label,$sub])
             <div class="ps-item {{ $n===1?'active':'' }}" id="ps-{{ $n }}" onclick="scrollToBloque({{ $n }})">
-                <div class="ps-connector"></div>
-                <div class="ps-num">{{ $n }}</div>
+                <div class="ps-connector-wrap">
+                    <div class="ps-num">{{ $n }}</div>
+                    <div class="ps-line"></div>
+                </div>
                 <div class="ps-info">
                     <span class="ps-label">{{ $label }}</span>
                     <span class="ps-sub">{{ $sub }}</span>
                 </div>
-                <span class="ps-badge-ok"><i class="bi bi-check2" style="font-size:.55rem"></i></span>
-                <span class="ps-badge-err"></span>
+                <div class="ps-badges">
+                    <span class="ps-badge-ok"><i class="bi bi-check2" style="font-size:.55rem"></i></span>
+                    <span class="ps-badge-err"></span>
+                </div>
             </div>
             @endforeach
         </div>
         <div class="ps-footer">
-            <div class="ps-footer-labels">
-                <span>Completado</span>
-                <strong id="ps-done-count">0/7</strong>
+            <div class="ps-footer-row">
+                <span class="ps-f-label">Completado</span>
+                <span class="ps-f-count" id="ps-done-count">0/7</span>
             </div>
             <div class="ps-bar"><div class="ps-fill" id="ps-fill"></div></div>
             <div class="ps-pct" id="ps-pct">0%</div>
@@ -775,16 +985,27 @@ html { scroll-behavior: smooth; }
     <ul>@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
 </div>
 @endif
+@if(session('error'))
+<div class="lerr">
+    <strong><i class="bi bi-exclamation-triangle me-1"></i> Error al guardar:</strong>
+    {{ session('error') }}
+</div>
+@endif
 
+@if(session('success'))
+<div style="background:var(--adv-green-l);border:1.5px solid var(--adv-green-m);border-left:4px solid var(--adv-green);border-radius:var(--r);padding:1rem 1.2rem;margin-bottom:1.25rem;color:var(--adv-green);font-weight:700;">
+    <i class="bi bi-check-circle me-1"></i> {{ session('success') }}
+</div>
+@endif
 <form method="POST" action="{{ route('reservas.store') }}" enctype="multipart/form-data" id="form-reserva" novalidate>
 @csrf
 
 {{-- ══ BLOQUE 1 · TITULAR ══ --}}
 <div class="fb" id="bloque-1">
+    <div class="fb-num-badge" id="fb-status-1">1</div>
     <div class="fb-head">
         <div class="fb-ico blue"><i class="bi bi-person-badge"></i></div>
         <div class="fb-titles"><h3>Pasajero titular</h3><p>Datos personales y de contacto del responsable principal</p></div>
-        <div class="fb-status" id="fb-status-1">1</div>
     </div>
     <div class="fb-body">
         <input type="hidden" name="cliente_id" id="cliente_id" value="{{ old('cliente_id') }}">
@@ -869,7 +1090,6 @@ html { scroll-behavior: smooth; }
         <div class="st">Contacto</div>
         <div class="g2">
             <div class="field">
-                {{-- CORREGIDO: lbl-wa para alineación del icono WhatsApp con el texto --}}
                 <label class="lbl-wa" for="titular_telefono">
                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="#25d366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                     Celular / WhatsApp <span class="req">*</span>
@@ -919,10 +1139,10 @@ html { scroll-behavior: smooth; }
 
 {{-- ══ BLOQUE 2 · VIAJE ══ --}}
 <div class="fb" id="bloque-2">
+    <div class="fb-num-badge" id="fb-status-2">2</div>
     <div class="fb-head">
         <div class="fb-ico amber"><i class="bi bi-airplane"></i></div>
         <div class="fb-titles"><h3>Datos del viaje</h3><p>Nombre del servicio, precio, fechas y canal de venta</p></div>
-        <div class="fb-status" id="fb-status-2">2</div>
     </div>
     <div class="fb-body">
         <div class="st">Servicio</div>
@@ -1011,10 +1231,10 @@ html { scroll-behavior: smooth; }
 
 {{-- ══ BLOQUE 3 · PAGO Y COMPROBANTE ══ --}}
 <div class="fb" id="bloque-3">
+    <div class="fb-num-badge" id="fb-status-3">3</div>
     <div class="fb-head">
         <div class="fb-ico amber"><i class="bi bi-credit-card"></i></div>
         <div class="fb-titles"><h3>Pago y comprobante</h3><p>Método de pago, monto calculado y comprobante adjunto</p></div>
-        <div class="fb-status" id="fb-status-3">3</div>
     </div>
     <div class="fb-body">
         <div class="alerta amber">
@@ -1045,8 +1265,8 @@ html { scroll-behavior: smooth; }
                                     value="{{ old('ruc_factura') }}"
                                     class="fi" placeholder="20XXXXXXXXX" maxlength="11"
                                     inputmode="numeric"
-                                    oninput="soloNumeros(this,11);autoRUC(this.value)">
-                                <button type="button" class="btn-dni-lookup" onclick="buscarRUC()">
+                                    oninput="onRucInput(this)">
+                                <button type="button" class="btn-dni-lookup" id="btn-ruc-lookup" onclick="buscarRUC()">
                                     <i class="bi bi-search"></i> SUNAT
                                 </button>
                             </div>
@@ -1085,7 +1305,6 @@ html { scroll-behavior: smooth; }
 
         <div class="g3">
             <div class="field">
-                {{-- CORREGIDO: la validación JS ya no bloquea si el valor está presente --}}
                 <label class="lbl" for="metodo_pago">Método de pago <span class="req">*</span></label>
                 <select name="metodo_pago" id="metodo_pago" class="fi"
                     onchange="updOpHint();updateProgressSteps()"
@@ -1168,14 +1387,16 @@ html { scroll-behavior: smooth; }
 
 {{-- ══ BLOQUE 4 · PASAJEROS ══ --}}
 <div class="fb" id="bloque-4">
+    <div class="fb-num-badge" id="fb-status-4">4</div>
     <div class="fb-head">
         <div class="fb-ico blue"><i class="bi bi-people"></i></div>
         <div class="fb-titles"><h3>Pasajeros adicionales</h3><p>Integrantes del grupo, además del titular</p></div>
-        <div class="fb-status" id="fb-status-4">4</div>
     </div>
     <div class="fb-body">
 
-        {{-- NUEVO: Switch "Viajo solo" --}}
+        {{-- Switch "Solo titular" — INICIA DESACTIVADO.
+             Desactivado = se muestran pasajeros adicionales (estado por defecto)
+             Activado    = solo viaja el titular (oculta sección) --}}
         <div class="solo-banner" id="solo-banner">
             <div class="solo-banner-text">
                 <i class="bi bi-person-check"></i>
@@ -1204,7 +1425,6 @@ html { scroll-behavior: smooth; }
             </button>
         </div>
 
-        {{-- Mensaje cuando está en modo "solo" --}}
         <div id="solo-msg" style="display:none; padding:.75rem 1rem; background:var(--adv-green-l); border:1.5px solid var(--adv-green-m); border-radius:var(--r); font-size:.8rem; color:var(--adv-green); font-weight:700;">
             <i class="bi bi-check-circle me-1"></i> Registrado como viajero único. No se requieren pasajeros adicionales.
         </div>
@@ -1213,12 +1433,36 @@ html { scroll-behavior: smooth; }
 
 {{-- ══ BLOQUE 5 · SALUD ══ --}}
 <div class="fb" id="bloque-5">
+    <div class="fb-num-badge" id="fb-status-5">5</div>
     <div class="fb-head">
         <div class="fb-ico amber"><i class="bi bi-heart-pulse"></i></div>
         <div class="fb-titles"><h3>Salud y seguridad</h3><p>Información médica de cada integrante del grupo</p></div>
-        <div class="fb-status" id="fb-status-5">5</div>
     </div>
     <div class="fb-body">
+
+        {{-- Switch principal de salud — INICIA DESACTIVADO
+             Desactivado = SÍ HAY alergias/condiciones (muestra campos)
+             Activado    = NO HAY alergias/condiciones (oculta campos)
+             En estado inicial el bloque NO se marca completo hasta interactuar
+             o llenar los campos. --}}
+        <div class="salud-master-banner has-conditions" id="salud-master-banner">
+            <div class="salud-master-text" id="salud-master-text">
+                <i class="bi bi-exclamation-triangle" id="salud-master-icon"></i>
+                <span id="salud-master-label">Algún pasajero tiene alergias o condiciones médicas</span>
+                <span class="salud-master-badge" id="salud-master-badge">Con condiciones</span>
+            </div>
+            <label class="toggle-knob" title="Activar si NINGÚN pasajero tiene alergias o condiciones">
+                <input type="checkbox" id="salud-master-toggle"
+                    onchange="toggleSaludMaster(this)"
+                    {{ old('salud_sin_condiciones') ? 'checked' : '' }}>
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+        {{-- Hidden: 1 = NO tiene condiciones (switch ON), 0 = SÍ tiene condiciones (switch OFF) --}}
+        <input type="hidden" name="salud_sin_condiciones" id="salud-sin-condiciones-hidden"
+            value="{{ old('salud_sin_condiciones', '0') }}">
+
+        {{-- Contenido de salud — visible cuando el switch está DESACTIVADO --}}
         <div id="salud-lista">
             {{-- Bloque salud del TITULAR --}}
             <div class="salud-block" id="salud-titular">
@@ -1229,9 +1473,9 @@ html { scroll-behavior: smooth; }
                 </div>
                 <div class="salud-body">
                     <div class="salud-grid">
-                        <div>
-                            <label class="lbl" style="margin-bottom:.5rem">Alergias o condiciones médicas</label>
-                            {{-- CORREGIDO: switches Sí/No sin preactivar, valor neutral por defecto --}}
+                        {{-- Columna izquierda: Alergias --}}
+                        <div class="salud-col">
+                            <label class="lbl">Alergias o condiciones médicas</label>
                             <div class="sw-group" style="margin-bottom:.6rem">
                                 <label class="sw-btn sw-no {{ old('titular_tiene_alergias','no')=='no'?'sel':'' }}" onclick="togAlergPax(this,'alerg-titular')">
                                     <input type="radio" name="titular_tiene_alergias" value="no" {{ old('titular_tiene_alergias','no')=='no'?'checked':'' }}>
@@ -1244,22 +1488,22 @@ html { scroll-behavior: smooth; }
                             </div>
                             <div id="alerg-titular-wrap" style="{{ old('titular_tiene_alergias')=='si'?'':'display:none' }}">
                                 <div class="alerg-expand">
-                                    <label class="lbl" style="margin-bottom:.4rem;color:var(--adv-amber-d)"><i class="bi bi-exclamation-triangle me-1"></i>Detalla las alergias</label>
+                                    <label class="lbl"><i class="bi bi-exclamation-triangle me-1"></i>Detalla las alergias</label>
                                     <textarea name="titular_alergias_detalle" id="alerg-titular"
-                                        class="fi" rows="2"
+                                        class="fi" rows="3"
                                         placeholder="Medicamentos, alimentos, materiales...">{{ old('titular_alergias_detalle') }}</textarea>
                                 </div>
                             </div>
                         </div>
-                        <div>
+                        {{-- Columna derecha: Restricciones alimentarias --}}
+                        <div class="salud-col">
                             <label class="lbl">Restricciones alimentarias</label>
                             <textarea name="titular_restricciones" class="fi" rows="3" placeholder="Vegetariano, vegano, sin gluten...">{{ old('titular_restricciones') }}</textarea>
                         </div>
                     </div>
 
-                    {{-- NUEVO: Sección "Progreso físico" con switches Sí/No --}}
                     <div style="margin-top:1rem; padding-top:1rem; border-top:1px solid var(--border)">
-                        <label class="lbl" style="margin-bottom:.5rem">
+                        <label class="lbl" style="margin-bottom:.65rem">
                             <i class="bi bi-activity me-1" style="color:var(--adv-blue)"></i>
                             Condición física / Movilidad
                         </label>
@@ -1300,6 +1544,12 @@ html { scroll-behavior: smooth; }
                 </div>
             </div>
         </div>
+
+        {{-- Mensaje cuando el switch está activado (sin condiciones) --}}
+        <div id="salud-confirm-msg" style="display:none; padding:.75rem 1rem; background:var(--adv-green-l); border:1.5px solid var(--adv-green-m); border-radius:var(--r); font-size:.8rem; color:var(--adv-green); font-weight:700;">
+            <i class="bi bi-check-circle me-1"></i> Confirmado: ningún pasajero tiene alergias ni condiciones médicas relevantes.
+        </div>
+
         <p style="font-size:.72rem;color:var(--ink-4);margin-top:.5rem">
             <i class="bi bi-info-circle me-1"></i>
             Al agregar pasajeros en el bloque anterior, aparecerán aquí sus campos de salud.
@@ -1309,10 +1559,10 @@ html { scroll-behavior: smooth; }
 
 {{-- ══ BLOQUE 6 · LOGÍSTICA ══ --}}
 <div class="fb" id="bloque-6">
+    <div class="fb-num-badge" id="fb-status-6">6</div>
     <div class="fb-head">
         <div class="fb-ico navy"><i class="bi bi-pin-map"></i></div>
         <div class="fb-titles"><h3>Logística del viaje</h3><p>Punto de encuentro, hora de recojo, guía y observaciones</p></div>
-        <div class="fb-status" id="fb-status-6">6</div>
     </div>
     <div class="fb-body">
         <div class="alerta blue">
@@ -1356,10 +1606,10 @@ html { scroll-behavior: smooth; }
 
 {{-- ══ BLOQUE 7 · POLÍTICAS ══ --}}
 <div class="fb" id="bloque-7">
+    <div class="fb-num-badge" id="fb-status-7">7</div>
     <div class="fb-head">
         <div class="fb-ico blue"><i class="bi bi-shield-check"></i></div>
         <div class="fb-titles"><h3>Políticas y Privacidad</h3><p>Selecciona, personaliza y envía las políticas aplicables</p></div>
-        <div class="fb-status" id="fb-status-7">7</div>
     </div>
     <div class="fb-body">
         <div class="alerta blue">
@@ -1444,10 +1694,11 @@ html { scroll-behavior: smooth; }
 </form>
 </div>{{-- fin form-main --}}
 
-{{-- SUMMARY PANEL --}}
+{{-- SUMMARY PANEL — bloque independiente, sin progreso interno --}}
 <aside class="summary-panel">
     <div class="summary-panel-inner">
         <div class="sp-title"><i class="bi bi-receipt" style="font-size:.9rem"></i> Resumen financiero</div>
+
         <div class="sp-item">
             <div class="sp-label">Precio total</div>
             <div class="sp-value" id="sp-total">S/ 0.00</div>
@@ -1469,15 +1720,6 @@ html { scroll-behavior: smooth; }
             </div>
             <div class="sp-pax-count" id="sp-pax-txt"></div>
         </div>
-        <div class="sp-progress-section">
-            <div class="sp-progress-label">
-                <span>Formulario</span>
-                <span id="sp-pct-txt" style="color:rgba(255,255,255,.65);font-family:'JetBrains Mono',monospace">0%</span>
-            </div>
-            <div class="sp-progress-bar">
-                <div class="sp-progress-fill" id="sp-fill"></div>
-            </div>
-        </div>
     </div>
 </aside>
 
@@ -1490,13 +1732,14 @@ html { scroll-behavior: smooth; }
 <script src="{{ asset('js/politicas.js') }}"></script>
 <script>
 /* ════════════════════════════════════════════════════════════
-   ADVENTURE — create.blade.php · JavaScript v6
-   CORRECCIONES:
-   ✓ metodo_pago: validación corregida — no bloquea si está seleccionado
-   ✓ Solo pasajero: toggle oculta la sección y no requiere pasajeros
-   ✓ Switches Sí/No en salud correctamente inicializados
-   ✓ edad guardada en pasajeros[i][edad] en BD
-   ✓ Sin emojis — solo Bootstrap Icons
+   ADVENTURE — create.blade.php · JavaScript v7
+   AJUSTES UI/UX:
+   ✓ Búsqueda RUC corregida (autoRUC enganchado en oninput)
+   ✓ Switch solo-pasajero invertido: inicia desactivado → muestra
+   ✓ Switch salud-master invertido: inicia desactivado → SÍ tiene
+                                    activado → NO tiene (oculta)
+   ✓ Bloque 5 NO completo hasta interacción/datos válidos
+   ✓ SIN cambios en lógica de negocio
 ════════════════════════════════════════════════════════════ */
 
 /* ──────────────────────────────────────────────────────────
@@ -1615,9 +1858,21 @@ document.addEventListener('DOMContentLoaded', () => {
         if (cb && cb.checked) item.classList.add('checked');
     });
 
-    // Solo pasajero: restaurar estado si viene del old()
+    // Solo pasajero: aplicar estado inicial — INICIA DESACTIVADO
     const soloChk = document.getElementById('solo-pasajero');
-    if (soloChk && soloChk.checked) toggleSoloPasajero(soloChk);
+    if (soloChk) {
+        // Aplicar estado visual según checked actual (puede venir del old())
+        toggleSoloPasajero(soloChk);
+    }
+
+    // Salud master: aplicar estado inicial — INICIA DESACTIVADO (=> SÍ tiene)
+    const saludChk = document.getElementById('salud-master-toggle');
+    if (saludChk) {
+        // Aplicar estado visual según checked actual
+        _updateSaludMasterVisual(saludChk.checked);
+        // Si el old() trajo el switch ON, marcar como touched
+        if (saludChk.checked) saludChk.dataset.touched = '1';
+    }
 
     updateProgressSteps();
 });
@@ -1629,7 +1884,19 @@ function soloNumeros(inp, max) {
     inp.value = (inp.value || '').replace(/\D/g, '').substring(0, max);
 }
 
+/* RUC: handler completo con auto-búsqueda al completar 11 dígitos */
 let _rucTimer = null;
+function onRucInput(inp) {
+    // Solo dígitos, máx 11
+    inp.value = (inp.value || '').replace(/\D/g, '').substring(0, 11);
+    clearTimeout(_rucTimer);
+    if (inp.value.length === 11) {
+        _rucTimer = setTimeout(buscarRUC, 700);
+    }
+    updateProgressSteps();
+}
+
+/* Compatibilidad si algún punto antiguo aún llamaba autoRUC */
 function autoRUC(val) {
     clearTimeout(_rucTimer);
     if ((val || '').length === 11) {
@@ -1785,25 +2052,44 @@ async function buscarPorDoc() {
     }
 }
 
+/* RUC — búsqueda corregida */
 async function buscarRUC() {
-    const ruc = (document.getElementById('ruc_factura')?.value || '').trim();
-    if (ruc.length !== 11) return;
+    const rucInp = document.getElementById('ruc_factura');
+    const ruc    = (rucInp?.value || '').trim();
+    const btn    = document.getElementById('btn-ruc-lookup');
+
+    if (!ruc) { showRucResult('err', 'Ingresa el RUC antes de buscar.'); return; }
+    if (ruc.length !== 11) { showRucResult('err', 'El RUC debe tener 11 dígitos.'); return; }
+
+    setLookupLoading(btn, true, 'btn-ruc-lookup');
     showRucResult('load', '<span class="spinner" style="margin-right:6px"></span> Consultando SUNAT...');
+
     try {
+        // 1. Intentar local primero
         const local = await fetchJSON('/api/buscar-ruc/' + ruc);
-        if (local && local.razon_social) {
-            document.getElementById('razon_social').value = local.razon_social.toUpperCase();
-            showRucResult('ok', '<i class="bi bi-check-circle-fill me-1"></i>' + local.razon_social); return;
+        if (local && (local.razon_social || local.nombre)) {
+            const rs = (local.razon_social || local.nombre || '').toUpperCase();
+            const rsInp = document.getElementById('razon_social');
+            if (rsInp) rsInp.value = rs;
+            showRucResult('ok', '<i class="bi bi-check-circle-fill me-1"></i>' + rs);
+            updateProgressSteps();
+            return;
         }
+        // 2. Fallback API externa
         const ext = await fetchJSON('https://api.apis.net.pe/v2/sunat/ruc?numero=' + ruc);
         if (ext && ext.razonSocial) {
-            document.getElementById('razon_social').value = ext.razonSocial.toUpperCase();
-            showRucResult('ok', '<i class="bi bi-check-circle-fill me-1"></i>' + ext.razonSocial);
+            const rs = ext.razonSocial.toUpperCase();
+            const rsInp = document.getElementById('razon_social');
+            if (rsInp) rsInp.value = rs;
+            showRucResult('ok', '<i class="bi bi-check-circle-fill me-1"></i>' + rs);
+            updateProgressSteps();
         } else {
             showRucResult('err', 'RUC no encontrado. Ingrésalo manualmente.');
         }
-    } catch {
+    } catch (e) {
         showRucResult('err', 'Error de conexión. Ingrésalo manualmente.');
+    } finally {
+        setLookupLoading(btn, false, 'btn-ruc-lookup');
     }
 }
 
@@ -1828,9 +2114,15 @@ async function fetchJSON(url) {
 function setLookupLoading(btn, loading, id) {
     if (!btn) return;
     btn.disabled = loading;
-    btn.innerHTML = loading
-        ? '<span class="spinner" style="width:10px;height:10px;border-width:2px;margin-right:4px"></span> Buscando'
-        : '<i class="bi bi-search"></i> Buscar';
+    if (id === 'btn-ruc-lookup') {
+        btn.innerHTML = loading
+            ? '<span class="spinner" style="width:10px;height:10px;border-width:2px;margin-right:4px"></span> Buscando'
+            : '<i class="bi bi-search"></i> SUNAT';
+    } else {
+        btn.innerHTML = loading
+            ? '<span class="spinner" style="width:10px;height:10px;border-width:2px;margin-right:4px"></span> Buscando'
+            : '<i class="bi bi-search"></i> Buscar';
+    }
 }
 
 function showDniResult(type, msg) {
@@ -1973,21 +2265,23 @@ function toggleNotif(item, cbId) {
 }
 
 /* ──────────────────────────────────────────────────────────
-   12. SOLO PASAJERO — nuevo switch
+   12. SOLO PASAJERO — Switch invertido
+       Inicia DESACTIVADO → muestra sección de pasajeros
+       Activado → solo titular (oculta sección)
 ────────────────────────────────────────────────────────── */
 function toggleSoloPasajero(chk) {
     const seccion = document.getElementById('pax-seccion');
     const msg     = document.getElementById('solo-msg');
     if (chk.checked) {
-        // Ocultar sección de agregar pasajeros
+        // Solo titular: ocultar sección y limpiar pasajeros
         if (seccion) seccion.style.display = 'none';
         if (msg)     msg.style.display     = 'block';
-        // Limpiar pasajeros existentes
         document.querySelectorAll('#pax-lista .pax-card').forEach(c => {
             const idx = c.id.replace('pax-','');
             removePax(parseInt(idx));
         });
     } else {
+        // Mostrar sección normal de pasajeros
         if (seccion) seccion.style.display = '';
         if (msg)     msg.style.display     = 'none';
     }
@@ -1995,8 +2289,54 @@ function toggleSoloPasajero(chk) {
 }
 
 /* ──────────────────────────────────────────────────────────
+   12b. SALUD MASTER TOGGLE — Switch invertido
+        Inicia DESACTIVADO → SÍ HAY alergias (muestra campos)
+        Activado → NO HAY alergias (oculta y confirma)
+        El bloque NO se marca completo si:
+        - Está desactivado y los campos no tienen datos suficientes
+        - El usuario no ha interactuado con el switch
+────────────────────────────────────────────────────────── */
+function toggleSaludMaster(chk) {
+    chk.dataset.touched = '1';
+    _updateSaludMasterVisual(chk.checked);
+    const h = document.getElementById('salud-sin-condiciones-hidden');
+    if (h) h.value = chk.checked ? '1' : '0';
+    updateProgressSteps();
+}
+
+function _updateSaludMasterVisual(isOn) {
+    // isOn = true  → switch activado → NO hay condiciones (oculta)
+    // isOn = false → switch desactivado → SÍ hay condiciones (muestra)
+    const banner    = document.getElementById('salud-master-banner');
+    const label     = document.getElementById('salud-master-label');
+    const badge     = document.getElementById('salud-master-badge');
+    const icon      = document.getElementById('salud-master-icon');
+    const lista     = document.getElementById('salud-lista');
+    const confirmEl = document.getElementById('salud-confirm-msg');
+
+    if (!banner) return;
+
+    if (isOn) {
+        // NO hay condiciones — oculta campos
+        banner.classList.remove('has-conditions');
+        if (label) label.textContent = 'Ningún pasajero tiene alergias o condiciones médicas';
+        if (badge) badge.textContent = 'Sin condiciones';
+        if (icon)  icon.className     = 'bi bi-shield-check';
+        if (lista) lista.style.display = 'none';
+        if (confirmEl) confirmEl.style.display = 'block';
+    } else {
+        // SÍ hay condiciones — muestra campos
+        banner.classList.add('has-conditions');
+        if (label) label.textContent = 'Algún pasajero tiene alergias o condiciones médicas';
+        if (badge) badge.textContent = 'Con condiciones';
+        if (icon)  icon.className     = 'bi bi-exclamation-triangle';
+        if (lista) lista.style.display = '';
+        if (confirmEl) confirmEl.style.display = 'none';
+    }
+}
+
+/* ──────────────────────────────────────────────────────────
    13. PASAJEROS ADICIONALES
-   CORREGIDO: edad se envía en pasajeros[i][edad] (campo numérico)
 ────────────────────────────────────────────────────────── */
 let pN = 0;
 
@@ -2019,7 +2359,6 @@ function addPax() {
             '</div>' +
             '<div class="field">' +
                 '<label class="lbl">Edad</label>' +
-                /* CORREGIDO: name ahora es pasajeros[i][edad] para que llegue al backend */
                 '<input type="number" name="pasajeros[' + i + '][edad]" id="pax-edad-' + i + '" class="fi" min="0" max="120" placeholder="Ej: 25" inputmode="numeric"' +
                 ' oninput="calcTipoPax(' + i + ',this.value)">' +
                 '<div id="pax-tipo-badge-' + i + '" style="margin-top:.3rem"></div>' +
@@ -2085,7 +2424,6 @@ function addSaludPax(i) {
     if (!lista) return;
     const s = document.createElement('div');
     s.className = 'salud-block'; s.id = 'salud-pax-' + i;
-    /* CORREGIDO: switches Sí/No en salud de pasajeros con clase sw-btn correcta */
     s.innerHTML =
         '<div class="salud-head">' +
             '<i class="bi bi-person" style="color:var(--ink-3)"></i>' +
@@ -2094,8 +2432,8 @@ function addSaludPax(i) {
         '</div>' +
         '<div class="salud-body">' +
             '<div class="salud-grid">' +
-                '<div>' +
-                    '<label class="lbl" style="margin-bottom:.5rem">Alergias o condiciones médicas</label>' +
+                '<div class="salud-col">' +
+                    '<label class="lbl">Alergias o condiciones médicas</label>' +
                     '<div class="sw-group" style="margin-bottom:.6rem">' +
                         '<label class="sw-btn sw-no sel" onclick="togAlergPax(this,\'alerg-pax-' + i + '\')">' +
                             '<input type="radio" name="pasajeros[' + i + '][tiene_alergias]" value="no" checked>' +
@@ -2108,12 +2446,12 @@ function addSaludPax(i) {
                     '</div>' +
                     '<div id="alerg-pax-' + i + '-wrap" style="display:none">' +
                         '<div class="alerg-expand">' +
-                            '<label class="lbl" style="margin-bottom:.4rem;color:var(--adv-amber-d)"><i class="bi bi-exclamation-triangle me-1"></i>Detalla las alergias</label>' +
-                            '<textarea name="pasajeros[' + i + '][alergias_detalle]" id="alerg-pax-' + i + '" class="fi" rows="2" placeholder="Medicamentos, alimentos..."></textarea>' +
+                            '<label class="lbl"><i class="bi bi-exclamation-triangle me-1"></i>Detalla las alergias</label>' +
+                            '<textarea name="pasajeros[' + i + '][alergias_detalle]" id="alerg-pax-' + i + '" class="fi" rows="3" placeholder="Medicamentos, alimentos..."></textarea>' +
                         '</div>' +
                     '</div>' +
                 '</div>' +
-                '<div>' +
+                '<div class="salud-col">' +
                     '<label class="lbl">Restricciones alimentarias</label>' +
                     '<textarea name="pasajeros[' + i + '][restricciones]" class="fi" rows="3" placeholder="Sin gluten, vegano..."></textarea>' +
                 '</div>' +
@@ -2127,14 +2465,6 @@ function updateSaludNombre(i, n) {
     if (el) el.textContent = n || 'sin nombre';
 }
 
-function paxDoc(sel, i) {
-    const inp = document.getElementById('pd-' + i);
-    if (!inp) return;
-    const cfg = { DNI:{max:8,ph:'8 dígitos'}, CE:{max:12,ph:'12 dígitos'}, PASAPORTE:{max:15,ph:'Alfanumér.'} };
-    const c   = cfg[sel.value] || {max:20,ph:'Opcional'};
-    inp.maxLength = c.max; inp.placeholder = c.ph;
-}
-
 function paxCnt() {
     const n  = document.querySelectorAll('#pax-lista .pax-card').length;
     const el = document.getElementById('pax-cnt');
@@ -2145,11 +2475,18 @@ function paxCnt() {
     if (sb) sb.textContent = n > 0 ? '· ' + (n+1) + ' pasajeros' : '';
 }
 
+function paxDoc(sel, i) {
+    const inp = document.getElementById('pd-' + i);
+    if (!inp) return;
+    const cfg = { DNI:{max:8,ph:'8 dígitos'}, CE:{max:12,ph:'12 dígitos'}, PASAPORTE:{max:15,ph:'Alfanumér.'} };
+    const c   = cfg[sel.value] || {max:20,ph:'Opcional'};
+    inp.maxLength = c.max; inp.placeholder = c.ph;
+}
+
 /* ──────────────────────────────────────────────────────────
-   14. ALERGIAS TOGGLE — adaptado para sw-btn
+   14. ALERGIAS TOGGLE
 ────────────────────────────────────────────────────────── */
 function togAlergPax(lbl, taId) {
-    // Buscar el grupo sw-group padre y limpiar selección
     lbl.closest('.sw-group')?.querySelectorAll('.sw-btn').forEach(b => b.classList.remove('sel'));
     lbl.classList.add('sel');
     const radio = lbl.querySelector('input[type="radio"]');
@@ -2162,7 +2499,6 @@ function togAlergPax(lbl, taId) {
     updateProgressSteps();
 }
 
-/* Toggle genérico para switches Sí/No */
 function togSw(lbl, name) {
     lbl.closest('.sw-group')?.querySelectorAll('.sw-btn').forEach(b => b.classList.remove('sel'));
     lbl.classList.add('sel');
@@ -2296,19 +2632,22 @@ function getBloqueStatus(n) {
             return 'done';
         }
         case 3: {
-            /* CORREGIDO: verificar que el select tenga un valor no vacío */
             const met = (document.getElementById('metodo_pago')?.value || '').trim();
             const mon = parseFloat(document.getElementById('monto_pagado_inicial')?.value) || 0;
-            if (!met || met === '') return 'incomplete';   // solo incompleto, no error
+            if (!met || met === '') return 'incomplete';
             if (mon <= 0) return 'incomplete';
             if (!voucherAdjunto) return 'incomplete';
             return 'done';
         }
         case 4: {
+            // Switch "solo titular" activado → siempre completo
             const soloCbk = document.getElementById('solo-pasajero');
-            if (soloCbk && soloCbk.checked) return 'done'; // viajero único: siempre completo
+            if (soloCbk && soloCbk.checked) return 'done';
+            // Switch desactivado: validar pasajeros
             const cards = document.querySelectorAll('#pax-lista .pax-card');
-            if (!cards.length) return 'done';
+            // Si no hay cards y el switch está desactivado, está incompleto
+            // (debe agregar al menos uno o activar "solo titular")
+            if (!cards.length) return 'incomplete';
             let ok = true;
             cards.forEach(card => {
                 const idx = card.id.replace('pax-','');
@@ -2319,9 +2658,47 @@ function getBloqueStatus(n) {
             return ok ? 'done' : 'incomplete';
         }
         case 5: {
-            const trRad = document.querySelector('[name="titular_tiene_alergias"]:checked');
-            if (trRad?.value === 'si' && !(document.getElementById('alerg-titular')?.value.trim())) return 'error';
-            return 'done';
+            // Switch INVERTIDO:
+            //   ON  = NO hay condiciones → completo (confirmado)
+            //   OFF = SÍ hay condiciones → debe llenar campos
+            const masterChk = document.getElementById('salud-master-toggle');
+            if (!masterChk) return 'incomplete';
+
+            // Caso ON: confirmado sin condiciones, completo
+            if (masterChk.checked) return 'done';
+
+            // Caso OFF: requiere que se haya interactuado o que tenga datos
+            // Verificar si hay alguna interacción con campos de salud
+            const trRad     = document.querySelector('[name="titular_tiene_alergias"]:checked');
+            const tieneAlerg = trRad?.value === 'si';
+            const detalleAlerg = (document.getElementById('alerg-titular')?.value || '').trim();
+            const restricciones = document.querySelector('[name="titular_restricciones"]')?.value.trim() || '';
+            const obsMed = document.querySelector('[name="titular_obs_medicas"]')?.value.trim() || '';
+            const dificMov = document.querySelector('[name="titular_dificultad_movilidad"]:checked')?.value;
+            const usaMed = document.querySelector('[name="titular_usa_medicacion"]:checked')?.value;
+
+            // Si el usuario tocó el switch (touched) → permitir completar según campos
+            const wasTouched = masterChk.dataset.touched === '1';
+
+            // Si dijo "Sí tiene" alergias pero no detalló → error
+            if (tieneAlerg && !detalleAlerg) return 'error';
+
+            // Si tocó algo significativo en salud → completo
+            if (wasTouched) {
+                // Touched: aceptar como completo si:
+                //  - dijo "no tiene" alergias (default), o
+                //  - dijo "sí tiene" y detalló
+                if (tieneAlerg && detalleAlerg) return 'done';
+                if (!tieneAlerg) {
+                    // Si además dejó algún dato, OK
+                    if (restricciones || obsMed || dificMov === 'si' || usaMed === 'si' || dificMov === 'no' || usaMed === 'no') return 'done';
+                    // Sin datos extra y "no tiene" → considerarlo como pendiente de revisar
+                    return 'incomplete';
+                }
+            }
+
+            // No tocó nada → pendiente
+            return 'incomplete';
         }
         case 6: {
             const vals = [
@@ -2344,35 +2721,48 @@ function updateProgressSteps() {
     let doneCount  = 0;
     const activeIdx = getActiveBloqueIdx();
     for (let i = 1; i <= TOTAL_BLOQUES; i++) {
-        const ps  = document.getElementById('ps-' + i);
-        const fb  = document.getElementById('bloque-' + i);
-        const fbs = document.getElementById('fb-status-' + i);
+        const ps    = document.getElementById('ps-' + i);
+        const fb    = document.getElementById('bloque-' + i);
+        const badge = document.getElementById('fb-status-' + i);
         if (!ps || !fb) continue;
         const status = getBloqueStatus(i);
+
         ps.classList.remove('done','has-error','active');
         fb.classList.remove('has-errors','is-complete');
-        if (fbs) fbs.textContent = String(i);
+
+        if (badge) {
+            badge.style.background = 'var(--adv-blue)';
+            badge.innerHTML = String(i);
+        }
+
         if (status === 'done') {
-            ps.classList.add('done'); fb.classList.add('is-complete');
-            if (fbs) fbs.innerHTML = '<i class="bi bi-check2"></i>';
+            ps.classList.add('done');
+            fb.classList.add('is-complete');
+            if (badge) {
+                badge.style.background = 'var(--adv-blue)';
+                badge.innerHTML = '<i class="bi bi-check2" style="font-size:.8rem"></i>';
+            }
             doneCount++;
         } else if (status === 'error') {
-            ps.classList.add('has-error'); fb.classList.add('has-errors');
-            if (fbs) fbs.innerHTML = '<i class="bi bi-exclamation-lg"></i>';
+            ps.classList.add('has-error');
+            fb.classList.add('has-errors');
+            if (badge) {
+                badge.style.background = 'var(--adv-red)';
+                badge.innerHTML = '<i class="bi bi-exclamation-lg" style="font-size:.7rem"></i>';
+            }
         }
+
         if (i === activeIdx) ps.classList.add('active');
     }
-    const pct = Math.round((doneCount / TOTAL_BLOQUES) * 100);
+
+    const pct   = Math.round((doneCount / TOTAL_BLOQUES) * 100);
     const pFill = document.getElementById('ps-fill');
     const pPct  = document.getElementById('ps-pct');
     const pDone = document.getElementById('ps-done-count');
-    const sFill = document.getElementById('sp-fill');
-    const sPct  = document.getElementById('sp-pct-txt');
+
     if (pFill) pFill.style.width = pct + '%';
     if (pPct)  pPct.textContent  = pct + '%';
     if (pDone) pDone.textContent = doneCount + '/' + TOTAL_BLOQUES;
-    if (sFill) sFill.style.width = pct + '%';
-    if (sPct)  sPct.textContent  = pct + '%';
 }
 
 function getActiveBloqueIdx() {
@@ -2425,7 +2815,6 @@ function validateField(input) {
 
 /* ──────────────────────────────────────────────────────────
    22. SUBMIT
-   CORREGIDO: metodo_pago no bloquea si ya tiene valor seleccionado
 ────────────────────────────────────────────────────────── */
 document.getElementById('form-reserva').addEventListener('submit', function(e) {
     joinEmail();
@@ -2439,10 +2828,8 @@ document.getElementById('form-reserva').addEventListener('submit', function(e) {
     let valid = true;
 
     requeridos.forEach(id => {
-        // Buscar por id y por name
         const f = document.getElementById(id) || document.querySelector('[name="' + id + '"]');
         if (!f) return;
-        // Excluir campos dentro de factura oculta
         const cf = document.getElementById('campos-factura');
         if (cf && cf.contains(f) && cf.style.display === 'none') return;
         if (!f.value || !f.value.trim()) {
@@ -2451,17 +2838,15 @@ document.getElementById('form-reserva').addEventListener('submit', function(e) {
         }
     });
 
-    /* CORREGIDO: validar metodo_pago por separado para no fallar si tiene valor */
     const metPago = document.getElementById('metodo_pago');
     if (!metPago || !metPago.value || metPago.value === '') {
         valid = false;
         if (metPago) metPago.classList.add('err');
     }
 
-    /* CORREGIDO: monto_pagado_inicial — calcular si no está */
     const montoInp = document.getElementById('monto_pagado_inicial');
     if (montoInp && (!montoInp.value || parseFloat(montoInp.value) <= 0)) {
-        calcTotal(); // intentar recalcular
+        calcTotal();
         if (!montoInp.value || parseFloat(montoInp.value) <= 0) {
             valid = false;
             montoInp.classList.add('err');

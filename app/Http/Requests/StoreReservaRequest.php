@@ -80,7 +80,7 @@ class StoreReservaRequest extends FormRequest
             // ── Bloque 3 — Pasajeros adicionales ──────────────────────
             'pasajeros'                    => 'nullable|array',
             'pasajeros.*.nombre_completo'  => 'required|string|max:200',
-            'pasajeros.*.tipo' => 'nullable|in:adulto,nino,bebe,adolescente,adulto_mayor',
+            'pasajeros.*.tipo'             => 'nullable|in:adulto,nino,bebe,adolescente,adulto_mayor',
             'pasajeros.*.tipo_documento'   => 'nullable|in:DNI,CE,PASAPORTE',
             'pasajeros.*.numero_documento' => 'nullable|string|max:15',
             'pasajeros.*.edad'             => 'nullable|integer|min:0|max:120',

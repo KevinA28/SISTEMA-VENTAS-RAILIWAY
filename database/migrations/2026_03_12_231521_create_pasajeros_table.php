@@ -19,7 +19,7 @@ class CreatePasajerosTable extends Migration
             $table->enum('tipo_documento', ['DNI', 'CE', 'PASAPORTE'])->nullable();
             $table->string('numero_documento', 20)->nullable();
             $table->date('fecha_nacimiento')->nullable();
-            $table->enum('tipo', ['adulto', 'nino'])->default('adulto');
+            $table->enum('tipo', ['adulto', 'nino', 'bebe', 'adolescente', 'adulto_mayor'])->default('adulto');
             $table->timestamps();
         });
 
