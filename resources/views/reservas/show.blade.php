@@ -428,9 +428,6 @@ body { font-family: 'DM Sans', sans-serif; }
         <div class="info-card">
             <div class="info-card-header">
                 <div class="hdr-left"><i class="bi bi-credit-card"></i> Pagos registrados</div>
-                <button class="btn-sm-green" data-bs-toggle="modal" data-bs-target="#modalPago">
-                    <i class="bi bi-plus"></i> Registrar pago
-                </button>
             </div>
 
             {{-- Barra de progreso ── --}}

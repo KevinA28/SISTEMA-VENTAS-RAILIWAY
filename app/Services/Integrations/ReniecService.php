@@ -1,14 +1,4 @@
 <?php
-// =====================================================================
-// ARCHIVO: ReniecService.php
-// UBICACIÓN: app/Services/Integrations/ReniecService.php
-// =====================================================================
-// SERVICIO USADO: apis.net.pe (plan gratuito — 100 consultas/día)
-// DOCUMENTACIÓN: https://apis.net.pe/api-dni-gratis
-// CONFIGURAR EN .env:
-//   RENIEC_API_TOKEN=tu_token_aqui
-// OBTENER TOKEN GRATIS EN: https://apis.net.pe
-// =====================================================================
 
 namespace App\Services\Integrations;
 
@@ -17,64 +7,82 @@ use Illuminate\Support\Facades\Log;
 
 class ReniecService
 {
-    private string $baseUrl = 'https://api.apis.net.pe/v2';
+    private string $baseUrl = 'https://apiperu.dev/api';
     private string $token;
 
     public function __construct()
     {
-        $this->token = config('services.reniec.token', '');
+        $this->token = config('services.apiperu.token', '');
     }
 
-    // -----------------------------------------------------------------
-    // MÉTODO PRINCIPAL
-    // Detecta automáticamente si es DNI o RUC y consulta el endpoint
-    // correcto. Retorna array con datos normalizados o null si falla.
-    // -----------------------------------------------------------------
+    /**
+     * Detecta tipo y consulta el endpoint correcto.
+     */
     public function consultar(string $numero, string $tipo): ?array
     {
         return match (strtoupper($tipo)) {
-            'DNI'  => $this->consultarDni($numero),
-            'RUC'  => $this->consultarRuc($numero),
+            'DNI'   => $this->consultarDni($numero),
+            'RUC'   => $this->consultarRuc($numero),
             default => null,
         };
     }
 
-    // -----------------------------------------------------------------
-    // CONSULTAR DNI
-    // Endpoint: GET /reniec/dni?numero=12345678
-    // Respuesta: { "nombres", "apellidoPaterno", "apellidoMaterno", ... }
-    // -----------------------------------------------------------------
+    /**
+     * Consultar DNI en RENIEC via apiperu.dev
+     * GET https://apiperu.dev/api/dni/{dni}
+     * Respuesta exitosa:
+     * {
+     *   "success": true,
+     *   "data": {
+     *     "numero": "73147366",
+     *     "nombre_completo": "FLORES YGNACIO, KEVIN ANTONY",
+     *     "nombres": "KEVIN ANTONY",
+     *     "apellido_paterno": "FLORES",
+     *     "apellido_materno": "YGNACIO"
+     *   }
+     * }
+     */
     public function consultarDni(string $dni): ?array
     {
         try {
             $response = Http::withToken($this->token)
                 ->timeout(8)
-                ->get("{$this->baseUrl}/reniec/dni", ['numero' => $dni]);
+                ->get("{$this->baseUrl}/dni/{$dni}");
 
             if ($response->failed()) {
-                Log::warning('ReniecService: DNI no encontrado o error', [
+                Log::warning('ReniecService: DNI no encontrado', [
                     'dni'    => $dni,
                     'status' => $response->status(),
                 ]);
                 return null;
             }
 
-            $data = $response->json();
+            $body = $response->json();
 
-            // Normalizar al formato interno del sistema
+            // Verificar que la respuesta sea exitosa y tenga datos
+            if (empty($body['success']) || empty($body['data'])) {
+                Log::warning('ReniecService: respuesta sin datos para DNI', ['dni' => $dni]);
+                return null;
+            }
+
+            $data = $body['data'];
+
             return [
                 'nombre_completo'  => trim(
-                    ($data['nombres'] ?? '') . ' ' .
-                    ($data['apellidoPaterno'] ?? '') . ' ' .
-                    ($data['apellidoMaterno'] ?? '')
+                    ($data['apellido_paterno'] ?? '') . ' ' .
+                    ($data['apellido_materno'] ?? '') . ' ' .
+                    ($data['nombres']          ?? '')
                 ),
+                'nombres'          => $data['nombres']          ?? '',
+                'apellido_paterno' => $data['apellido_paterno'] ?? '',
+                'apellido_materno' => $data['apellido_materno'] ?? '',
                 'tipo_documento'   => 'DNI',
                 'numero_documento' => $dni,
-                'direccion'        => null, // RENIEC no retorna dirección
+                'direccion'        => $data['direccion_completa'] ?? null,
             ];
 
         } catch (\Exception $e) {
-            Log::error('ReniecService: excepción consultando DNI', [
+            Log::error('ReniecService: excepcion DNI', [
                 'dni'     => $dni,
                 'mensaje' => $e->getMessage(),
             ]);
@@ -82,37 +90,45 @@ class ReniecService
         }
     }
 
-    // -----------------------------------------------------------------
-    // CONSULTAR RUC
-    // Endpoint: GET /sunat/ruc?numero=20123456789
-    // Respuesta: { "razonSocial", "nombreComercial", "direccion", ... }
-    // -----------------------------------------------------------------
+    /**
+     * Consultar RUC en SUNAT via apiperu.dev
+     * GET https://apiperu.dev/api/ruc/{ruc}
+     */
     public function consultarRuc(string $ruc): ?array
     {
         try {
             $response = Http::withToken($this->token)
                 ->timeout(8)
-                ->get("{$this->baseUrl}/sunat/ruc", ['numero' => $ruc]);
+                ->get("{$this->baseUrl}/ruc/{$ruc}");
 
             if ($response->failed()) {
-                Log::warning('ReniecService: RUC no encontrado o error', [
+                Log::warning('ReniecService: RUC no encontrado', [
                     'ruc'    => $ruc,
                     'status' => $response->status(),
                 ]);
                 return null;
             }
 
-            $data = $response->json();
+            $body = $response->json();
+
+            if (empty($body['success']) || empty($body['data'])) {
+                Log::warning('ReniecService: respuesta sin datos para RUC', ['ruc' => $ruc]);
+                return null;
+            }
+
+            $data = $body['data'];
 
             return [
-                'nombre_completo'  => $data['razonSocial'] ?? $data['nombreComercial'] ?? '',
+                'nombre_completo'  => $data['nombre_o_razon_social'] ?? $data['razon_social'] ?? '',
                 'tipo_documento'   => 'RUC',
                 'numero_documento' => $ruc,
                 'direccion'        => $data['direccion'] ?? null,
+                'estado'           => $data['estado']    ?? null,
+                'condicion'        => $data['condicion'] ?? null,
             ];
 
         } catch (\Exception $e) {
-            Log::error('ReniecService: excepción consultando RUC', [
+            Log::error('ReniecService: excepcion RUC', [
                 'ruc'     => $ruc,
                 'mensaje' => $e->getMessage(),
             ]);
