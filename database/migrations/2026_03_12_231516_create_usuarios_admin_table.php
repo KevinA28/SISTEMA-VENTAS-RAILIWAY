@@ -1,16 +1,13 @@
 <?php
-// =====================================================================
-// ARCHIVO: 2026_03_12_000001_create_usuarios_admin_table.php
-// UBICACIÓN: database/migrations/
-// =====================================================================
- 
+// UBICACIÓN: database/migrations/2026_03_12_000001_create_usuarios_admin_table.php
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
- 
-class CreateUsuariosAdminTable extends Migration
+
+return new class extends Migration
 {
-    public function up()
+    public function up(): void
     {
         Schema::create('usuarios_admin', function (Blueprint $table) {
             $table->id();
@@ -23,10 +20,9 @@ class CreateUsuariosAdminTable extends Migration
             $table->timestamps();
         });
     }
- 
-    public function down()
+
+    public function down(): void
     {
         Schema::dropIfExists('usuarios_admin');
     }
-}
- 
+};

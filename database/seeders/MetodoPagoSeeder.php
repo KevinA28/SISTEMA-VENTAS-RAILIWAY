@@ -1,4 +1,5 @@
 <?php
+// UBICACIÓN: database/seeders/MetodoPagoSeeder.php
 
 namespace Database\Seeders;
 
@@ -9,36 +10,31 @@ class MetodoPagoSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        DB::table('metodos_pago')->truncate();
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
-
         $metodos = [
-            'efectivo',
-            'yape',
-            'plin',
-            'tunki',
-            'transf_bcp',
-            'transf_bbva',
-            'transf_inter',
-            'transf_sc',
-            'transf_bn',
-            'transf_otros',
-            'dep_bcp',
-            'dep_bbva',
-            'dep_inter',
-            'dep_otros',
-            'tarjeta_credito',
-            'tarjeta_debito',
+            // clave (lo que manda el form)  =>  nombre (lo que se muestra)
+            ['clave' => 'efectivo',          'nombre' => 'Efectivo'],
+            ['clave' => 'yape',              'nombre' => 'Yape'],
+            ['clave' => 'plin',              'nombre' => 'Plin'],
+            ['clave' => 'tunki',             'nombre' => 'Tunki'],
+            ['clave' => 'transf_bcp',        'nombre' => 'Transferencia BCP'],
+            ['clave' => 'transf_bbva',       'nombre' => 'Transferencia BBVA'],
+            ['clave' => 'transf_inter',      'nombre' => 'Transferencia Interbank'],
+            ['clave' => 'transf_sc',         'nombre' => 'Transferencia Scotiabank'],
+            ['clave' => 'transf_bn',         'nombre' => 'Transferencia Banco Nación'],
+            ['clave' => 'transf_otros',      'nombre' => 'Transferencia otro banco'],
+            ['clave' => 'dep_bcp',           'nombre' => 'Depósito BCP'],
+            ['clave' => 'dep_bbva',          'nombre' => 'Depósito BBVA'],
+            ['clave' => 'dep_inter',         'nombre' => 'Depósito Interbank'],
+            ['clave' => 'dep_otros',         'nombre' => 'Depósito otro banco'],
+            ['clave' => 'tarjeta_credito',   'nombre' => 'Tarjeta de crédito'],
+            ['clave' => 'tarjeta_debito',    'nombre' => 'Tarjeta de débito'],
         ];
 
-        foreach ($metodos as $nombre) {
-            DB::table('metodos_pago')->insert([
-                'nombre'     => $nombre,
-                'activo'     => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+        foreach ($metodos as $m) {
+            DB::table('metodos_pago')->updateOrInsert(
+                ['clave' => $m['clave']],
+                ['nombre' => $m['nombre'], 'activo' => true, 'updated_at' => now(), 'created_at' => now()]
+            );
         }
     }
 }

@@ -1,8 +1,5 @@
 <?php
-// =====================================================================
-// ARCHIVO: Cliente.php
 // UBICACIÓN: app/Models/Cliente.php
-// =====================================================================
 
 namespace App\Models;
 
@@ -16,9 +13,19 @@ class Cliente extends Model
         'nombre_completo',
         'razon_social',
         'direccion_fiscal',
+        'fecha_nacimiento',
+        'genero',
+        'nacionalidad',
         'telefono',
+        'telefono2',
         'email',
-        'telefono_whatsapp',
+        'emergencia_nombre',
+        'emergencia_parentesco',
+        'emergencia_telefono',
+    ];
+
+    protected $casts = [
+        'fecha_nacimiento' => 'date',
     ];
 
     public function reservas()
@@ -26,7 +33,6 @@ class Cliente extends Model
         return $this->hasMany(Reserva::class);
     }
 
-    // Devuelve razón social si es empresa, nombre completo si es persona
     public function getNombreMostrarAttribute(): string
     {
         return $this->razon_social ?? $this->nombre_completo;

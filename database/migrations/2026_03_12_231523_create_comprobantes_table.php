@@ -1,20 +1,17 @@
 <?php
-// =====================================================================
-// ARCHIVO: 2026_03_12_000007_create_comprobantes_table.php
-// UBICACIÓN: database/migrations/
-// =====================================================================
+// UBICACIÓN: database/migrations/2026_03_12_000008_create_comprobantes_table.php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateComprobantesTable extends Migration
+return new class extends Migration
 {
-    public function up()
+    public function up(): void
     {
         Schema::create('comprobantes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('reserva_id')->constrained('reservas');
+            $table->foreignId('reserva_id')->constrained('reservas')->cascadeOnDelete();
             $table->foreignId('emitido_por')->constrained('usuarios_admin');
             $table->enum('tipo', ['boleta', 'factura']);
             $table->string('serie', 10);
@@ -23,7 +20,7 @@ class CreateComprobantesTable extends Migration
             $table->decimal('igv', 10, 2);
             $table->decimal('total', 10, 2);
             $table->string('ruc_receptor', 20)->nullable();
-            $table->string('razon_social_receptor')->nullable();
+            $table->string('razon_social_receptor', 200)->nullable();
             $table->string('direccion_receptor')->nullable();
             $table->string('archivo_pdf')->nullable();
             $table->string('correo_envio')->nullable();
@@ -34,8 +31,8 @@ class CreateComprobantesTable extends Migration
         });
     }
 
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('comprobantes');
     }
-}
+};

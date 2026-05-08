@@ -27,7 +27,7 @@ return [
 
     // ── apis.net.pe — RENIEC (DNI) + SUNAT (RUC) ─────────────────────
     // Token gratis en: https://apis.net.pe  (100 consultas/día gratis)
-    // Agregar al .env:  RENIEC_API_TOKEN=tu_token_aqui
+    // Agregar al .env: RENIEC_API_TOKEN=tu_token_aqui
     'reniec' => [
         'token' => env('RENIEC_API_TOKEN', ''),
     ],
@@ -37,6 +37,11 @@ return [
         'token'    => env('APIPERU_TOKEN', 'e71f6c9e49b4350a1d29099dcfbb59b63de9fd35f160139620f4c0027d4e283b'),
         'base_url' => env('APIPERU_BASE_URL', 'https://apiperu.dev/api'),
         'timeout'  => 8,
+    ],
+
+    'whatsapp' => [
+        'token'    => env('WHATSAPP_TOKEN', ''),
+        'phone_id' => env('WHATSAPP_PHONE_ID', ''),
     ],
 
 ];

@@ -1,0 +1,63 @@
+/**
+ * UBICACIÓN: public/css/reservas-form-fixes.css
+ * DESCRIPCIÓN: Fixes puntuales sobre reservas-form.css
+ * Fix 1: Barra de progreso que desaparecía (top sticky)
+ * Fix 2: Bloque salud fusionado con pasajeros
+ */
+
+/* ══════════════════════════════════════════════════════════════
+   FIX 1 — PROGRESS SIDEBAR: dejar de usar top:50% + transform
+   porque en algunos layouts el sidebar se salía del viewport.
+   Se usa top fijo con scroll natural.
+══════════════════════════════════════════════════════════════ */
+.progress-sidebar {
+    position: sticky;
+    top: 2rem;
+    transform: none;           /* quitar el translateY(-50%) anterior */
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+    align-self: start;
+}
+
+/* Lo mismo para el panel resumen derecho */
+.summary-panel {
+    position: sticky;
+    top: 2rem;
+    transform: none;
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+    align-self: start;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FIX 2 — PAGE WRAP: asegurar que el grid tenga
+   grid-template-rows correcto para que los stickies funcionen
+══════════════════════════════════════════════════════════════ */
+.page-wrap {
+    align-items: start;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FIX 3 — SALUD: separador visual entre titular y pasajeros
+   dentro del mismo bloque
+══════════════════════════════════════════════════════════════ */
+#salud-pax-seccion {
+    border-top: 2px solid var(--adv-blue-l);
+    padding-top: 1.25rem;
+}
+
+#salud-pax-seccion .st-salud-pax {
+    font-size: .62rem; font-weight: 800; text-transform: uppercase;
+    letter-spacing: .1em; color: var(--adv-blue);
+    margin-bottom: .85rem;
+    display: flex; align-items: center; gap: .4rem;
+}
+
+/* Pasajeros dentro del bloque salud — mismo estilo que pax-card */
+#pax-lista .pax-card {
+    background: var(--adv-slate-l);
+    border: 1.5px solid var(--border);
+    border-radius: var(--r);
+    margin-bottom: .65rem;
+    animation: fadeUp .2s ease;
+}

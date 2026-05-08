@@ -1,25 +1,26 @@
 <?php
-// =====================================================================
-// ARCHIVO: 2026_03_12_000005_create_pasajeros_table.php
-// UBICACIÓN: database/migrations/
-// =====================================================================
+// UBICACIÓN: database/migrations/2026_03_12_000006_create_pasajeros_table.php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreatePasajerosTable extends Migration
+return new class extends Migration
 {
-    public function up()
+    public function up(): void
     {
         Schema::create('pasajeros', function (Blueprint $table) {
             $table->id();
             $table->foreignId('reserva_id')->constrained('reservas')->cascadeOnDelete();
-            $table->string('nombre_completo');
+
+            $table->string('nombre_completo', 200);
             $table->enum('tipo_documento', ['DNI', 'CE', 'PASAPORTE'])->nullable();
             $table->string('numero_documento', 20)->nullable();
             $table->date('fecha_nacimiento')->nullable();
+            $table->unsignedTinyInteger('edad')->nullable(); // ← AGREGADO: service lo escribe
             $table->enum('tipo', ['adulto', 'nino', 'bebe', 'adolescente', 'adulto_mayor'])->default('adulto');
+            $table->boolean('es_titular')->default(false);  // ← AGREGADO: service lo escribe
+
             $table->timestamps();
         });
 
@@ -34,9 +35,9 @@ class CreatePasajerosTable extends Migration
         });
     }
 
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('salud_pasajero');
         Schema::dropIfExists('pasajeros');
     }
-}
+};
