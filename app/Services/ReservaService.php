@@ -23,172 +23,192 @@ use App\Services\Integrations\WhatsAppService;
 class ReservaService
 {
     public function __construct(
-        private PdfService  $pdfService,
-        private MailService $mailService,
+        private PdfService      $pdfService,
+        private MailService     $mailService,
         private WhatsAppService $whatsAppService,
     ) {}
 
     // ══════════════════════════════════════════════════════════════════
     // CREAR
     // ══════════════════════════════════════════════════════════════════
-    // ══════════════════════════════════════════════════════════════════
-// CREAR
-// ══════════════════════════════════════════════════════════════════
-public function crear(array $datos): Reserva
-{
-    $reserva = DB::transaction(function () use ($datos) {
+    public function crear(array $datos): Reserva
+    {
+        $reserva = DB::transaction(function () use ($datos) {
 
-        // ── 1. Resolver o crear cliente ───────────────────────
-        $clienteId = $datos['cliente_id'] ?? null;
+            // ── 1. Resolver o crear cliente ───────────────────────
+            $clienteId = $datos['cliente_id'] ?? null;
 
-        if (!$clienteId) {
-            $cliente = Cliente::firstOrCreate(
-                ['telefono' => $datos['titular_telefono']],
-                [
-                    'nombre_completo'       => $datos['titular_nombre'],
-                    'email'                 => $datos['titular_email']             ?? null,
-                    'tipo_documento'        => $datos['titular_tipo_documento']    ?? null,
-                    'numero_documento'      => $datos['titular_numero_documento']  ?? null,
-                    'fecha_nacimiento'      => $datos['titular_fecha_nacimiento']  ?? null,
-                    'genero'                => $datos['titular_genero']            ?? null,
-                    'nacionalidad'          => $datos['titular_nacionalidad']      ?? 'Peruana',
-                    'telefono2'             => $datos['titular_telefono2']         ?? null,
-                    'emergencia_nombre'     => $datos['emergencia_nombre']         ?? null,
-                    'emergencia_parentesco' => $datos['emergencia_parentesco_manual']
-                                                ?? ($datos['emergencia_parentesco'] ?? null),
-                    'emergencia_telefono'   => $datos['emergencia_telefono']       ?? null,
-                ]
-            );
-            $clienteId = $cliente->id;
-        }
+            if (!$clienteId) {
+                // Normalizar teléfono — quitar espacios y caracteres no numéricos
+                $telefonoNormalizado = preg_replace('/\D/', '', $datos['titular_telefono'] ?? '');
 
-        // ── 2. Estado inicial ─────────────────────────────────
-        $mapaEstados = [
-            'mitad_pago' => 'mitad_pago',
-            'pagado'     => 'pagado',
-            'cancelada'  => 'cancelada',
-        ];
-        $nombreEstado  = $mapaEstados[$datos['estado_inicial']] ?? 'mitad_pago';
-        $estadoInicial = EstadoReserva::where('nombre', $nombreEstado)->firstOrFail();
+                $cliente = Cliente::where('telefono', $telefonoNormalizado)->first();
 
-        // ── 3. Crear la reserva ───────────────────────────────
-        $reserva = Reserva::create([
-            'codigo_reserva'                     => Reserva::generarCodigo(),
-            'nombre_tour'                        => $datos['nombre_tour'],
-            'fecha_tour'                         => $datos['fecha_tour'],
-            'hora_salida'                        => $datos['hora_salida'],
-            'cliente_id'                         => $clienteId,
-            'fecha_tour_id'                      => null,
-            'estado_id'                          => $estadoInicial->id,
-            'usuario_admin_id'                   => Auth::id(),
-            'cantidad_adultos'                   => $datos['cantidad_adultos'],
-            'cantidad_ninos'                     => $datos['cantidad_ninos'],
-            'precio_total'                       => (float) $datos['precio_tour'],
-            'monto_pagado'                       => $datos['monto_pagado_inicial'],
-            'canal_contacto'                     => $datos['canal_contacto'],
-            'ciudad_procedencia'                 => $datos['ciudad_procedencia'],
-            'ciudad_destino'                     => $datos['ciudad_destino']           ?? null,
-            'departamento_destino'               => $datos['departamento_destino']     ?? null,
-            'fecha_arribo'                       => $datos['fecha_arribo']             ?? null,
-            'fecha_retorno'                      => $datos['fecha_retorno']            ?? null,
-            'dias_viaje'                         => $datos['dias_viaje']               ?? null,
-            'hora_arribo'                        => $datos['hora_arribo']              ?? null,
-            'hora_retorno'                       => $datos['hora_retorno']             ?? null,
-            'tipo_transporte'                    => $datos['tipo_transporte']          ?? null,
-            'empresa_transporte'                 => $datos['empresa_transporte']       ?? null,
-            'aerolinea'                          => $datos['aerolinea']                ?? null,
-            'numero_vuelo'                       => $datos['numero_vuelo']             ?? null,
-            'hora_salida_vuelo'                  => $datos['hora_salida_vuelo']        ?? null,
-            'hora_llegada_vuelo'                 => $datos['hora_llegada_vuelo']       ?? null,
-            'nombre_hotel'                       => $datos['nombre_hotel']             ?? null,
-            'tipo_habitacion'                    => $datos['tipo_habitacion']          ?? null,
-            'tipo_establecimiento'               => $datos['tipo_establecimiento']     ?? null,
-            'tipo_cama'                          => $datos['tipo_cama']                ?? null,
-            'plan_alimentacion'                  => $datos['plan_alimentacion']        ?? null,
-            'tipo_comprobante'                   => $datos['tipo_comprobante'],
-            'ruc_factura'                        => $datos['ruc_factura']              ?? null,
-            'razon_social'                       => $datos['razon_social']             ?? null,
-            'punto_encuentro'                    => $datos['punto_encuentro']          ?? null,
-            'hora_recojo'                        => $datos['hora_recojo']              ?? null,
-            'alergias_titular'                   => ($datos['titular_tiene_alergias'] ?? '') === 'si'
-                                                    ? ($datos['titular_alergias_detalle'] ?? null)
-                                                    : null,
-            'restricciones_alimentarias_titular' => $datos['titular_restricciones']   ?? null,
-            'titular_obs_medicas'                => $datos['titular_obs_medicas']      ?? null,
-            'politica_descripcion'               => $datos['politica_descripcion']     ?? null,
-            'politica_tipo'                      => $datos['politica_tipo']            ?? null,
-            'observaciones'                      => $datos['observaciones']            ?? null,
-        ]);
+                if ($cliente) {
+                    // Cliente existente — actualizar datos si vienen nuevos
+                    $cliente->update([
+                        'nombre_completo'       => $datos['titular_nombre']             ?? $cliente->nombre_completo,
+                        'email'                 => $datos['titular_email']              ?? $cliente->email,
+                        'tipo_documento'        => $datos['titular_tipo_documento']     ?? $cliente->tipo_documento,
+                        'numero_documento'      => $datos['titular_numero_documento']   ?? $cliente->numero_documento,
+                        'fecha_nacimiento'      => $datos['titular_fecha_nacimiento']   ?? $cliente->fecha_nacimiento,
+                        'genero'                => $datos['titular_genero']             ?? $cliente->genero,
+                        'nacionalidad'          => $datos['titular_nacionalidad']       ?? $cliente->nacionalidad,
+                        'telefono2'             => $datos['titular_telefono2']          ?? $cliente->telefono2,
+                        'emergencia_nombre'     => $datos['emergencia_nombre']          ?? $cliente->emergencia_nombre,
+                        'emergencia_parentesco' => $datos['emergencia_parentesco_manual']
+                                                    ?? ($datos['emergencia_parentesco'] ?? $cliente->emergencia_parentesco),
+                        'emergencia_telefono'   => $datos['emergencia_telefono']        ?? $cliente->emergencia_telefono,
+                    ]);
+                } else {
+                    // Cliente nuevo — crear
+                    $cliente = Cliente::create([
+                        'telefono'              => $telefonoNormalizado,
+                        'nombre_completo'       => $datos['titular_nombre'],
+                        'email'                 => $datos['titular_email']             ?? null,
+                        'tipo_documento'        => $datos['titular_tipo_documento']    ?? null,
+                        'numero_documento'      => $datos['titular_numero_documento']  ?? null,
+                        'fecha_nacimiento'      => $datos['titular_fecha_nacimiento']  ?? null,
+                        'genero'                => $datos['titular_genero']            ?? null,
+                        'nacionalidad'          => $datos['titular_nacionalidad']      ?? 'Peruana',
+                        'telefono2'             => $datos['titular_telefono2']         ?? null,
+                        'emergencia_nombre'     => $datos['emergencia_nombre']         ?? null,
+                        'emergencia_parentesco' => $datos['emergencia_parentesco_manual']
+                                                    ?? ($datos['emergencia_parentesco'] ?? null),
+                        'emergencia_telefono'   => $datos['emergencia_telefono']       ?? null,
+                    ]);
+                }
 
-        // ── 4. Pasajero titular ───────────────────────────────
-        $titular = $reserva->pasajeros()->create([
-            'nombre_completo'  => $datos['titular_nombre'],
-            'tipo'             => 'adulto',
-            'tipo_documento'   => $datos['titular_tipo_documento']   ?? null,
-            'numero_documento' => $datos['titular_numero_documento'] ?? null,
-            'fecha_nacimiento' => $datos['titular_fecha_nacimiento'] ?? null,
-            'edad'             => null,
-            'es_titular'       => true,
-        ]);
-        $this->guardarSaludTitular($titular, $datos);
+                $clienteId = $cliente->id;
+            } // ← cierra if (!$clienteId)
 
-        // ── 5. Pasajeros adicionales ──────────────────────────
-        if (empty($datos['solo_pasajero'])) {
-            foreach ($datos['pasajeros'] ?? [] as $p) {
-                if (empty(trim($p['nombre_completo'] ?? ''))) continue;
-                $pasajero = $reserva->pasajeros()->create([
-                    'nombre_completo'  => $p['nombre_completo'],
-                    'tipo'             => $p['tipo']             ?? 'adulto',
-                    'tipo_documento'   => $p['tipo_documento']   ?? null,
-                    'numero_documento' => $p['numero_documento'] ?? null,
-                    'fecha_nacimiento' => !empty($p['fecha_nacimiento']) ? $p['fecha_nacimiento'] : null,
-                    'edad'             => isset($p['edad']) && $p['edad'] !== '' ? (int) $p['edad'] : null,
-                    'es_titular'       => false,
-                ]);
-                $this->guardarSaludPasajero($pasajero, $p);
+            // ── 2. Estado inicial ─────────────────────────────────
+            $mapaEstados = [
+                'mitad_pago' => 'mitad_pago',
+                'pagado'     => 'pagado',
+                'cancelada'  => 'cancelada',
+            ];
+            $nombreEstado  = $mapaEstados[$datos['estado_inicial']] ?? 'mitad_pago';
+            $estadoInicial = EstadoReserva::where('nombre', $nombreEstado)->firstOrFail();
+
+            // ── 3. Crear la reserva ───────────────────────────────
+            $reserva = Reserva::create([
+                'codigo_reserva'                     => Reserva::generarCodigo(),
+                'nombre_tour'                        => $datos['nombre_tour'],
+                'fecha_tour'                         => $datos['fecha_tour'],
+                'hora_salida'                        => $datos['hora_salida'],
+                'cliente_id'                         => $clienteId,
+                'fecha_tour_id'                      => null,
+                'estado_id'                          => $estadoInicial->id,
+                'usuario_admin_id'                   => Auth::id(),
+                'cantidad_adultos'                   => $datos['cantidad_adultos'],
+                'cantidad_ninos'                     => $datos['cantidad_ninos'],
+                'precio_total'                       => (float) $datos['precio_tour'],
+                'monto_pagado'                       => $datos['monto_pagado_inicial'],
+                'canal_contacto'                     => $datos['canal_contacto'],
+                'ciudad_procedencia'                 => $datos['ciudad_procedencia'],
+                'ciudad_destino'                     => $datos['ciudad_destino']           ?? null,
+                'departamento_destino'               => $datos['departamento_destino']     ?? null,
+                'fecha_arribo'                       => $datos['fecha_arribo']             ?? null,
+                'fecha_retorno'                      => $datos['fecha_retorno']            ?? null,
+                'dias_viaje'                         => $datos['dias_viaje']               ?? null,
+                'hora_arribo'                        => $datos['hora_arribo']              ?? null,
+                'hora_retorno'                       => $datos['hora_retorno']             ?? null,
+                'tipo_transporte'                    => $datos['tipo_transporte']          ?? null,
+                'empresa_transporte'                 => $datos['empresa_transporte']       ?? null,
+                'aerolinea'                          => $datos['aerolinea']                ?? null,
+                'numero_vuelo'                       => $datos['numero_vuelo']             ?? null,
+                'hora_salida_vuelo'                  => $datos['hora_salida_vuelo']        ?? null,
+                'hora_llegada_vuelo'                 => $datos['hora_llegada_vuelo']       ?? null,
+                'nombre_hotel'                       => $datos['nombre_hotel']             ?? null,
+                'tipo_habitacion'                    => $datos['tipo_habitacion']          ?? null,
+                'tipo_establecimiento'               => $datos['tipo_establecimiento']     ?? null,
+                'tipo_cama'                          => $datos['tipo_cama']                ?? null,
+                'plan_alimentacion'                  => $datos['plan_alimentacion']        ?? null,
+                'tipo_comprobante'                   => $datos['tipo_comprobante'],
+                'ruc_factura'                        => $datos['ruc_factura']              ?? null,
+                'razon_social'                       => $datos['razon_social']             ?? null,
+                'punto_encuentro'                    => $datos['punto_encuentro']          ?? null,
+                'hora_recojo'                        => $datos['hora_recojo']              ?? null,
+                'alergias_titular'                   => ($datos['titular_tiene_alergias'] ?? '') === 'si'
+                                                        ? ($datos['titular_alergias_detalle'] ?? null)
+                                                        : null,
+                'restricciones_alimentarias_titular' => $datos['titular_restricciones']   ?? null,
+                'titular_obs_medicas'                => $datos['titular_obs_medicas']      ?? null,
+                'politica_descripcion'               => $datos['politica_descripcion']     ?? null,
+                'politica_tipo'                      => $datos['politica_tipo']            ?? null,
+                'observaciones'                      => $datos['observaciones']            ?? null,
+            ]);
+
+            // ── 4. Pasajero titular ───────────────────────────────
+            $titular = $reserva->pasajeros()->create([
+                'nombre_completo'  => $datos['titular_nombre'],
+                'tipo'             => 'adulto',
+                'tipo_documento'   => $datos['titular_tipo_documento']   ?? null,
+                'numero_documento' => $datos['titular_numero_documento'] ?? null,
+                'fecha_nacimiento' => $datos['titular_fecha_nacimiento'] ?? null,
+                'edad'             => null,
+                'es_titular'       => true,
+            ]);
+            $this->guardarSaludTitular($titular, $datos);
+
+            // ── 5. Pasajeros adicionales ──────────────────────────
+            if (empty($datos['solo_pasajero'])) {
+                foreach ($datos['pasajeros'] ?? [] as $p) {
+                    if (empty(trim($p['nombre_completo'] ?? ''))) continue;
+                    $pasajero = $reserva->pasajeros()->create([
+                        'nombre_completo'  => $p['nombre_completo'],
+                        'tipo'             => $p['tipo']             ?? 'adulto',
+                        'tipo_documento'   => $p['tipo_documento']   ?? null,
+                        'numero_documento' => $p['numero_documento'] ?? null,
+                        'fecha_nacimiento' => !empty($p['fecha_nacimiento']) ? $p['fecha_nacimiento'] : null,
+                        'edad'             => isset($p['edad']) && $p['edad'] !== '' ? (int) $p['edad'] : null,
+                        'es_titular'       => false,
+                    ]);
+                    $this->guardarSaludPasajero($pasajero, $p);
+                }
             }
-        }
 
-        // ── 6. Método de pago ─────────────────────────────────
-        $metodoPago = MetodoPago::where('clave', $datos['metodo_pago'])
-                        ->orWhere('nombre', $datos['metodo_pago'])
-                        ->firstOrFail();
+            // ── 6. Método de pago ─────────────────────────────────
+            $metodoPago = MetodoPago::where('clave', $datos['metodo_pago'])
+                            ->orWhere('nombre', $datos['metodo_pago'])
+                            ->firstOrFail();
 
-        // ── 7. Baucher ────────────────────────────────────────
-        $rutaBaucher = null;
-        if (!empty($datos['archivo_baucher']) && $datos['archivo_baucher'] instanceof UploadedFile) {
-            $rutaBaucher = $datos['archivo_baucher']->store('baucherss', 'public');
-        }
+            // ── 7. Baucher ────────────────────────────────────────
+            $rutaBaucher = null;
+            if (!empty($datos['archivo_baucher']) && $datos['archivo_baucher'] instanceof UploadedFile) {
+                $rutaBaucher = $datos['archivo_baucher']->store('baucherss', 'public');
+            }
 
-        // ── 8. Pago inicial ───────────────────────────────────
-        $reserva->pagos()->create([
-            'metodo_pago_id'    => $metodoPago->id,
-            'registrado_por'    => Auth::id(),
-            'monto'             => $datos['monto_pagado_inicial'],
-            'numero_operacion'  => $datos['numero_operacion'] ?? null,
-            'archivo_baucher'   => $rutaBaucher,
-            'tipo_pago'         => $datos['tipo_pago'],
-            'estado_validacion' => 'pendiente',
-            'fecha_pago'        => $datos['fecha_pago'],
-        ]);
+            // ── 8. Pago inicial ───────────────────────────────────
+            $reserva->pagos()->create([
+                'metodo_pago_id'    => $metodoPago->id,
+                'registrado_por'    => Auth::id(),
+                'monto'             => $datos['monto_pagado_inicial'],
+                'numero_operacion'  => $datos['numero_operacion'] ?? null,
+                'archivo_baucher'   => $rutaBaucher,
+                'tipo_pago'         => $datos['tipo_pago'],
+                'estado_validacion' => 'pendiente',
+                'fecha_pago'        => $datos['fecha_pago'],
+            ]);
 
-        // ── 9. Historial ──────────────────────────────────────
-        HistorialEstado::create([
-            'reserva_id'      => $reserva->id,
-            'estado_nuevo_id' => $estadoInicial->id,
-            'cambiado_por'    => Auth::id(),
-            'motivo'          => 'Reserva creada — canal: ' . $datos['canal_contacto'],
-            'fecha_cambio'    => now(),
-        ]);
+            // ── 9. Historial ──────────────────────────────────────
+            HistorialEstado::create([
+                'reserva_id'      => $reserva->id,
+                'estado_nuevo_id' => $estadoInicial->id,
+                'cambiado_por'    => Auth::id(),
+                'motivo'          => 'Reserva creada — canal: ' . $datos['canal_contacto'],
+                'fecha_cambio'    => now(),
+            ]);
 
-        return $reserva; // ← cierra la transacción
-    });
+            return $reserva;
+        }); // ← cierra DB::transaction
 
-    // Notificaciones FUERA de la transacción
-    $this->enviarNotificacionesCreacion($reserva, $datos);
+        // Notificaciones FUERA de la transacción
+        $this->enviarNotificacionesCreacion($reserva, $datos);
 
-    return $reserva;
-}
+        return $reserva;
+    }
 
     // ══════════════════════════════════════════════════════════════════
     // CAMBIAR ESTADO
@@ -326,7 +346,7 @@ public function crear(array $datos): Reserva
             ]);
 
             // ── 4. Reemplazar pasajeros + salud ───────────────────
-            $reserva->pasajeros()->delete(); // cascadeOnDelete borra salud_pasajero
+            $reserva->pasajeros()->delete();
 
             $titular = $reserva->pasajeros()->create([
                 'nombre_completo'  => $datos['titular_nombre'],
@@ -401,7 +421,6 @@ public function crear(array $datos): Reserva
     // ══════════════════════════════════════════════════════════════════
     // HELPERS PRIVADOS — SALUD
     // ══════════════════════════════════════════════════════════════════
-
     private function guardarSaludTitular(Pasajero $pasajero, array $datos): void
     {
         $tieneAlergias      = ($datos['titular_tiene_alergias'] ?? 'no') === 'si';
@@ -437,6 +456,10 @@ public function crear(array $datos): Reserva
             ]);
         }
     }
+
+    // ══════════════════════════════════════════════════════════════════
+    // NOTIFICACIONES CREACIÓN
+    // ══════════════════════════════════════════════════════════════════
     public function enviarNotificacionesCreacion(Reserva $reserva, array $datos): void
     {
         try {
@@ -469,5 +492,4 @@ public function crear(array $datos): Reserva
             ]);
         }
     }
-
 }

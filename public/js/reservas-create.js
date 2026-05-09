@@ -765,7 +765,11 @@ function joinEmail() {
     const u = (document.getElementById('email-user')?.value   || '').trim();
     const d = (document.getElementById('email-domain')?.value || '').trim();
     const h = document.getElementById('titular_email');
-    if (h) h.value = (u && d) ? u+'@'+d : '';
+    if (u.includes('@')) {
+        h.value = u;
+        return;
+    }
+    h.value = (u && d) ? u + '@' + d : '';
 }
 function loadEmailOld() {
     const raw = document.getElementById('titular_email')?.value || '';
@@ -842,7 +846,6 @@ function actualizarNombreTitularSalud(n) {
 function toggleNotif(item, cbId) {
     const cb = document.getElementById(cbId);
     if (!cb) return;
-    cb.checked = !cb.checked;
     item.classList.toggle('checked', cb.checked);
 }
 

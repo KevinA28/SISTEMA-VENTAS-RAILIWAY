@@ -90,20 +90,23 @@
 </div>
 
 <div class="notif-row">
-    <label class="notif-item checked" id="p-wa" onclick="toggleNotif(this,'cb-wa')">
-        <input type="checkbox" name="notif_whatsapp" value="1" checked id="cb-wa">
+    <label class="notif-item checked" id="p-wa">
+        <input type="checkbox" name="notif_whatsapp" value="1"
+               checked id="cb-wa"
+               onchange="this.closest('label').classList.toggle('checked', this.checked)">
         <span class="notif-box"><i class="bi bi-check2"></i></span>
         <i class="bi bi-whatsapp" style="color:#25d366;font-size:1rem"></i>
         <span>Enviar por WhatsApp</span>
     </label>
-    <label class="notif-item" id="p-em" onclick="toggleNotif(this,'cb-em')">
-        <input type="checkbox" name="notif_email" value="1" id="cb-em">
+    <label class="notif-item checked" id="p-em">
+        <input type="checkbox" name="notif_email" value="1"
+               checked id="cb-em"
+               onchange="this.closest('label').classList.toggle('checked', this.checked)">
         <span class="notif-box"><i class="bi bi-check2"></i></span>
         <i class="bi bi-envelope-fill" style="color:var(--adv-blue);font-size:.9rem"></i>
         <span>Enviar por correo</span>
     </label>
 </div>
-
 <div class="fhint" style="margin-top:.5rem">
             <i class="bi bi-info-circle me-1"></i>
             Se enviará automáticamente al guardar la reserva si el titular tiene número y correo registrados.
