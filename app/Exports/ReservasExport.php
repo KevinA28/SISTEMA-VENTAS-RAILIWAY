@@ -2,8 +2,6 @@
 // =====================================================================
 // ARCHIVO: ReservasExport.php
 // UBICACIÓN: app/Exports/ReservasExport.php
-// SIN DEPENDENCIAS EXTERNAS — SpreadsheetML (XML nativo de Excel)
-// Compatible con Excel, Google Sheets, LibreOffice — sin composer
 // =====================================================================
 
 namespace App\Exports;
@@ -15,7 +13,6 @@ class ReservasExport
 {
     public function __construct(private array $filtros = []) {}
 
-    // ── Descarga directa como respuesta HTTP ─────────────────────────
     public function download(): Response
     {
         $rows   = $this->getData();
@@ -30,17 +27,31 @@ class ReservasExport
         ]);
     }
 
-    // ── Query con los mismos filtros del index ────────────────────────
     private function getData(): array
     {
         $query = Reserva::with(['cliente', 'estado', 'pagos'])->latest();
 
-        if (!empty($this->filtros['estado'])) {
+        // ── FIX: soporte de múltiples estados (viene como "1,2,3") ──
+        if (!empty($this->filtros['estados'])) {
+            $ids = array_filter(explode(',', $this->filtros['estados']));
+            if (count($ids)) {
+                $query->whereIn('estado_id', $ids);
+            }
+        } elseif (!empty($this->filtros['estado'])) {
+            // compatibilidad con el filtro simple anterior
             $query->where('estado_id', $this->filtros['estado']);
         }
-        if (!empty($this->filtros['canal'])) {
+
+        // ── FIX: soporte de múltiples canales (viene como "yape,efectivo") ──
+        if (!empty($this->filtros['canales'])) {
+            $canales = array_filter(explode(',', $this->filtros['canales']));
+            if (count($canales)) {
+                $query->whereIn('canal_contacto', $canales);
+            }
+        } elseif (!empty($this->filtros['canal'])) {
             $query->where('canal_contacto', $this->filtros['canal']);
         }
+
         if (!empty($this->filtros['fecha_desde'])) {
             $query->whereDate('created_at', '>=', $this->filtros['fecha_desde']);
         }
@@ -78,7 +89,7 @@ class ReservasExport
                 $r->cliente->nombre_completo ?? '—',
                 $r->cliente->numero_documento ?? '—',
                 $r->cliente->telefono ?? '—',
-                $r->cliente->email ?? '—',
+                $r->email_contacto ?? $r->cliente->email ?? '—',
                 $r->ciudad_procedencia ?? '—',
                 $r->ciudad_destino ?? '—',
                 (string) $r->cantidad_adultos,
@@ -109,7 +120,6 @@ class ReservasExport
         ];
     }
 
-    // ── Construir XML SpreadsheetML ───────────────────────────────────
     private function buildXml(array $rows): string
     {
         $headings = $this->headings();
@@ -120,7 +130,6 @@ class ReservasExport
  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
  xmlns:x="urn:schemas-microsoft-com:office:excel">' . "\n";
 
-        // ── Estilos ───────────────────────────────────────────────────
         $xml .= '<Styles>
   <Style ss:ID="h">
     <Font ss:Bold="1" ss:Color="#FFFFFF" ss:Size="11"/>
@@ -151,57 +160,40 @@ class ReservasExport
   </Style>
 </Styles>' . "\n";
 
-        // ── Hoja ──────────────────────────────────────────────────────
         $xml .= '<Worksheet ss:Name="Reservas">' . "\n";
         $xml .= '<Table>' . "\n";
 
-        // Anchos de columnas
         $ws = [80,100,80,160,80,60,160,80,90,150,90,100,50,50,75,75,75,60,80,80,120,120,80,160];
         foreach ($ws as $w) {
             $xml .= '<Column ss:Width="' . $w . '"/>' . "\n";
         }
 
-        // Cabecera
         $xml .= '<Row ss:Height="24">' . "\n";
         foreach ($headings as $h) {
-            $xml .= '<Cell ss:StyleID="h"><Data ss:Type="String">'
-                  . $this->esc($h) . '</Data></Cell>' . "\n";
+            $xml .= '<Cell ss:StyleID="h"><Data ss:Type="String">' . $this->esc($h) . '</Data></Cell>' . "\n";
         }
         $xml .= '</Row>' . "\n";
 
-        // Índices de columnas numéricas (0-based)
-        // 14=Total, 15=Pagado, 16=Saldo
         foreach ($rows as $i => $row) {
             $base = ($i % 2 === 0) ? 'e' : 'o';
             $xml .= '<Row ss:Height="17">' . "\n";
-
             foreach ($row as $j => $cell) {
-                // Elegir estilo
                 if ($j === 14 || $j === 15) {
-                    $sty  = 'm';
-                    $type = 'Number';
+                    $sty = 'm'; $type = 'Number';
                 } elseif ($j === 16) {
-                    $sty  = ((float)$cell > 0) ? 's' : 'm';
-                    $type = 'Number';
+                    $sty = ((float)$cell > 0) ? 's' : 'm'; $type = 'Number';
                 } elseif (in_array($j, [12, 13])) {
-                    // Adultos / Niños — número entero
-                    $sty  = $base;
-                    $type = 'Number';
+                    $sty = $base; $type = 'Number';
                 } else {
-                    $sty  = $base;
-                    $type = 'String';
+                    $sty = $base; $type = 'String';
                 }
-
                 $val = $type === 'Number' ? $cell : $this->esc((string) $cell);
-                $xml .= '<Cell ss:StyleID="' . $sty . '"><Data ss:Type="' . $type . '">'
-                      . $val . '</Data></Cell>' . "\n";
+                $xml .= '<Cell ss:StyleID="' . $sty . '"><Data ss:Type="' . $type . '">' . $val . '</Data></Cell>' . "\n";
             }
             $xml .= '</Row>' . "\n";
         }
 
         $xml .= '</Table>' . "\n";
-
-        // Congelar primera fila
         $xml .= '<WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
   <FreezePanes/>
   <FrozenNoSplit/>
@@ -209,7 +201,6 @@ class ReservasExport
   <TopRowBottomPane>1</TopRowBottomPane>
   <ActivePane>2</ActivePane>
 </WorksheetOptions>' . "\n";
-
         $xml .= '</Worksheet>' . "\n";
         $xml .= '</Workbook>';
 

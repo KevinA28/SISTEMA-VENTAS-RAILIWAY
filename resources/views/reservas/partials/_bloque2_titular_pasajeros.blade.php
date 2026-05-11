@@ -1,6 +1,10 @@
 {{-- =====================================================================
      UBICACIÓN: resources/views/reservas/partials/_bloque2_titular_pasajeros.blade.php
-     CAMBIOS: parentesco expandido, titular=pasajero1, switch salud, Si/No campos
+     CAMBIOS:
+       - Eliminado switch "Solo viaja el titular" (no tenía sentido)
+       - Seguro de salud visible SIN necesidad de abrir el panel de salud
+       - discapacidades y seguro_salud ahora se envían correctamente
+       - pasajeros adicionales también tienen seguro visible
      ===================================================================== --}}
 <div class="fb" id="bloque-2">
     <div class="fb-num-badge" id="fb-status-2">2</div>
@@ -134,7 +138,6 @@
                         <input type="text" id="email-user" class="fi email-user"
                                placeholder="usuario" maxlength="80" autocomplete="off"
                                oninput="emailInput();onTitularChange()"
-                               oninput="emailInput()"
                                onblur="setTimeout(closeDomains,200)"
                                onpaste="handleEmailPaste(event)">
                         <span class="at-sign">@</span>
@@ -149,7 +152,7 @@
             </div>
         </div>
 
-        {{-- TELÉFONO SECUNDARIO --}}
+        {{-- TELÉFONO SECUNDARIO + CANAL --}}
         <div class="g2" style="margin-top:.5rem">
             <div class="field">
                 <label class="lbl">Teléfono secundario <span class="opt">(opcional)</span></label>
@@ -175,8 +178,6 @@
                     </div>
                 </div>
             </div>
-
-            {{-- CANAL DE VENTA --}}
             <div class="field">
                 <label class="lbl" for="canal_contacto">Canal de contacto <span class="req">*</span></label>
                 <select name="canal_contacto" id="canal_contacto"
@@ -253,155 +254,214 @@
             </div>
         </div>
 
-        {{-- ── PASAJEROS DEL GRUPO ── --}}
+        {{-- ══════════════════════════════════════════════════════════
+             PASAJEROS DEL GRUPO
+             NOTA: Se eliminó el switch "Solo viaja el titular"
+             porque no tenía sentido — si el titular tiene salud
+             y viaja solo, igual se necesita capturar esa info.
+             Ahora el titular siempre aparece como Pasajero 1,
+             y si no hay adicionales simplemente no se agregan.
+        ══════════════════════════════════════════════════════════ --}}
         <div class="st" style="margin-top:1.5rem">Pasajeros del grupo</div>
 
-        <div class="solo-banner">
-            <div class="solo-banner-text">
-                <i class="bi bi-person-check"></i>
-                Solo viaja el titular
+        {{-- ── TITULAR — Pasajero 1 ── --}}
+        <div class="pax-card" id="pax-titular-card"
+             style="border:1.5px solid var(--adv-blue,#2563eb);background:#f0f7ff;margin-bottom:.75rem;">
+            <div class="pax-head">
+                <span>
+                    <i class="bi bi-person-badge me-1"></i>
+                    Pasajero 1 — <span id="pax1-nombre-lbl" style="font-weight:800">Titular</span>
+                </span>
+                <span style="background:var(--adv-blue,#2563eb);color:#fff;font-size:.62rem;
+                             font-weight:800;padding:.15rem .55rem;border-radius:99px;
+                             letter-spacing:.04em">TITULAR</span>
             </div>
-            <label class="solo-toggle">
-                <input type="checkbox" id="solo-pasajero" name="solo_pasajero" value="1"
-                       onchange="toggleSoloPasajero(this)"
-                       {{ old('solo_pasajero') ? 'checked' : '' }}>
-                <span class="solo-slider"></span>
-            </label>
-        </div>
 
-        <div id="pax-seccion">
-            {{-- Pasajero 1 = Titular (solo lectura, se actualiza en tiempo real) --}}
-            <div class="pax-card" id="pax-titular-card"
-                 style="border:1.5px solid var(--adv-blue,#2563eb);background:#f0f7ff;">
-                <div class="pax-head">
-                    <span>
-                        <i class="bi bi-person-badge me-1"></i>
-                        Pasajero 1 — <span id="pax1-nombre-lbl" style="font-weight:800">Titular</span>
-                    </span>
-                    <span style="background:var(--adv-blue,#2563eb);color:#fff;font-size:.62rem;
-                                 font-weight:800;padding:.15rem .55rem;border-radius:99px;
-                                 letter-spacing:.04em">TITULAR</span>
+            {{-- Resumen de datos en tiempo real --}}
+            <div style="display:flex;flex-wrap:wrap;gap:.4rem 1.4rem;padding:.45rem .65rem .5rem;font-size:.76rem;">
+                <div>
+                    <div class="mini-lbl">Documento</div>
+                    <div class="mini-val" id="pax1-doc">—</div>
                 </div>
-                <div style="display:flex;flex-wrap:wrap;gap:.4rem 1.4rem;padding:.45rem .65rem .6rem;font-size:.76rem;">
-                    <div>
-                        <div style="font-size:.62rem;font-weight:700;color:var(--ink-4);text-transform:uppercase;letter-spacing:.05em">Documento</div>
-                        <div style="font-weight:600;color:var(--ink-2)" id="pax1-doc">—</div>
-                    </div>
-                    <div>
-                        <div style="font-size:.62rem;font-weight:700;color:var(--ink-4);text-transform:uppercase;letter-spacing:.05em">Teléfono</div>
-                        <div style="font-weight:600;color:var(--ink-2)" id="pax1-tel">—</div>
-                    </div>
-                    <div>
-                        <div style="font-size:.62rem;font-weight:700;color:var(--ink-4);text-transform:uppercase;letter-spacing:.05em">Correo</div>
-                        <div style="font-weight:600;color:var(--ink-2)" id="pax1-email">—</div>
-                    </div>
+                <div>
+                    <div class="mini-lbl">Teléfono</div>
+                    <div class="mini-val" id="pax1-tel">—</div>
                 </div>
-                {{-- Switch salud titular --}}
-                <div style="display:flex;align-items:center;justify-content:space-between;
-                            padding:.45rem .65rem;background:rgba(0,0,0,.03);
-                            border-top:1px solid var(--border,#e2e8f0);">
-                    <span style="font-size:.72rem;font-weight:700;color:var(--ink-3)">
-                        <i class="bi bi-heart-pulse me-1" style="color:#b45309"></i>
-                        Condiciones de salud
-                    </span>
-                    <label style="display:flex;align-items:center;gap:.45rem;cursor:pointer">
-                        <div class="pax-sw-track" id="titular-sw-track">
-                            <div class="pax-sw-thumb"></div>
-                        </div>
-                        <input type="checkbox" id="titular-salud-sw" style="display:none"
-                               onchange="toggleSaludSw(this,'titular-salud-body','titular-sw-track','titular-sw-lbl')">
-                        <span class="pax-sw-lbl" id="titular-sw-lbl">Sin condiciones</span>
-                    </label>
-                </div>
-                <div id="titular-salud-body" style="display:none;padding:.8rem .65rem;
-                     border-top:1px solid var(--border,#e2e8f0)">
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.65rem">
-                        <div class="field">
-                            <label class="lbl">Alergias</label>
-                            <div class="yn-grp">
-                                <button type="button" class="yn-btn yn-no active" data-target="titular-alerg-det" onclick="togYN(this)">No</button>
-                                <button type="button" class="yn-btn yn-si"        data-target="titular-alerg-det" onclick="togYN(this)">Sí</button>
-                            </div>
-                            <input type="hidden" name="titular_tiene_alergias" id="titular_tiene_alergias" value="no">
-                            <div id="titular-alerg-det" style="display:none;margin-top:.4rem">
-                                <textarea name="titular_alergias_detalle" class="fi" rows="2" placeholder="Describe las alergias..."></textarea>
-                            </div>
-                        </div>
-                        <div class="field">
-                            <label class="lbl">Restricciones alimentarias</label>
-                            <div class="yn-grp">
-                                <button type="button" class="yn-btn yn-no active" data-target="titular-rest-det" onclick="togYN(this)">No</button>
-                                <button type="button" class="yn-btn yn-si"        data-target="titular-rest-det" onclick="togYN(this)">Sí</button>
-                            </div>
-                            <div id="titular-rest-det" style="display:none;margin-top:.4rem">
-                                <textarea name="titular_restricciones" class="fi" rows="2" placeholder="Sin gluten, vegano..."></textarea>
-                            </div>
-                        </div>
-                        <div class="field" style="grid-column:1/-1">
-                            <label class="lbl">Discapacidad</label>
-                            <div class="yn-grp">
-                                <button type="button" class="yn-btn yn-no active" data-target="titular-discap-det" onclick="togYN(this)">No</button>
-                                <button type="button" class="yn-btn yn-si"        data-target="titular-discap-det" onclick="togYN(this)">Sí</button>
-                            </div>
-                            <div id="titular-discap-det" style="display:none;margin-top:.4rem" data-discap-wrap>
-                                <div class="discap-chips">
-                                    <span class="discap-chip" data-val="motora"         onclick="togDiscap(this)">Motora</span>
-                                    <span class="discap-chip" data-val="visual"         onclick="togDiscap(this)">Visual</span>
-                                    <span class="discap-chip" data-val="auditiva"       onclick="togDiscap(this)">Auditiva</span>
-                                    <span class="discap-chip" data-val="cognitiva"      onclick="togDiscap(this)">Cognitiva</span>
-                                    <span class="discap-chip" data-val="habla_lenguaje" onclick="togDiscap(this)">Habla/Lenguaje</span>
-                                    <span class="discap-chip" data-val="psicosocial"    onclick="togDiscap(this)">Psicosocial</span>
-                                    <span class="discap-chip" data-val="otro"           onclick="togDiscap(this)">Otro</span>
-                                </div>
-                                <input type="hidden" name="titular_discapacidades" value="">
-                                <input type="text" class="fi discap-otro" name="titular_discapacidad_otro"
-                                       placeholder="Especifica..." style="display:none;margin-top:.35rem">
-                            </div>
-                        </div>
-                        <div class="field" style="grid-column:1/-1">
-                            <label class="lbl">Observaciones médicas</label>
-                            <div class="yn-grp">
-                                <button type="button" class="yn-btn yn-no active" data-target="titular-obs-det" onclick="togYN(this)">No</button>
-                                <button type="button" class="yn-btn yn-si"        data-target="titular-obs-det" onclick="togYN(this)">Sí</button>
-                            </div>
-                            <div id="titular-obs-det" style="display:none;margin-top:.4rem">
-                                <textarea name="titular_obs_medicas" class="fi" rows="2" placeholder="Condiciones crónicas, medicamentos..."></textarea>
-                            </div>
-                        </div>
-                        <div class="field" style="grid-column:1/-1">
-                            <label class="lbl">Seguro de salud</label>
-                            <select name="titular_seguro_salud" class="fi">
-                                <option value="">— Sin seguro / No sabe —</option>
-                                <option value="essalud">EsSalud</option>
-                                <option value="sis">SIS</option>
-                                <option value="eps">EPS privada</option>
-                                <option value="ffaa">FFAA / PNP</option>
-                                <option value="otro">Otro seguro</option>
-                            </select>
-                        </div>
-                    </div>
+                <div>
+                    <div class="mini-lbl">Correo</div>
+                    <div class="mini-val" id="pax1-email">—</div>
                 </div>
             </div>
 
-            <div id="pax-lista"></div>
-            <p id="pax-cnt" style="font-size:.74rem;color:var(--ink-4);margin-bottom:.35rem;margin-top:.3rem"></p>
-            <button type="button" class="btn-add" onclick="addPax()">
-                <i class="bi bi-person-plus"></i> Agregar pasajero
-            </button>
+            {{-- ── SEGURO (siempre visible, sin abrir salud) ── --}}
+            <div class="seguro-row">
+                <span class="seguro-lbl">
+                    <i class="bi bi-shield-plus" style="color:#0369a1"></i>
+                    Seguro de salud
+                </span>
+                <select name="titular_seguro_salud" id="titular_seguro_salud"
+                        class="fi seguro-sel" onchange="updateProgressSteps()">
+                    <option value="">Sin seguro</option>
+                    <option value="essalud" {{ old('titular_seguro_salud') == 'essalud' ? 'selected' : '' }}>EsSalud</option>
+                    <option value="sis"     {{ old('titular_seguro_salud') == 'sis'     ? 'selected' : '' }}>SIS</option>
+                    <option value="eps"     {{ old('titular_seguro_salud') == 'eps'     ? 'selected' : '' }}>EPS privada</option>
+                    <option value="ffaa"    {{ old('titular_seguro_salud') == 'ffaa'    ? 'selected' : '' }}>FFAA / PNP</option>
+                    <option value="otro"    {{ old('titular_seguro_salud') == 'otro'    ? 'selected' : '' }}>Otro</option>
+                </select>
+            </div>
+
+            {{-- ── SWITCH CONDICIONES DE SALUD ── --}}
+            <div class="salud-sw-bar">
+                <span class="salud-sw-title">
+                    <i class="bi bi-heart-pulse" style="color:#b45309"></i>
+                    Condiciones de salud
+                    <span class="salud-hint">alergias, restricciones, discapacidad</span>
+                </span>
+                <label class="sw-label">
+                    <div class="pax-sw-track" id="titular-sw-track">
+                        <div class="pax-sw-thumb"></div>
+                    </div>
+                    <input type="checkbox" id="titular-salud-sw" style="display:none"
+                           onchange="toggleSaludSw(this,'titular-salud-body','titular-sw-track','titular-sw-lbl')">
+                    <span class="pax-sw-lbl" id="titular-sw-lbl">Sin condiciones</span>
+                </label>
+            </div>
+
+            {{-- ── PANEL SALUD TITULAR (se despliega con el switch) ── --}}
+            <div id="titular-salud-body" style="display:none;padding:.8rem .65rem;
+                 border-top:1px solid var(--border,#e2e8f0);background:#fffdf7">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:.65rem">
+
+                    <div class="field">
+                        <label class="lbl">Alergias</label>
+                        <div class="yn-grp">
+                            <button type="button" class="yn-btn yn-no active"
+                                    data-target="titular-alerg-det" onclick="togYN(this)">No</button>
+                            <button type="button" class="yn-btn yn-si"
+                                    data-target="titular-alerg-det" onclick="togYN(this)">Sí</button>
+                        </div>
+                        <input type="hidden" name="titular_tiene_alergias" id="titular_tiene_alergias" value="no">
+                        <div id="titular-alerg-det" style="display:none;margin-top:.4rem">
+                            <textarea name="titular_alergias_detalle" class="fi" rows="2"
+                                      placeholder="Medicamentos, alimentos, materiales...">{{ old('titular_alergias_detalle') }}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="lbl">Restricciones alimentarias</label>
+                        <div class="yn-grp">
+                            <button type="button" class="yn-btn yn-no active"
+                                    data-target="titular-rest-det" onclick="togYN(this)">No</button>
+                            <button type="button" class="yn-btn yn-si"
+                                    data-target="titular-rest-det" onclick="togYN(this)">Sí</button>
+                        </div>
+                        <div id="titular-rest-det" style="display:none;margin-top:.4rem">
+                            <textarea name="titular_restricciones" class="fi" rows="2"
+                                      placeholder="Sin gluten, vegano, sin lactosa...">{{ old('titular_restricciones') }}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="field" style="grid-column:1/-1">
+                        <label class="lbl">Discapacidad</label>
+                        <div class="yn-grp">
+                            <button type="button" class="yn-btn yn-no active"
+                                    data-target="titular-discap-det" onclick="togYN(this)">No</button>
+                            <button type="button" class="yn-btn yn-si"
+                                    data-target="titular-discap-det" onclick="togYN(this)">Sí</button>
+                        </div>
+                        <div id="titular-discap-det" style="display:none;margin-top:.4rem" data-discap-wrap>
+                            <div class="discap-chips">
+                                <span class="discap-chip" data-val="motora"         onclick="togDiscap(this)">Motora</span>
+                                <span class="discap-chip" data-val="visual"         onclick="togDiscap(this)">Visual</span>
+                                <span class="discap-chip" data-val="auditiva"       onclick="togDiscap(this)">Auditiva</span>
+                                <span class="discap-chip" data-val="cognitiva"      onclick="togDiscap(this)">Cognitiva</span>
+                                <span class="discap-chip" data-val="habla_lenguaje" onclick="togDiscap(this)">Habla/Lenguaje</span>
+                                <span class="discap-chip" data-val="psicosocial"    onclick="togDiscap(this)">Psicosocial</span>
+                                <span class="discap-chip" data-val="otro"           onclick="togDiscap(this)">Otro</span>
+                            </div>
+                            <input type="hidden" name="titular_discapacidades"
+                                   value="{{ old('titular_discapacidades') }}">
+                            <input type="text" class="fi discap-otro"
+                                   name="titular_discapacidad_otro"
+                                   value="{{ old('titular_discapacidad_otro') }}"
+                                   placeholder="Especifica..." style="display:none;margin-top:.35rem">
+                        </div>
+                    </div>
+
+                    <div class="field" style="grid-column:1/-1">
+                        <label class="lbl">Observaciones médicas</label>
+                        <div class="yn-grp">
+                            <button type="button" class="yn-btn yn-no active"
+                                    data-target="titular-obs-det" onclick="togYN(this)">No</button>
+                            <button type="button" class="yn-btn yn-si"
+                                    data-target="titular-obs-det" onclick="togYN(this)">Sí</button>
+                        </div>
+                        <div id="titular-obs-det" style="display:none;margin-top:.4rem">
+                            <textarea name="titular_obs_medicas" class="fi" rows="2"
+                                      placeholder="Condiciones crónicas, medicamentos habituales...">{{ old('titular_obs_medicas') }}</textarea>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
         </div>
 
-        <div id="solo-msg"
-             style="display:none;padding:.75rem 1rem;background:var(--adv-green-l);
-                    border:1.5px solid var(--adv-green-m);border-radius:var(--r);
-                    font-size:.8rem;color:var(--adv-green);font-weight:700;">
-            <i class="bi bi-check-circle me-1"></i> Solo viaja el titular.
-        </div>
-    </div>
+        {{-- ── PASAJEROS ADICIONALES ── --}}
+        <div id="pax-lista"></div>
+        <p id="pax-cnt" style="font-size:.74rem;color:var(--ink-4);margin-bottom:.35rem;margin-top:.3rem"></p>
+        <button type="button" class="btn-add" onclick="addPax()">
+            <i class="bi bi-person-plus"></i> Agregar pasajero
+        </button>
+
+    </div>{{-- fin fb-body --}}
 </div>
 
 {{-- ══ ESTILOS ══ --}}
 <style>
-/* Switch salud */
+.mini-lbl {
+    font-size:.62rem;font-weight:700;color:var(--ink-4);
+    text-transform:uppercase;letter-spacing:.05em;
+}
+.mini-val { font-weight:600;color:var(--ink-2);font-size:.76rem; }
+
+/* Seguro siempre visible */
+.seguro-row {
+    display:flex;align-items:center;gap:.65rem;
+    padding:.5rem .65rem;
+    border-top:1px solid var(--border,#e2e8f0);
+    background:#f0f9ff;
+}
+.seguro-lbl {
+    font-size:.72rem;font-weight:700;color:#0369a1;
+    white-space:nowrap;display:flex;align-items:center;gap:.3rem;
+    flex-shrink:0;
+}
+.seguro-sel {
+    flex:1;font-size:.78rem;padding:.3rem .5rem;
+    border-radius:6px;min-width:0;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 8px center;
+    padding-right:24px;
+}
+
+/* Barra switch salud */
+.salud-sw-bar {
+    display:flex;align-items:center;justify-content:space-between;gap:.5rem;
+    padding:.45rem .65rem;
+    background:rgba(0,0,0,.025);
+    border-top:1px solid var(--border,#e2e8f0);
+}
+.salud-sw-title {
+    font-size:.72rem;font-weight:700;color:var(--ink-3);
+    display:flex;align-items:center;gap:.3rem;flex-wrap:wrap;
+}
+.salud-hint {
+    font-size:.65rem;font-weight:400;color:var(--ink-4);
+    font-style:italic;
+}
+.sw-label { display:flex;align-items:center;gap:.45rem;cursor:pointer; }
+
+/* Switch track/thumb */
 .pax-sw-track {
     width:36px;height:20px;background:#cbd5e1;border-radius:99px;
     position:relative;cursor:pointer;transition:background .25s;flex-shrink:0;
@@ -414,7 +474,7 @@
 }
 .pax-sw-track.on .pax-sw-thumb { transform:translateX(16px); }
 .pax-sw-lbl { font-size:.7rem;font-weight:700;color:var(--ink-4);min-width:90px; }
-.pax-sw-track.on + input + .pax-sw-lbl { color:#b45309; }
+.pax-sw-track.on ~ .pax-sw-lbl { color:#b45309; }
 
 /* Si/No buttons */
 .yn-grp { display:flex;gap:.3rem;margin-bottom:.1rem; }
@@ -462,7 +522,6 @@ function onTitularChange() {
     setV('pax1-tel',   tel);
     setV('pax1-email', email);
 
-    // Bloque 5 — displays de notificación
     const codigo = document.getElementById('titular_telefono_codigo')?.value || '+51';
     const telDisplay   = document.getElementById('notif-tel-display');
     const emailDisplay = document.getElementById('notif-email-display');
@@ -470,7 +529,7 @@ function onTitularChange() {
     if (emailDisplay) emailDisplay.textContent = email || '— Sin correo —';
 }
 
-/* Switch salud (titular y pasajeros) */
+/* Switch salud — titular y pasajeros adicionales */
 function toggleSaludSw(chk, bodyId, trackId, lblId) {
     const body  = document.getElementById(bodyId);
     const track = document.getElementById(trackId);
@@ -492,7 +551,8 @@ document.addEventListener('click', e => {
         chk.dispatchEvent(new Event('change'));
     }
 });
-/* Si / No toggle */
+
+/* Si / No toggle — actualiza también el hidden de tiene_alergias */
 function togYN(btn) {
     const grp = btn.closest('.yn-grp');
     grp?.querySelectorAll('.yn-btn').forEach(b => b.classList.remove('active'));
@@ -501,6 +561,13 @@ function togYN(btn) {
     const det  = document.getElementById(btn.dataset.target);
     if (det) det.style.display = isSi ? 'block' : 'none';
     if (!isSi && det) det.querySelectorAll('textarea,input[type="text"]').forEach(t => t.value = '');
+
+    // Actualizar hidden tiene_alergias del titular
+    if (btn.dataset.target === 'titular-alerg-det') {
+        const hid = document.getElementById('titular_tiene_alergias');
+        if (hid) hid.value = isSi ? 'si' : 'no';
+    }
+    // Para pasajeros el hidden se maneja en el template de addPax()
 }
 
 /* Discapacidad chips */
@@ -517,12 +584,27 @@ function togDiscap(chip) {
 
 document.addEventListener('DOMContentLoaded', () => {
     onTitularChange();
-    
-    // Flatpickr fecha nacimiento titular — se re-inicializa aquí porque
-    // el blade carga después del JS principal
+
+    // Restaurar old() para discapacidades del titular
+    const discapOld = document.querySelector('[name="titular_discapacidades"]')?.value || '';
+    if (discapOld) {
+        discapOld.split(',').filter(Boolean).forEach(val => {
+            const chip = document.querySelector(
+                `#titular-discap-det .discap-chip[data-val="${val}"]`
+            );
+            if (chip) chip.classList.add('sel');
+        });
+        const otro = document.querySelector('[name="titular_discapacidad_otro"]');
+        if (otro?.value) {
+            const otroCont = document.querySelector('.discap-otro');
+            if (otroCont) otroCont.style.display = 'block';
+        }
+    }
+
+    // Flatpickr fecha nacimiento titular
     const fpEl = document.getElementById('titular_fecha_nacimiento');
-     if (fpEl?._flatpickr) fpEl._flatpickr.destroy();
-     if (typeof flatpickr !== 'undefined') {
+    if (fpEl?._flatpickr) fpEl._flatpickr.destroy();
+    if (typeof flatpickr !== 'undefined') {
         flatpickr('#titular_fecha_nacimiento', {
             locale: 'es', dateFormat: 'd/m/Y', maxDate: 'today', allowInput: false,
             onChange(sel, str, inst) {

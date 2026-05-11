@@ -191,6 +191,9 @@ class ReservaService
                 'estado_validacion' => 'pendiente',
                 'fecha_pago'        => $datos['fecha_pago'],
             ]);
+            $reserva->update([
+               'monto_pagado' => $reserva->pagos()->sum('monto'),
+            ]);
 
             // ── 9. Historial ──────────────────────────────────────
             HistorialEstado::create([
@@ -206,9 +209,9 @@ class ReservaService
 
         // Notificaciones FUERA de la transacción
         $this->enviarNotificacionesCreacion($reserva, $datos);
-
         return $reserva;
     }
+    
 
     // ══════════════════════════════════════════════════════════════════
     // CAMBIAR ESTADO
@@ -236,7 +239,7 @@ class ReservaService
             'fecha_cambio'       => now(),
         ]);
 
-        if ($estadoNuevo->nombre === 'confirmada') {
+        if ($estadoNuevo->nombre === 'confirmada' && !$reserva->notificacion_enviada) {
             $reserva->load(['cliente', 'fechaTour.tour', 'pasajeros']);
             $pdfPath = $this->pdfService->generarConfirmacion($reserva);
             $this->mailService->enviarConfirmacion($reserva, $pdfPath);
@@ -300,6 +303,7 @@ class ReservaService
             $nombreEstado = $mapaEstados[$datos['estado_inicial']] ?? 'mitad_pago';
             $estado       = EstadoReserva::where('nombre', $nombreEstado)->firstOrFail();
             $estadoCambio = $estado->id !== $reserva->estado_id;
+            $estadoAnteriorId = $reserva->estado_id;
 
             // ── 3. Actualizar reserva ─────────────────────────────
             $reserva->update([
@@ -343,21 +347,21 @@ class ReservaService
                 'politica_descripcion'               => $datos['politica_descripcion']     ?? null,
                 'politica_tipo'                      => $datos['politica_tipo']            ?? null,
                 'observaciones'                      => $datos['observaciones']            ?? null,
+                'email_contacto'                     => $datos['titular_email'] ?? null,
             ]);
 
             // ── 4. Reemplazar pasajeros + salud ───────────────────
-            $reserva->pasajeros()->delete();
+            $reserva->pasajeros()->where('es_titular', false)->delete();
 
-            $titular = $reserva->pasajeros()->create([
-                'nombre_completo'  => $datos['titular_nombre'],
-                'tipo'             => 'adulto',
-                'tipo_documento'   => $datos['titular_tipo_documento']   ?? null,
-                'numero_documento' => $datos['titular_numero_documento'] ?? null,
-                'fecha_nacimiento' => $datos['titular_fecha_nacimiento'] ?? null,
-                'edad'             => null,
-                'es_titular'       => true,
-            ]);
-            $this->guardarSaludTitular($titular, $datos);
+            $titular = $reserva->pasajeros()->where('es_titular', true)->firstOrFail();
+            $titular->update([
+                 'nombre_completo'  => $datos['titular_nombre'],
+                 'tipo_documento'   => $datos['titular_tipo_documento']   ?? null,
+                 'numero_documento' => $datos['titular_numero_documento'] ?? null,
+                 'fecha_nacimiento' => $datos['titular_fecha_nacimiento'] ?? null,
+              ]);
+               $titular->salud()->delete();
+               $this->guardarSaludTitular($titular, $datos);
 
             if (empty($datos['solo_pasajero'])) {
                 foreach ($datos['pasajeros'] ?? [] as $p) {
@@ -406,7 +410,7 @@ class ReservaService
             if ($estadoCambio) {
                 HistorialEstado::create([
                     'reserva_id'         => $reserva->id,
-                    'estado_anterior_id' => $reserva->getOriginal('estado_id'),
+                    'estado_anterior_id' => $estadoAnteriorId,
                     'estado_nuevo_id'    => $estado->id,
                     'cambiado_por'       => Auth::id(),
                     'motivo'             => 'Reserva editada — estado actualizado',
@@ -424,39 +428,61 @@ class ReservaService
     private function guardarSaludTitular(Pasajero $pasajero, array $datos): void
     {
         $tieneAlergias      = ($datos['titular_tiene_alergias'] ?? 'no') === 'si';
-        $tieneRestricciones = !empty(trim($datos['titular_restricciones'] ?? ''));
-        $tieneObsMedicas    = !empty(trim($datos['titular_obs_medicas']   ?? ''));
-
-        if ($tieneAlergias || $tieneRestricciones || $tieneObsMedicas) {
+        $tieneRestricciones = !empty(trim($datos['titular_restricciones']  ?? ''));
+        $tieneObsMedicas    = !empty(trim($datos['titular_obs_medicas']    ?? ''));
+        $tieneDiscap        = !empty(trim($datos['titular_discapacidades'] ?? ''));
+        $tieneSeguro        = !empty(trim($datos['titular_seguro_salud']   ?? ''));
+ 
+        // Guardar si hay CUALQUIER dato de salud, incluido seguro
+        if ($tieneAlergias || $tieneRestricciones || $tieneObsMedicas || $tieneDiscap || $tieneSeguro) {
             $pasajero->salud()->create([
                 'alergias'                   => $tieneAlergias
                                                 ? ($datos['titular_alergias_detalle'] ?? null)
                                                 : null,
-                'restricciones_alimentarias' => $datos['titular_restricciones'] ?? null,
-                'condiciones_medicas'        => $datos['titular_obs_medicas']   ?? null,
+                'restricciones_alimentarias' => $datos['titular_restricciones']      ?? null,
+                'condiciones_medicas'        => $datos['titular_obs_medicas']        ?? null,
                 'medicamentos'               => null,
+                'discapacidades'             => $tieneDiscap
+                                                ? ($datos['titular_discapacidades']  ?? null)
+                                                : null,
+                'discapacidad_otro'          => $tieneDiscap
+                                                ? ($datos['titular_discapacidad_otro'] ?? null)
+                                                : null,
+                'seguro_salud'               => !empty($datos['titular_seguro_salud'])
+                                                ? $datos['titular_seguro_salud']
+                                                : null,
             ]);
         }
     }
-
+ 
     private function guardarSaludPasajero(Pasajero $pasajero, array $p): void
     {
         $tieneAlergias      = ($p['tiene_alergias'] ?? 'no') === 'si';
-        $tieneRestricciones = !empty(trim($p['restricciones'] ?? ''));
-        $tieneObsMedicas    = !empty(trim($p['obs_medicas']   ?? ''));
-
-        if ($tieneAlergias || $tieneRestricciones || $tieneObsMedicas) {
+        $tieneRestricciones = !empty(trim($p['restricciones']   ?? ''));
+        $tieneObsMedicas    = !empty(trim($p['obs_medicas']     ?? ''));
+        $tieneDiscap        = !empty(trim($p['discapacidades']  ?? ''));
+        $tieneSeguro        = !empty(trim($p['seguro_salud']    ?? ''));
+ 
+        if ($tieneAlergias || $tieneRestricciones || $tieneObsMedicas || $tieneDiscap || $tieneSeguro) {
             $pasajero->salud()->create([
                 'alergias'                   => $tieneAlergias
                                                 ? ($p['alergias_detalle'] ?? null)
                                                 : null,
-                'restricciones_alimentarias' => $p['restricciones'] ?? null,
-                'condiciones_medicas'        => $p['obs_medicas']   ?? null,
+                'restricciones_alimentarias' => $p['restricciones']       ?? null,
+                'condiciones_medicas'        => $p['obs_medicas']         ?? null,
                 'medicamentos'               => null,
+                'discapacidades'             => $tieneDiscap
+                                                ? ($p['discapacidades']   ?? null)
+                                                : null,
+                'discapacidad_otro'          => $tieneDiscap
+                                                ? ($p['discapacidad_otro'] ?? null)
+                                                : null,
+                'seguro_salud'               => !empty($p['seguro_salud'])
+                                                ? $p['seguro_salud']
+                                                : null,
             ]);
         }
     }
-
     // ══════════════════════════════════════════════════════════════════
     // NOTIFICACIONES CREACIÓN
     // ══════════════════════════════════════════════════════════════════
@@ -484,6 +510,11 @@ class ReservaService
             if ($notifEmail) {
                 $this->mailService->enviarConfirmacion($reserva, $pdfPath);
             }
+            if ($notifEmail) {
+                $this->mailService->enviarConfirmacion($reserva, $pdfPath);
+            }
+
+            $reserva->update(['notificacion_enviada' => true]); 
 
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('ReservaService: error en notificaciones creación', [

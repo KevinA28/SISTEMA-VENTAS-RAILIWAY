@@ -36,11 +36,23 @@ body { font-family:'DM Sans',sans-serif; }
     display:inline-flex;align-items:center;gap:.5rem;
     padding:10px 20px;border-radius:10px;font-size:.88rem;font-weight:700;
     font-family:'DM Sans',sans-serif;
-    background:linear-gradient(135deg,#7c3aed 0%,#4f46e5 100%);
-    color:#fff;border:none;cursor:not-allowed;opacity:.75;
+    background:linear-gradient(135deg,#059669 0%,#047857 100%);
+    color:#fff;border:none;cursor:pointer;
     text-decoration:none;transition:all .2s;
-    box-shadow:0 2px 8px rgba(124,58,237,.25);
+    box-shadow:0 2px 8px rgba(5,150,105,.25);
 }
+.btn-reportes:hover { opacity:.9;transform:translateY(-1px); }
+
+.btn-pdf-salud {
+    display:inline-flex;align-items:center;gap:.5rem;
+    padding:10px 20px;border-radius:10px;font-size:.88rem;font-weight:700;
+    font-family:'DM Sans',sans-serif;
+    background:linear-gradient(135deg,#dc2626 0%,#b91c1c 100%);
+    color:#fff;border:none;cursor:pointer;
+    text-decoration:none;transition:all .2s;
+    box-shadow:0 2px 8px rgba(220,38,38,.25);
+}
+.btn-pdf-salud:hover { opacity:.9;transform:translateY(-1px); }
 
 /* ── FILTROS ── */
 .filtros-card {
@@ -49,7 +61,6 @@ body { font-family:'DM Sans',sans-serif; }
     display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;
 }
 
-/* Búsqueda */
 .search-wrap { position:relative;flex:1;min-width:220px; }
 .search-ico {
     position:absolute;left:11px;top:50%;transform:translateY(-50%);
@@ -174,7 +185,6 @@ body { font-family:'DM Sans',sans-serif; }
 .rc-fecha-hora .fecha { font-weight:600;color:var(--ink-2); }
 .rc-dot { width:3px;height:3px;border-radius:50%;background:var(--line);flex-shrink:0; }
 
-/* Barra de progreso tarjeta */
 .rc-pago { display:flex;flex-direction:column;gap:4px; }
 .rc-pago-row { display:flex;align-items:center;gap:.5rem; }
 .pago-bar { flex:1;height:6px;background:var(--line);border-radius:999px;overflow:hidden; }
@@ -229,7 +239,7 @@ body { font-family:'DM Sans',sans-serif; }
 }
 .pag-info { font-size:.78rem;color:var(--ink-4); }
 
-/* ── MODAL ── */
+/* ── MODAL GENÉRICO ── */
 .modal-overlay {
     display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);
     z-index:9999;align-items:center;justify-content:center;
@@ -238,7 +248,7 @@ body { font-family:'DM Sans',sans-serif; }
 @keyframes mFadeIn { from{opacity:0}to{opacity:1} }
 .modal-box {
     background:white;border-radius:16px;padding:1.5rem;
-    width:100%;max-width:460px;
+    width:100%;
     box-shadow:0 20px 60px rgba(0,0,0,.2);margin:1rem;
     animation:mSlide .2s ease;
 }
@@ -267,6 +277,13 @@ body { font-family:'DM Sans',sans-serif; }
     display:flex;align-items:center;gap:.4rem;
 }
 .modal-btn-confirm:hover { background:#047857; }
+.modal-btn-danger {
+    padding:8px 20px;border-radius:9px;font-size:.84rem;font-weight:700;
+    background:var(--red);color:white;border:none;cursor:pointer;
+    font-family:'DM Sans',sans-serif;transition:background .15s;
+    display:flex;align-items:center;gap:.4rem;
+}
+.modal-btn-danger:hover { background:#b91c1c; }
 .modal-tab-wrap {
     display:flex;gap:.4rem;background:var(--line-2);border-radius:10px;
     padding:.3rem;margin-bottom:.875rem;
@@ -282,7 +299,7 @@ body { font-family:'DM Sans',sans-serif; }
 }
 .modal-field-label {
     font-size:.67rem;font-weight:700;text-transform:uppercase;
-    letter-spacing:.06em;color:var(--ink-4);margin-bottom:.3rem;
+    letter-spacing:.06em;color:var(--ink-4);margin-bottom:.3rem;display:block;
 }
 .modal-select, .modal-input {
     width:100%;padding:.5rem .7rem;border:1.5px solid var(--line);
@@ -318,6 +335,32 @@ body { font-family:'DM Sans',sans-serif; }
     font-size:.79rem;color:var(--red);font-weight:600;
 }
 
+/* ── Sección filtros modal Excel ── */
+.filtro-grupo {
+    background:var(--line-2);border:1px solid var(--line);border-radius:10px;
+    padding:.875rem 1rem;margin-bottom:.75rem;
+}
+.filtro-grupo-title {
+    font-size:.67rem;font-weight:700;text-transform:uppercase;
+    letter-spacing:.07em;color:var(--ink-4);margin-bottom:.6rem;
+    display:flex;align-items:center;gap:.35rem;
+}
+.check-group { display:flex;flex-wrap:wrap;gap:.4rem; }
+.check-pill input { display:none; }
+.check-pill label {
+    display:inline-flex;align-items:center;gap:.3rem;
+    padding:5px 12px;border-radius:20px;font-size:.76rem;font-weight:600;
+    border:1.5px solid var(--line);background:white;color:var(--ink-3);
+    cursor:pointer;transition:all .15s;user-select:none;
+}
+.check-pill label::before { content:'';width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0; }
+.check-pill input:checked + label {
+    background:var(--blue-l);border-color:var(--blue);color:var(--blue);
+}
+.check-pill.pill-pagado   input:checked + label { background:var(--green-l);border-color:var(--green);color:var(--green); }
+.check-pill.pill-cancelada input:checked + label { background:var(--red-l);border-color:var(--red);color:var(--red); }
+.check-pill.pill-mitad    input:checked + label { background:var(--blue-l);border-color:var(--blue);color:var(--blue); }
+
 /* ── Flatpickr override ── */
 .flatpickr-calendar {
     border-radius:12px!important;box-shadow:0 8px 30px rgba(0,0,0,.12)!important;
@@ -326,7 +369,6 @@ body { font-family:'DM Sans',sans-serif; }
 .flatpickr-day.selected,.flatpickr-day.selected:hover { background:var(--blue)!important;border-color:var(--blue)!important; }
 .flatpickr-day:hover { background:var(--blue-l)!important; }
 
-/* Responsive */
 @media(max-width:640px){
     .cards-grid { grid-template-columns:1fr; }
     .filtros-card { flex-direction:column;align-items:stretch; }
@@ -346,19 +388,21 @@ body { font-family:'DM Sans',sans-serif; }
         </div>
         <div class="page-subtitle">Gestiona y monitorea todas las reservas</div>
     </div>
-    <a href="{{ route('reservas.exportar', request()->only(['estado','canal','fecha_desde','fecha_hasta','buscar'])) }}"
-   class="btn-reportes"
-   style="cursor:pointer;opacity:1;"
-   title="Exportar reservas filtradas a Excel">
-    <i class="bi bi-file-earmark-excel-fill"></i> Exportar Excel
-</a>
+    {{-- Botones de reporte --}}
+    <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
+        <button type="button" class="btn-reportes" onclick="abrirModalExcel()" title="Exportar reservas a Excel con filtros">
+            <i class="bi bi-file-earmark-excel-fill"></i> Exportar Excel
+        </button>
+        <button type="button" class="btn-pdf-salud" onclick="abrirModalSalud()" title="Reporte de salud y documentos por día de tour">
+            <i class="bi bi-file-earmark-medical-fill"></i> Reporte Salud PDF
+        </button>
+    </div>
 </div>
 
 {{-- ── FORMULARIO FILTROS ── --}}
 <form method="GET" action="{{ route('reservas.index') }}" id="form-filtros">
 
     <div class="filtros-card">
-        {{-- Búsqueda ── NOTA: el input NO está dentro del área que se reemplaza por AJAX --}}
         <div class="search-wrap" id="search-wrap">
             <i class="bi bi-search search-ico"></i>
             <input type="text" name="buscar" id="input-buscar"
@@ -383,6 +427,7 @@ body { font-family:'DM Sans',sans-serif; }
             <option value="referido"       {{ request('canal')=='referido'       ?'selected':'' }}>Referido</option>
         </select>
 
+        {{-- FECHA DESDE: FIX — flatpickr necesita input de texto, no type=date --}}
         <div class="date-wrap">
             <i class="bi bi-calendar3"></i>
             <input type="text" name="fecha_desde" id="fecha-desde"
@@ -410,23 +455,35 @@ body { font-family:'DM Sans',sans-serif; }
         <div class="estado-btns">
             <span style="font-size:.78rem;color:var(--ink-4);font-weight:600;margin-right:.2rem;">Estado:</span>
             @php
-                $estadoActual   = request('estado');
-                $idPagado       = $estados->firstWhere('nombre','pagado')?->id;
-                $idCancelada    = $estados->firstWhere('nombre','cancelada')?->id;
-                $idMitad        = $estados->firstWhere('nombre','mitad_pago')?->id;
+                $estadoActual = request('estado');
+                $idPagado     = $estados->firstWhere('nombre','pagado')?->id;
+                $idCancelada  = $estados->firstWhere('nombre','cancelada')?->id;
+                $idMitad      = $estados->firstWhere('nombre','mitad_pago')?->id;
+                $idConfirmada = $estados->firstWhere('nombre','confirmada')?->id;
+                $idPreReserva = $estados->firstWhere('nombre','pre_reserva')?->id;
             @endphp
             <button type="button"
                     class="btn-estado {{ $estadoActual == $idPagado    ? 'act-pagado'    : '' }}"
                     data-id="{{ $idPagado }}" data-cls="act-pagado"
                     onclick="toggleEstado(this)">Pagado</button>
             <button type="button"
-                    class="btn-estado {{ $estadoActual == $idCancelada ? 'act-cancelada' : '' }}"
-                    data-id="{{ $idCancelada }}" data-cls="act-cancelada"
-                    onclick="toggleEstado(this)">Cancelada</button>
-            <button type="button"
                     class="btn-estado {{ $estadoActual == $idMitad     ? 'act-mitad'     : '' }}"
                     data-id="{{ $idMitad }}" data-cls="act-mitad"
                     onclick="toggleEstado(this)">50% Pagado</button>
+            <button type="button"
+                    class="btn-estado {{ $estadoActual == $idConfirmada ? 'act-pagado' : '' }}"
+                    data-id="{{ $idConfirmada }}" data-cls="act-pagado"
+                    onclick="toggleEstado(this)">Confirmada</button>
+            <button type="button"
+                    class="btn-estado {{ $estadoActual == $idCancelada ? 'act-cancelada' : '' }}"
+                    data-id="{{ $idCancelada }}" data-cls="act-cancelada"
+                    onclick="toggleEstado(this)">Cancelada</button>
+            @if($idPreReserva)
+            <button type="button"
+                    class="btn-estado"
+                    data-id="{{ $idPreReserva }}" data-cls="act-mitad"
+                    onclick="toggleEstado(this)">Pre-reserva</button>
+            @endif
         </div>
     </div>
 
@@ -443,63 +500,62 @@ body { font-family:'DM Sans',sans-serif; }
         </div>
     </div>
 
-    {{-- ⚠ SOLO este bloque se reemplaza por AJAX — NO el formulario de filtros ── --}}
     <div id="ajax-results">
         <div class="cards-grid">
             @forelse($reservas as $reserva)
-@php
-    $total      = (float)($reserva->precio_total ?? 0);
-    $pagado     = (float)($reserva->pagos_sum_monto ?? $reserva->monto_pagado ?? 0);
-    $saldo      = max(0, $total - $pagado);
-    $pct        = $total > 0 ? min(100, round($pagado / $total * 100)) : 0;
-    $barColor   = $pct >= 100 ? '#059669' : ($pct >= 50 ? '#1d4ed8' : '#d97706');
-    $estadoSlug = str_replace(' ','_', strtolower($reserva->estado->nombre ?? 'consulta'));
-    $canales    = ['whatsapp'=>'bi-whatsapp','presencial'=>'bi-shop','llamada'=>'bi-telephone','redes_sociales'=>'bi-instagram','web'=>'bi-globe2','referido'=>'bi-people'];
-    $fechaTour  = $reserva->fecha_tour ? \Carbon\Carbon::parse($reserva->fecha_tour)->format('d/m/Y') : ($reserva->fechaTour?->fecha ? \Carbon\Carbon::parse($reserva->fechaTour->fecha)->format('d/m/Y') : '—');
-    $horaTour   = $reserva->hora_salida ? substr($reserva->hora_salida,0,5) : ($reserva->fechaTour?->hora_salida ? substr($reserva->fechaTour->hora_salida,0,5) : null);
-    $nombreTour = $reserva->nombre_tour ?? $reserva->fechaTour?->tour?->nombre ?? '—';
-    $estadoPagadoId  = $estados->firstWhere('nombre','pagado')?->id ?? null;
-    $mostrarCompletar = $saldo > 0 && !in_array($estadoSlug,['pagado','cancelada','finalizada']) && $estadoPagadoId;
-    $pagoUrl = route('reservas.registrarPago', $reserva);
-@endphp
-<div class="reserva-card" data-reserva-id="{{ $reserva->id }}">
-    <div class="rc-head">
-        <a href="{{ route('reservas.show', $reserva) }}" class="codigo-reserva">{{ $reserva->codigo_reserva }}</a>
-        <span class="badge-estado est-{{ $estadoSlug }}">{{ ucfirst(str_replace('_',' ',$reserva->estado->nombre ?? '')) }}</span>
-    </div>
-    <div class="rc-cliente">
-        <span class="nombre">{{ $reserva->cliente->nombre_completo }}</span>
-        <span class="tel"><i class="bi bi-telephone-fill"></i> {{ $reserva->cliente->telefono ?? '—' }}@if($reserva->cliente->numero_documento) &nbsp;·&nbsp; <i class="bi bi-card-text" style="font-size:.65rem;"></i> {{ $reserva->cliente->numero_documento }}@endif</span>
-    </div>
-    <div class="rc-tour"><i class="bi bi-geo-alt-fill"></i> {{ $nombreTour }}@if($reserva->ciudad_destino)<span style="color:var(--ink-4);font-size:.75rem;font-weight:400;"> — {{ $reserva->ciudad_destino }}</span>@endif</div>
-    <div class="rc-fecha-hora">
-        <i class="bi bi-calendar-event" style="font-size:.75rem;"></i>
-        <span class="fecha">{{ $fechaTour }}</span>
-        @if($horaTour)<span class="rc-dot"></span><i class="bi bi-clock" style="font-size:.7rem;"></i> {{ $horaTour }}@endif
-    </div>
-    <div class="rc-pago">
-        <div class="rc-pago-row">
-            <div class="pago-bar"><div class="pago-bar-fill" style="width:{{ $pct }}%;background:{{ $barColor }};"></div></div>
-            <span class="pago-pct" style="color:{{ $barColor }}">{{ $pct }}%</span>
-        </div>
-        <div class="pago-detalle">S/ {{ number_format($pagado,2) }} pagado &nbsp;/&nbsp; Total: S/ {{ number_format($total,2) }}@if($saldo > 0) &nbsp;·&nbsp; <span style="color:var(--red);font-weight:600;">Saldo: S/ {{ number_format($saldo,2) }}</span>@endif</div>
-    </div>
-    <div class="rc-footer">
-        <div class="rc-footer-left">
-            <span class="canal-badge"><i class="bi {{ $canales[$reserva->canal_contacto] ?? 'bi-chat' }}"></i> {{ ucfirst(str_replace('_',' ',$reserva->canal_contacto ?? '')) }}</span>
-        </div>
-        <div style="display:flex;gap:.4rem;align-items:center;">
-            <a href="{{ route('reservas.show', $reserva) }}" class="btn-tabla"><i class="bi bi-eye"></i> Ver</a>
-            @if($mostrarCompletar)
-            <button type="button" class="btn-completar-card"
-                    onclick="abrirModalPago({{ $reserva->id }},'{{ $pagoUrl }}','{{ $reserva->codigo_reserva }}',{{ $total }},{{ $pagado }},{{ $saldo }})">
-                <i class="bi bi-check-circle"></i> Completar
-            </button>
-            @endif
-        </div>
-    </div>
-</div>
-@empty
+            @php
+                $total      = (float)($reserva->precio_total ?? 0);
+                $pagado     = (float)($reserva->pagos_sum_monto ?? $reserva->monto_pagado ?? 0);
+                $saldo      = max(0, $total - $pagado);
+                $pct        = $total > 0 ? min(100, round($pagado / $total * 100)) : 0;
+                $barColor   = $pct >= 100 ? '#059669' : ($pct >= 50 ? '#1d4ed8' : '#d97706');
+                $estadoSlug = str_replace(' ','_', strtolower($reserva->estado->nombre ?? 'consulta'));
+                $canales    = ['whatsapp'=>'bi-whatsapp','presencial'=>'bi-shop','llamada'=>'bi-telephone','redes_sociales'=>'bi-instagram','web'=>'bi-globe2','referido'=>'bi-people'];
+                $fechaTour  = $reserva->fecha_tour ? \Carbon\Carbon::parse($reserva->fecha_tour)->format('d/m/Y') : ($reserva->fechaTour?->fecha ? \Carbon\Carbon::parse($reserva->fechaTour->fecha)->format('d/m/Y') : '—');
+                $horaTour   = $reserva->hora_salida ? substr($reserva->hora_salida,0,5) : ($reserva->fechaTour?->hora_salida ? substr($reserva->fechaTour->hora_salida,0,5) : null);
+                $nombreTour = $reserva->nombre_tour ?? $reserva->fechaTour?->tour?->nombre ?? '—';
+                $estadoPagadoId  = $estados->firstWhere('nombre','pagado')?->id ?? null;
+                $mostrarCompletar = $saldo > 0 && !in_array($estadoSlug,['pagado','cancelada','finalizada']) && $estadoPagadoId;
+                $pagoUrl = route('reservas.registrarPago', $reserva);
+            @endphp
+            <div class="reserva-card" data-reserva-id="{{ $reserva->id }}">
+                <div class="rc-head">
+                    <a href="{{ route('reservas.show', $reserva) }}" class="codigo-reserva">{{ $reserva->codigo_reserva }}</a>
+                    <span class="badge-estado est-{{ $estadoSlug }}">{{ ucfirst(str_replace('_',' ',$reserva->estado->nombre ?? '')) }}</span>
+                </div>
+                <div class="rc-cliente">
+                    <span class="nombre">{{ $reserva->cliente->nombre_completo }}</span>
+                    <span class="tel"><i class="bi bi-telephone-fill"></i> {{ $reserva->cliente->telefono ?? '—' }}@if($reserva->cliente->numero_documento) &nbsp;·&nbsp; <i class="bi bi-card-text" style="font-size:.65rem;"></i> {{ $reserva->cliente->numero_documento }}@endif</span>
+                </div>
+                <div class="rc-tour"><i class="bi bi-geo-alt-fill"></i> {{ $nombreTour }}@if($reserva->ciudad_destino)<span style="color:var(--ink-4);font-size:.75rem;font-weight:400;"> — {{ $reserva->ciudad_destino }}</span>@endif</div>
+                <div class="rc-fecha-hora">
+                    <i class="bi bi-calendar-event" style="font-size:.75rem;"></i>
+                    <span class="fecha">{{ $fechaTour }}</span>
+                    @if($horaTour)<span class="rc-dot"></span><i class="bi bi-clock" style="font-size:.7rem;"></i> {{ $horaTour }}@endif
+                </div>
+                <div class="rc-pago">
+                    <div class="rc-pago-row">
+                        <div class="pago-bar"><div class="pago-bar-fill" style="width:{{ $pct }}%;background:{{ $barColor }};"></div></div>
+                        <span class="pago-pct" style="color:{{ $barColor }}">{{ $pct }}%</span>
+                    </div>
+                    <div class="pago-detalle">S/ {{ number_format($pagado,2) }} pagado &nbsp;/&nbsp; Total: S/ {{ number_format($total,2) }}@if($saldo > 0) &nbsp;·&nbsp; <span style="color:var(--red);font-weight:600;">Saldo: S/ {{ number_format($saldo,2) }}</span>@endif</div>
+                </div>
+                <div class="rc-footer">
+                    <div class="rc-footer-left">
+                        <span class="canal-badge"><i class="bi {{ $canales[$reserva->canal_contacto] ?? 'bi-chat' }}"></i> {{ ucfirst(str_replace('_',' ',$reserva->canal_contacto ?? '')) }}</span>
+                    </div>
+                    <div style="display:flex;gap:.4rem;align-items:center;">
+                        <a href="{{ route('reservas.show', $reserva) }}" class="btn-tabla"><i class="bi bi-eye"></i> Ver</a>
+                        @if($mostrarCompletar)
+                        <button type="button" class="btn-completar-card"
+                                onclick="abrirModalPago({{ $reserva->id }},'{{ $pagoUrl }}','{{ $reserva->codigo_reserva }}',{{ $total }},{{ $pagado }},{{ $saldo }})">
+                            <i class="bi bi-check-circle"></i> Completar
+                        </button>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            @empty
             <div class="empty-res">
                 <i class="bi bi-calendar-x"></i>
                 <p>No hay reservas que coincidan con los filtros.</p>
@@ -518,38 +574,183 @@ body { font-family:'DM Sans',sans-serif; }
     </div>
 </div>
 
-{{-- ══ MODAL COMPLETAR PAGO (único, dinámico) ════════════════════════ --}}
+{{-- ══════════════════════════════════════════════════════════════
+     MODAL — EXPORTAR EXCEL CON FILTROS
+══════════════════════════════════════════════════════════════ --}}
+<div class="modal-overlay" id="modal-excel" onclick="if(event.target===this)cerrarModalExcel()">
+    <div class="modal-box" style="max-width:520px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+            <div class="modal-title">
+                <i class="bi bi-file-earmark-excel-fill" style="color:#059669;margin-right:.4rem;"></i>
+                Exportar Reservas a Excel
+            </div>
+            <button type="button" onclick="cerrarModalExcel()"
+                    style="background:none;border:none;cursor:pointer;color:var(--ink-4);font-size:1rem;padding:.2rem .4rem;border-radius:6px;">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        {{-- Estado --}}
+        <div class="filtro-grupo">
+            <div class="filtro-grupo-title"><i class="bi bi-circle-fill" style="font-size:.5rem;"></i> Estado de la reserva</div>
+            <div class="check-group">
+                <div class="check-pill"><input type="checkbox" id="xls-est-todos" checked onchange="toggleTodos(this)"><label for="xls-est-todos">Todos</label></div>
+                @foreach($estados as $est)
+                @php $slug = str_replace(' ','_',strtolower($est->nombre)); @endphp
+                <div class="check-pill pill-{{ in_array($slug,['pagado']) ? 'pagado' : (in_array($slug,['cancelada']) ? 'cancelada' : 'mitad') }}">
+                    <input type="checkbox" id="xls-est-{{ $est->id }}" class="xls-estado" value="{{ $est->id }}" checked>
+                    <label for="xls-est-{{ $est->id }}">{{ ucfirst(str_replace('_',' ',$est->nombre)) }}</label>
+                </div>
+                @endforeach
+            </div>
+        </div>
+
+        {{-- Canal --}}
+        <div class="filtro-grupo">
+            <div class="filtro-grupo-title"><i class="bi bi-broadcast" style="font-size:.65rem;"></i> Canal de contacto</div>
+            <div class="check-group">
+                <div class="check-pill"><input type="checkbox" id="xls-canal-todos" checked onchange="toggleTodosCanal(this)"><label for="xls-canal-todos">Todos</label></div>
+                @foreach(['whatsapp'=>'WhatsApp','presencial'=>'Presencial','llamada'=>'Llamada','redes_sociales'=>'Redes Sociales','web'=>'Web','referido'=>'Referido'] as $val => $lbl)
+                <div class="check-pill">
+                    <input type="checkbox" id="xls-canal-{{ $val }}" class="xls-canal" value="{{ $val }}" checked>
+                    <label for="xls-canal-{{ $val }}">{{ $lbl }}</label>
+                </div>
+                @endforeach
+            </div>
+        </div>
+
+        {{-- Rango de fechas --}}
+        <div class="filtro-grupo">
+            <div class="filtro-grupo-title"><i class="bi bi-calendar3-range" style="font-size:.65rem;"></i> Rango de fechas de registro</div>
+            <div style="display:flex;gap:.65rem;align-items:center;flex-wrap:wrap;">
+                <div class="date-wrap" style="flex:1;min-width:120px;">
+                    <i class="bi bi-calendar3"></i>
+                    <input type="text" id="xls-desde" placeholder="Desde"
+                           class="input-date" style="width:100%;box-sizing:border-box;" readonly>
+                </div>
+                <span style="color:var(--ink-4);font-size:.8rem;">—</span>
+                <div class="date-wrap" style="flex:1;min-width:120px;">
+                    <i class="bi bi-calendar3"></i>
+                    <input type="text" id="xls-hasta" placeholder="Hasta"
+                           class="input-date" style="width:100%;box-sizing:border-box;" readonly>
+                </div>
+                <button type="button" onclick="limpiarFechasXls()"
+                        style="background:none;border:1.5px solid var(--line);border-radius:8px;padding:7px 10px;cursor:pointer;color:var(--ink-4);font-size:.75rem;white-space:nowrap;"
+                        title="Limpiar fechas">
+                    <i class="bi bi-x"></i> Limpiar
+                </button>
+            </div>
+        </div>
+
+        {{-- Búsqueda texto --}}
+        <div style="margin-bottom:.75rem;">
+            <label class="modal-field-label">Buscar (código, nombre, DNI)</label>
+            <div class="search-wrap" style="min-width:unset;">
+                <i class="bi bi-search search-ico"></i>
+                <input type="text" id="xls-buscar" class="input-search" placeholder="Opcional…" style="padding-left:34px;">
+            </div>
+        </div>
+
+        <div id="xls-preview" style="font-size:.75rem;color:var(--ink-4);margin-bottom:.75rem;padding:.5rem .7rem;background:var(--line-2);border-radius:8px;">
+            <i class="bi bi-info-circle"></i> Se exportarán todas las reservas con los filtros seleccionados.
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" class="modal-btn-cancel" onclick="cerrarModalExcel()">Cancelar</button>
+            <button type="button" class="modal-btn-confirm" onclick="descargarExcel()">
+                <i class="bi bi-download"></i> Descargar Excel
+            </button>
+        </div>
+    </div>
+</div>
+
+{{-- ══════════════════════════════════════════════════════════════
+     MODAL — REPORTE PDF SALUD POR DÍA DE TOUR
+══════════════════════════════════════════════════════════════ --}}
+<div class="modal-overlay" id="modal-salud" onclick="if(event.target===this)cerrarModalSalud()">
+    <div class="modal-box" style="max-width:480px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+            <div class="modal-title">
+                <i class="bi bi-file-earmark-medical-fill" style="color:var(--red);margin-right:.4rem;"></i>
+                Reporte de Salud y Documentos
+            </div>
+            <button type="button" onclick="cerrarModalSalud()"
+                    style="background:none;border:none;cursor:pointer;color:var(--ink-4);font-size:1rem;padding:.2rem .4rem;border-radius:6px;">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <p style="font-size:.82rem;color:var(--ink-3);margin-bottom:1rem;line-height:1.55;">
+            Genera un PDF con el listado de pasajeros por reserva para un día de tour específico.
+            Incluye alergias, restricciones alimentarias, condiciones médicas y documentos de identidad.
+        </p>
+
+        {{-- Fecha del tour --}}
+        <div style="margin-bottom:.875rem;">
+            <label class="modal-field-label" for="salud-fecha">
+                Fecha del tour <span style="color:var(--red);">*</span>
+            </label>
+            <div class="date-wrap" style="width:100%;">
+                <i class="bi bi-calendar3"></i>
+                <input type="text" id="salud-fecha" placeholder="Seleccionar fecha del tour"
+                       class="input-date" style="width:100%;box-sizing:border-box;" readonly>
+            </div>
+        </div>
+
+        {{-- Nombre del tour (opcional) --}}
+        <div style="margin-bottom:.875rem;">
+            <label class="modal-field-label" for="salud-tour">
+                Filtrar por nombre de tour <span style="font-weight:400;opacity:.6;">(opcional)</span>
+            </label>
+            <input type="text" id="salud-tour" class="modal-input"
+                   placeholder="Ej: Ruta Inca, Tour Amazonas…">
+        </div>
+
+        {{-- Solo con alertas médicas --}}
+        <div style="margin-bottom:1rem;display:flex;align-items:center;gap:.6rem;">
+            <input type="checkbox" id="salud-solo-alertas" style="width:16px;height:16px;cursor:pointer;">
+            <label for="salud-solo-alertas" style="font-size:.83rem;color:var(--ink-2);cursor:pointer;font-weight:500;">
+                Incluir solo pasajeros con alertas médicas
+            </label>
+        </div>
+
+        <div id="salud-error" class="modal-error"></div>
+
+        <div style="background:var(--red-l);border:1px solid #fca5a5;border-radius:8px;padding:.65rem .875rem;font-size:.76rem;color:#991b1b;margin-bottom:1rem;display:flex;gap:.4rem;">
+            <i class="bi bi-shield-lock-fill" style="flex-shrink:0;margin-top:1px;"></i>
+            <span>Este reporte contiene información médica sensible. Úsalo solo para operaciones del tour.</span>
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" class="modal-btn-cancel" onclick="cerrarModalSalud()">Cancelar</button>
+            <button type="button" class="modal-btn-danger" onclick="descargarPdfSalud()" id="salud-btn">
+                <i class="bi bi-file-earmark-pdf-fill"></i> Generar PDF
+            </button>
+        </div>
+    </div>
+</div>
+
+{{-- ══ MODAL COMPLETAR PAGO (sin cambios) ════════════════════════ --}}
 <div class="modal-overlay" id="modal-pago" onclick="if(event.target===this)cerrarModal()">
-    <div class="modal-box">
+    <div class="modal-box" style="max-width:460px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.875rem;">
             <div class="modal-title">
                 <i class="bi bi-check-circle-fill" style="color:var(--green);margin-right:.35rem;"></i>
                 Completar pago
             </div>
             <button type="button" onclick="cerrarModal()"
-                    style="background:none;border:none;cursor:pointer;color:var(--ink-4);
-                           font-size:1rem;padding:.2rem .4rem;border-radius:6px;">
+                    style="background:none;border:none;cursor:pointer;color:var(--ink-4);font-size:1rem;padding:.2rem .4rem;border-radius:6px;">
                 <i class="bi bi-x-lg"></i>
             </button>
         </div>
-
-        {{-- Resumen financiero (se llena por JS) --}}
         <div class="modal-resumen">
-            <div class="mr-row">
-                <span class="mr-lbl">Total reserva</span>
-                <span class="mr-val" id="m-total">—</span>
-            </div>
-            <div class="mr-row">
-                <span class="mr-lbl">Ya pagado</span>
-                <span class="mr-val" id="m-pagado">—</span>
-            </div>
+            <div class="mr-row"><span class="mr-lbl">Total reserva</span><span class="mr-val" id="m-total">—</span></div>
+            <div class="mr-row"><span class="mr-lbl">Ya pagado</span><span class="mr-val" id="m-pagado">—</span></div>
             <div class="mr-row" style="border-top:1px solid var(--green-m);padding-top:.35rem;margin-top:.2rem;">
                 <span class="mr-lbl" style="font-weight:700;color:var(--ink-2);">Saldo pendiente</span>
                 <span id="m-saldo" style="font-family:'DM Mono',monospace;font-weight:800;color:var(--red);font-size:1rem;">—</span>
             </div>
         </div>
-
-        {{-- Tabs --}}
         <div class="modal-tab-wrap">
             <button type="button" class="modal-tab act" id="tab-solo" onclick="switchTab('solo')">
                 <i class="bi bi-check-circle me-1"></i> Solo marcar pagado
@@ -558,18 +759,12 @@ body { font-family:'DM Sans',sans-serif; }
                 <i class="bi bi-plus-circle me-1"></i> Registrar nuevo pago
             </button>
         </div>
-
-        {{-- Panel solo estado --}}
         <div id="panel-solo">
-            <div style="background:var(--green-l);border:1.5px solid var(--green-m);border-radius:10px;
-                        padding:.75rem 1rem;font-size:.82rem;color:#065f46;line-height:1.5;">
+            <div style="background:var(--green-l);border:1.5px solid var(--green-m);border-radius:10px;padding:.75rem 1rem;font-size:.82rem;color:#065f46;line-height:1.5;">
                 <i class="bi bi-info-circle-fill me-1"></i>
-                Se marcará la reserva <strong id="m-codigo">—</strong> como
-                <strong>Pagada al 100%</strong> sin registrar un nuevo pago.
+                Se marcará la reserva <strong id="m-codigo">—</strong> como <strong>Pagada al 100%</strong> sin registrar un nuevo pago.
             </div>
         </div>
-
-        {{-- Panel nuevo pago --}}
         <div id="panel-pago" style="display:none;">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:.65rem;">
                 <div>
@@ -578,39 +773,26 @@ body { font-family:'DM Sans',sans-serif; }
                         <option value="">— Seleccionar —</option>
                         <optgroup label="Efectivo"><option value="efectivo">Efectivo</option></optgroup>
                         <optgroup label="Pagos digitales">
-                            <option value="yape">Yape</option>
-                            <option value="plin">Plin</option>
-                            <option value="tunki">Tunki</option>
+                            <option value="yape">Yape</option><option value="plin">Plin</option><option value="tunki">Tunki</option>
                         </optgroup>
                         <optgroup label="Transferencia">
-                            <option value="transf_bcp">Transf. BCP</option>
-                            <option value="transf_bbva">Transf. BBVA</option>
-                            <option value="transf_inter">Transf. Interbank</option>
-                            <option value="transf_sc">Transf. Scotiabank</option>
-                            <option value="transf_bn">Transf. Banco Nación</option>
-                            <option value="transf_otros">Otro banco</option>
+                            <option value="transf_bcp">Transf. BCP</option><option value="transf_bbva">Transf. BBVA</option>
+                            <option value="transf_inter">Transf. Interbank</option><option value="transf_sc">Transf. Scotiabank</option>
+                            <option value="transf_bn">Transf. Banco Nación</option><option value="transf_otros">Otro banco</option>
                         </optgroup>
                         <optgroup label="Depósito">
-                            <option value="dep_bcp">Depósito BCP</option>
-                            <option value="dep_bbva">Depósito BBVA</option>
-                            <option value="dep_inter">Depósito Interbank</option>
-                            <option value="dep_otros">Depósito otro banco</option>
+                            <option value="dep_bcp">Depósito BCP</option><option value="dep_bbva">Depósito BBVA</option>
+                            <option value="dep_inter">Depósito Interbank</option><option value="dep_otros">Depósito otro banco</option>
                         </optgroup>
                         <optgroup label="Tarjeta">
-                            <option value="tarjeta_credito">Tarjeta crédito</option>
-                            <option value="tarjeta_debito">Tarjeta débito</option>
+                            <option value="tarjeta_credito">Tarjeta crédito</option><option value="tarjeta_debito">Tarjeta débito</option>
                         </optgroup>
                     </select>
                 </div>
                 <div>
                     <div class="modal-field-label">Monto (S/) <span style="color:var(--red);">*</span></div>
-                    <div class="modal-input-s">
-                        <span>S/</span>
-                        <input type="number" id="m-monto" step="0.01" min="0.01" placeholder="0.00">
-                    </div>
-                    <div style="font-size:.67rem;color:var(--ink-4);margin-top:.2rem;">
-                        Saldo: <strong id="m-saldo-hint" style="color:var(--red);font-family:'DM Mono',monospace;">—</strong>
-                    </div>
+                    <div class="modal-input-s"><span>S/</span><input type="number" id="m-monto" step="0.01" min="0.01" placeholder="0.00"></div>
+                    <div style="font-size:.67rem;color:var(--ink-4);margin-top:.2rem;">Saldo: <strong id="m-saldo-hint" style="color:var(--red);font-family:'DM Mono',monospace;">—</strong></div>
                 </div>
                 <div>
                     <div class="modal-field-label">N° Operación <span style="opacity:.5;font-weight:400;">(opcional)</span></div>
@@ -621,15 +803,12 @@ body { font-family:'DM Sans',sans-serif; }
                     <label class="modal-upload">
                         <i class="bi bi-cloud-upload"></i>
                         <span id="m-upload-txt">Seleccionar...</span>
-                        <input type="file" id="m-baucher" accept=".jpg,.jpeg,.png,.pdf,.webp"
-                               style="display:none;" onchange="onModalFile(this)">
+                        <input type="file" id="m-baucher" accept=".jpg,.jpeg,.png,.pdf,.webp" style="display:none;" onchange="onModalFile(this)">
                     </label>
                 </div>
             </div>
         </div>
-
         <div class="modal-error" id="m-error"></div>
-
         <div class="modal-footer">
             <button type="button" class="modal-btn-cancel" id="m-btn-cancel" onclick="cerrarModal()">Cancelar</button>
             <button type="button" class="modal-btn-confirm" id="m-btn-confirm" onclick="ejecutarPago()">
@@ -647,16 +826,44 @@ body { font-family:'DM Sans',sans-serif; }
 (function () {
 
 /* ════════════════════════════════════════
-   FLATPICKR CALENDARIOS
+   FLATPICKR — FILTRO PRINCIPAL
+   FIX: onChange dispara submitForm que hace
+   un submit normal del formulario.
+   El problema anterior era que el value del
+   input no se actualizaba antes del submit.
+   Solución: usar onClose en lugar de onChange
+   para asegurar que el valor ya está escrito.
 ════════════════════════════════════════ */
 const fpCfg = {
-    locale:'es', dateFormat:'Y-m-d',
-    altInput:true, altFormat:'d/m/Y',
-    allowInput:false, disableMobile:true,
-    onChange(){ submitForm(); }
+    locale: 'es',
+    dateFormat: 'Y-m-d',        // valor que se envía al servidor
+    altInput: true,
+    altFormat: 'd/m/Y',         // lo que ve el usuario
+    allowInput: false,
+    disableMobile: true,
+    onClose(selectedDates, dateStr, instance) {
+        // Asegurarse que el input real tiene el valor antes de submit
+        instance.input.value = dateStr;
+        if (dateStr) instance.input.classList.add('active');
+        else instance.input.classList.remove('active');
+        submitForm();
+    },
+    onReady(selectedDates, dateStr, instance) {
+        // Al cargar la página, marcar como activo si ya tiene valor
+        if (instance.input.value) instance.input.classList.add('active');
+    }
 };
+
 flatpickr('#fecha-desde', fpCfg);
 flatpickr('#fecha-hasta', fpCfg);
+
+/* FLATPICKR — MODAL EXCEL */
+const fpXlsCfg = { locale:'es', dateFormat:'Y-m-d', altInput:true, altFormat:'d/m/Y', allowInput:false, disableMobile:true };
+flatpickr('#xls-desde', fpXlsCfg);
+flatpickr('#xls-hasta', fpXlsCfg);
+
+/* FLATPICKR — MODAL SALUD */
+flatpickr('#salud-fecha', { locale:'es', dateFormat:'Y-m-d', altInput:true, altFormat:'d M Y', allowInput:false, disableMobile:true });
 
 /* ════════════════════════════════════════
    SUBMIT + ESTADO TOGGLE
@@ -671,28 +878,18 @@ window.toggleEstado = function (btn) {
     const hidInput = document.getElementById('input-estado');
     const allCls   = ['act-pagado','act-cancelada','act-mitad'];
     const isActive = btn.classList.contains(cls);
-
-    // Limpiar todos
     document.querySelectorAll('.btn-estado').forEach(b => b.classList.remove(...allCls));
-
-    if (isActive) {
-        // Deseleccionar
-        hidInput.value = '';
-    } else {
-        btn.classList.add(cls);
-        hidInput.value = id;
-    }
+    if (isActive) { hidInput.value = ''; }
+    else { btn.classList.add(cls); hidInput.value = id; }
     submitForm();
 };
 
 /* ════════════════════════════════════════
-   BÚSQUEDA AJAX — sin cursor raro
-   Estrategia: el input NO se toca durante el fetch.
-   Solo se reemplaza #ajax-results y el contador.
+   BÚSQUEDA AJAX
 ════════════════════════════════════════ */
-const inputBuscar  = document.getElementById('input-buscar');
-const btnClear     = document.getElementById('btn-search-clear');
-const searchWrap   = document.getElementById('search-wrap');
+const inputBuscar = document.getElementById('input-buscar');
+const btnClear    = document.getElementById('btn-search-clear');
+const searchWrap  = document.getElementById('search-wrap');
 
 function updateClearBtn() {
     searchWrap.classList.toggle('has-value', inputBuscar.value.length > 0);
@@ -708,8 +905,8 @@ if (btnClear) {
     });
 }
 
-let searchTimer  = null;
-let searchSeq    = 0; // evitar respuestas desordenadas
+let searchTimer = null;
+let searchSeq   = 0;
 
 inputBuscar.addEventListener('input', function () {
     updateClearBtn();
@@ -718,7 +915,6 @@ inputBuscar.addEventListener('input', function () {
     searchTimer = setTimeout(() => doSearch(query), 380);
 });
 
-// Enviar al presionar Enter también
 inputBuscar.addEventListener('keydown', function (e) {
     if (e.key === 'Enter') {
         e.preventDefault();
@@ -729,12 +925,8 @@ inputBuscar.addEventListener('keydown', function (e) {
 
 function doSearch(query) {
     const seq = ++searchSeq;
-
     const url = new URL(window.location.href);
-    // Preservar todos los filtros actuales
     url.searchParams.set('buscar', query);
-
-    // Guardar selección ANTES del fetch para restaurar después
     const selStart = inputBuscar.selectionStart;
     const selEnd   = inputBuscar.selectionEnd;
 
@@ -743,54 +935,168 @@ function doSearch(query) {
     })
     .then(r => r.text())
     .then(html => {
-        if (seq !== searchSeq) return; // respuesta vieja, ignorar
-
-        const doc       = new DOMParser().parseFromString(html, 'text/html');
-        const newRes    = doc.getElementById('ajax-results');
-        const newCount  = doc.getElementById('reservas-count');
-        const curRes    = document.getElementById('ajax-results');
-        const curCount  = document.getElementById('reservas-count');
-
-        if (newRes  && curRes)  curRes.replaceWith(newRes);
+        if (seq !== searchSeq) return;
+        const doc      = new DOMParser().parseFromString(html, 'text/html');
+        const newRes   = doc.getElementById('ajax-results');
+        const newCount = doc.getElementById('reservas-count');
+        const curRes   = document.getElementById('ajax-results');
+        const curCount = document.getElementById('reservas-count');
+        if (newRes  && curRes)   curRes.replaceWith(newRes);
         if (newCount && curCount) curCount.textContent = newCount.textContent;
-
         window.history.replaceState({}, '', url.toString());
-
-        // Restaurar foco y cursor — el input NO fue reemplazado, solo los resultados
         requestAnimationFrame(() => {
             inputBuscar.focus();
             try { inputBuscar.setSelectionRange(selStart, selEnd); } catch(e){}
         });
     })
-    .catch(() => {
-        // Fallback silencioso — no interrumpir al usuario
-    });
+    .catch(() => {});
 }
 
 /* ════════════════════════════════════════
-   MODAL COMPLETAR PAGO
+   MODAL EXCEL — ABRIR / CERRAR
 ════════════════════════════════════════ */
-let modalReservaId  = null;
-let modalPagoUrl    = null;
-let modalTab        = 'solo';
-let modalCsrf       = "{{ csrf_token() }}";
+window.abrirModalExcel = function () {
+    // Pre-llenar con los filtros actuales de la página
+    const urlParams = new URLSearchParams(window.location.search);
+    const buscarActual = urlParams.get('buscar') || '';
+    const desdeActual  = urlParams.get('fecha_desde') || '';
+    const hastaActual  = urlParams.get('fecha_hasta') || '';
+
+    document.getElementById('xls-buscar').value = buscarActual;
+
+    // Setear fechas en flatpickr si existen
+    const fpDesde = document.getElementById('xls-desde')._flatpickr;
+    const fpHasta = document.getElementById('xls-hasta')._flatpickr;
+    if (fpDesde && desdeActual) fpDesde.setDate(desdeActual);
+    if (fpHasta && hastaActual) fpHasta.setDate(hastaActual);
+
+    document.getElementById('modal-excel').classList.add('open');
+    document.body.style.overflow = 'hidden';
+};
+
+window.cerrarModalExcel = function () {
+    document.getElementById('modal-excel').classList.remove('open');
+    document.body.style.overflow = '';
+};
+
+window.toggleTodos = function (cb) {
+    document.querySelectorAll('.xls-estado').forEach(c => c.checked = cb.checked);
+};
+
+window.toggleTodosCanal = function (cb) {
+    document.querySelectorAll('.xls-canal').forEach(c => c.checked = cb.checked);
+};
+
+window.limpiarFechasXls = function () {
+    const fpDesde = document.getElementById('xls-desde')._flatpickr;
+    const fpHasta = document.getElementById('xls-hasta')._flatpickr;
+    if (fpDesde) fpDesde.clear();
+    if (fpHasta) fpHasta.clear();
+};
+
+window.descargarExcel = function () {
+    const params = new URLSearchParams();
+
+    // Estados seleccionados
+    const estados = [...document.querySelectorAll('.xls-estado:checked')].map(c => c.value);
+    // Si no hay ninguno seleccionado o están todos, no mandar filtro de estado
+    const todosEstados = document.querySelectorAll('.xls-estado').length;
+    if (estados.length > 0 && estados.length < todosEstados) {
+        // Manda el primero seleccionado (el export actual solo soporta 1 estado)
+        // Si quieres múltiples, ajusta ReservasExport
+        params.set('estados', estados.join(','));
+    }
+
+    // Canales seleccionados
+    const canales = [...document.querySelectorAll('.xls-canal:checked')].map(c => c.value);
+    const todosCanales = document.querySelectorAll('.xls-canal').length;
+    if (canales.length > 0 && canales.length < todosCanales) {
+        params.set('canales', canales.join(','));
+    }
+
+    // Fechas
+    const desde = document.getElementById('xls-desde').value;
+    const hasta = document.getElementById('xls-hasta').value;
+    if (desde) params.set('fecha_desde', desde);
+    if (hasta) params.set('fecha_hasta', hasta);
+
+    // Búsqueda
+    const buscar = document.getElementById('xls-buscar').value.trim();
+    if (buscar) params.set('buscar', buscar);
+
+    const url = "{{ route('reservas.exportar') }}" + '?' + params.toString();
+    window.location.href = url;
+    cerrarModalExcel();
+};
+
+/* ════════════════════════════════════════
+   MODAL SALUD — ABRIR / CERRAR
+════════════════════════════════════════ */
+window.abrirModalSalud = function () {
+    document.getElementById('salud-error').style.display = 'none';
+    document.getElementById('modal-salud').classList.add('open');
+    document.body.style.overflow = 'hidden';
+};
+
+window.cerrarModalSalud = function () {
+    document.getElementById('modal-salud').classList.remove('open');
+    document.body.style.overflow = '';
+};
+
+window.descargarPdfSalud = function () {
+    const fecha = document.getElementById('salud-fecha').value;
+    const errEl = document.getElementById('salud-error');
+
+    if (!fecha) {
+        errEl.textContent = 'Selecciona una fecha de tour para generar el reporte.';
+        errEl.style.display = 'block';
+        return;
+    }
+    errEl.style.display = 'none';
+
+    const params = new URLSearchParams();
+    params.set('fecha', fecha);
+
+    const tour = document.getElementById('salud-tour').value.trim();
+    if (tour) params.set('tour', tour);
+
+    const soloAlertas = document.getElementById('salud-solo-alertas').checked;
+    if (soloAlertas) params.set('solo_alertas', '1');
+
+    const url = "{{ route('reservas.reporteSalud') }}" + '?' + params.toString();
+    window.open(url, '_blank');
+    cerrarModalSalud();
+};
+
+/* ════════════════════════════════════════
+   ESC cierra cualquier modal abierto
+════════════════════════════════════════ */
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+        cerrarModal();
+        cerrarModalExcel();
+        cerrarModalSalud();
+    }
+});
+
+/* ════════════════════════════════════════
+   MODAL COMPLETAR PAGO (sin cambios)
+════════════════════════════════════════ */
+let modalReservaId = null;
+let modalPagoUrl   = null;
+let modalTab       = 'solo';
+let modalCsrf      = "{{ csrf_token() }}";
 
 window.abrirModalPago = function (reservaId, pagoUrl, codigo, total, pagado, saldo) {
     modalReservaId = reservaId;
     modalPagoUrl   = pagoUrl;
-
-    // Llenar datos
-    document.getElementById('m-codigo').textContent  = codigo;
-    document.getElementById('m-total').textContent   = 'S/ ' + fmtNum(total);
-    document.getElementById('m-pagado').textContent  = 'S/ ' + fmtNum(pagado);
-    document.getElementById('m-saldo').textContent   = 'S/ ' + fmtNum(saldo);
-    document.getElementById('m-saldo-hint').textContent = 'S/ ' + fmtNum(saldo);
-
-    // Pre-llenar monto con el saldo
+    document.getElementById('m-codigo').textContent      = codigo;
+    document.getElementById('m-total').textContent       = 'S/ ' + fmtNum(total);
+    document.getElementById('m-pagado').textContent      = 'S/ ' + fmtNum(pagado);
+    document.getElementById('m-saldo').textContent       = 'S/ ' + fmtNum(saldo);
+    document.getElementById('m-saldo-hint').textContent  = 'S/ ' + fmtNum(saldo);
     const inputMonto = document.getElementById('m-monto');
     if (inputMonto) inputMonto.value = parseFloat(saldo).toFixed(2);
-
-    // Reset estado
     switchTab('solo');
     ocultarError();
     resetLoading();
@@ -798,7 +1104,6 @@ window.abrirModalPago = function (reservaId, pagoUrl, codigo, total, pagado, sal
     document.getElementById('m-operacion').value = '';
     document.getElementById('m-baucher').value   = '';
     document.getElementById('m-upload-txt').textContent = 'Seleccionar...';
-
     document.getElementById('modal-pago').classList.add('open');
     document.body.style.overflow = 'hidden';
 };
@@ -807,8 +1112,6 @@ window.cerrarModal = function () {
     document.getElementById('modal-pago').classList.remove('open');
     document.body.style.overflow = '';
 };
-
-document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarModal(); });
 
 window.switchTab = function (tab) {
     modalTab = tab;
@@ -832,21 +1135,17 @@ window.onModalFile = function (input) {
 
 window.ejecutarPago = async function () {
     ocultarError();
-
     if (modalTab === 'pago') {
         const metodo = document.getElementById('m-metodo').value;
         const monto  = parseFloat(document.getElementById('m-monto').value || 0);
         if (!metodo) { mostrarError('Selecciona un método de pago.'); return; }
         if (!monto || monto <= 0) { mostrarError('Ingresa un monto válido mayor a 0.'); return; }
     }
-
     setLoading(true);
-
     try {
         const fd = new FormData();
         fd.append('_token', modalCsrf);
         fd.append('solo_estado', modalTab === 'solo' ? '1' : '0');
-
         if (modalTab === 'pago') {
             fd.append('metodo_pago',      document.getElementById('m-metodo').value);
             fd.append('monto',            document.getElementById('m-monto').value);
@@ -854,24 +1153,13 @@ window.ejecutarPago = async function () {
             const baucherFile = document.getElementById('m-baucher').files[0];
             if (baucherFile) fd.append('archivo_baucher', baucherFile);
         }
-
         const resp = await fetch(modalPagoUrl, { method:'POST', body:fd });
         const data = await resp.json();
-
-        if (!data.ok) {
-            mostrarError(data.message || 'Error al guardar. Intenta de nuevo.');
-            setLoading(false);
-            return;
-        }
-
-        // ── Éxito: animar barra de la tarjeta y cerrar modal ──
+        if (!data.ok) { mostrarError(data.message || 'Error al guardar. Intenta de nuevo.'); setLoading(false); return; }
         animarTarjeta(modalReservaId);
         cerrarModal();
         mostrarToast('✓ Pago completado correctamente.');
-
-        // Recargar la página después de 1.5s
         setTimeout(() => window.location.reload(), 1500);
-
     } catch (e) {
         mostrarError('Error de conexión. Verifica tu internet.');
         setLoading(false);
@@ -879,11 +1167,10 @@ window.ejecutarPago = async function () {
 };
 
 function animarTarjeta(reservaId) {
-    // Buscar la barra de la tarjeta correspondiente
     const card = document.querySelector(`[data-reserva-id="${reservaId}"]`);
     if (!card) return;
-    const bar   = card.querySelector('.pago-bar-fill');
-    const pct   = card.querySelector('.pago-pct');
+    const bar = card.querySelector('.pago-bar-fill');
+    const pct = card.querySelector('.pago-pct');
     if (bar) { bar.style.width = '100%'; bar.style.background = '#059669'; }
     if (pct) { pct.textContent = '100%'; pct.style.color = '#059669'; }
 }
@@ -897,21 +1184,13 @@ function mostrarToast(msg) {
         animation:mFadeIn .25s ease;white-space:nowrap;`;
     t.textContent = msg;
     document.body.appendChild(t);
-    setTimeout(() => { t.style.opacity='0';t.style.transition='opacity .3s'; }, 1200);
+    setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity .3s'; }, 1200);
     setTimeout(() => t.remove(), 1500);
 }
 
-function fmtNum(n) {
-    return parseFloat(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-}
-function mostrarError(msg) {
-    const el = document.getElementById('m-error');
-    if (el) { el.textContent = msg; el.style.display = 'block'; }
-}
-function ocultarError() {
-    const el = document.getElementById('m-error');
-    if (el) el.style.display = 'none';
-}
+function fmtNum(n) { return parseFloat(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+function mostrarError(msg) { const el = document.getElementById('m-error'); if(el){el.textContent=msg;el.style.display='block';} }
+function ocultarError()    { const el = document.getElementById('m-error'); if(el) el.style.display='none'; }
 function setLoading(on) {
     document.getElementById('m-btn-txt').style.display  = on ? 'none'  : 'flex';
     document.getElementById('m-btn-load').style.display = on ? 'flex' : 'none';

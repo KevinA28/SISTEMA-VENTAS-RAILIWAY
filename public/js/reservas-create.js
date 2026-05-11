@@ -946,7 +946,6 @@ function addPax() {
         </div>
  
         <div class="g3" style="padding:.65rem .65rem .4rem">
- 
             <div class="field">
                 <label class="lbl">Tipo de documento</label>
                 <select name="pasajeros[${i}][tipo_documento]"
@@ -1012,19 +1011,34 @@ function addPax() {
             </div>
  
             <input type="hidden" name="pasajeros[${i}][edad]" id="pax-edad-${i}" value="">
- 
         </div>
         <input type="hidden" name="pasajeros[${i}][tipo]" id="pax-tipo-${i}" value="adulto">
  
-        <!-- Switch salud -->
-        <div style="display:flex;align-items:center;justify-content:space-between;
-                    padding:.45rem .65rem;background:var(--adv-slate-l,#f8fafc);
-                    border-top:1px solid var(--border,#e2e8f0);">
-            <span style="font-size:.72rem;font-weight:700;color:var(--ink-3)">
-                <i class="bi bi-heart-pulse me-1" style="color:#b45309"></i>
-                Condiciones de salud
+        <!-- ── SEGURO siempre visible (sin abrir salud) ── -->
+        <div class="seguro-row">
+            <span class="seguro-lbl">
+                <i class="bi bi-shield-plus" style="color:#0369a1"></i>
+                Seguro de salud
             </span>
-            <label style="display:flex;align-items:center;gap:.45rem;cursor:pointer">
+            <select name="pasajeros[${i}][seguro_salud]"
+                    class="fi seguro-sel" style="flex:1;font-size:.78rem;padding:.3rem .5rem;">
+                <option value="">Sin seguro</option>
+                <option value="essalud">EsSalud</option>
+                <option value="sis">SIS</option>
+                <option value="eps">EPS privada</option>
+                <option value="ffaa">FFAA / PNP</option>
+                <option value="otro">Otro</option>
+            </select>
+        </div>
+ 
+        <!-- ── Switch condiciones de salud ── -->
+        <div class="salud-sw-bar">
+            <span class="salud-sw-title">
+                <i class="bi bi-heart-pulse" style="color:#b45309"></i>
+                Condiciones de salud
+                <span class="salud-hint">alergias, restricciones, discapacidad</span>
+            </span>
+            <label class="sw-label">
                 <div class="pax-sw-track" id="pax-sw-track-${i}">
                     <div class="pax-sw-thumb"></div>
                 </div>
@@ -1034,22 +1048,23 @@ function addPax() {
             </label>
         </div>
  
-        <!-- Cuerpo salud -->
+        <!-- ── Panel salud (se despliega) ── -->
         <div id="pax-salud-body-${i}"
              style="display:none;padding:.8rem .65rem;
                     border-top:1px solid var(--border,#e2e8f0);
-                    background:var(--adv-slate-l,#f8fafc)">
+                    background:#fffdf7">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:.65rem">
  
                 <div class="field">
                     <label class="lbl">Alergias</label>
                     <div class="yn-grp">
                         <button type="button" class="yn-btn yn-no active"
-                                data-target="pax-alerg-${i}" onclick="togYN(this)">No</button>
+                                data-target="pax-alerg-${i}" onclick="togYNPax(this,${i},'alergias')">No</button>
                         <button type="button" class="yn-btn yn-si"
-                                data-target="pax-alerg-${i}" onclick="togYN(this)">Sí</button>
+                                data-target="pax-alerg-${i}" onclick="togYNPax(this,${i},'alergias')">Sí</button>
                     </div>
-                    <input type="hidden" name="pasajeros[${i}][tiene_alergias]" value="no">
+                    <input type="hidden" name="pasajeros[${i}][tiene_alergias]"
+                           id="pax-tiene-alergias-${i}" value="no">
                     <div id="pax-alerg-${i}" style="display:none;margin-top:.4rem">
                         <textarea name="pasajeros[${i}][alergias_detalle]" class="fi" rows="2"
                                   placeholder="Medicamentos, alimentos..."></textarea>
@@ -1109,56 +1124,39 @@ function addPax() {
                     </div>
                 </div>
  
-                <div class="field" style="grid-column:1/-1">
-                    <label class="lbl">Seguro de salud</label>
-                    <select name="pasajeros[${i}][seguro_salud]" class="fi">
-                        <option value="">— Sin seguro / No sabe —</option>
-                        <option value="essalud">EsSalud</option>
-                        <option value="sis">SIS</option>
-                        <option value="eps">EPS privada</option>
-                        <option value="ffaa">FFAA / PNP</option>
-                        <option value="otro">Otro seguro</option>
-                    </select>
-                </div>
- 
             </div>
         </div>
     `;
     lista.appendChild(d);
  
-    // Flatpickr fecha nacimiento — también actualiza edad hidden
+    // Flatpickr fecha nacimiento
     flatpickr('#pax-fnac-display-' + i, {
         locale: 'es', dateFormat: 'd/m/Y', maxDate: 'today', allowInput: false,
         onChange(sel, str, inst) {
             const iso = inst.formatDate(sel[0], 'Y-m-d');
             const hidFnac = document.getElementById('pax-fnac-' + i);
-            const hidEdad = document.getElementById('pax-edad-' + i);
             if (hidFnac) hidFnac.value = iso;
-            // Calcular edad en años
-            const hoy   = new Date();
-            const nac   = new Date(iso);
-            let edad    = hoy.getFullYear() - nac.getFullYear();
-            const m     = hoy.getMonth() - nac.getMonth();
+            const hoy = new Date(), nac = new Date(iso);
+            let edad = hoy.getFullYear() - nac.getFullYear();
+            const m = hoy.getMonth() - nac.getMonth();
             if (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) edad--;
+            const hidEdad = document.getElementById('pax-edad-' + i);
             if (hidEdad) hidEdad.value = edad >= 0 ? edad : '';
-            // Autodetectar tipo según edad
             const tipoSel = document.getElementById('pax-tipo-sel-' + i);
             const tipoHid = document.getElementById('pax-tipo-' + i);
             if (tipoSel && tipoHid) {
                 let tipo = 'adulto';
-                if (edad < 2)       tipo = 'bebe';
-                else if (edad < 12) tipo = 'nino';
-                else if (edad < 18) tipo = 'adolescente';
+                if (edad < 2)        tipo = 'bebe';
+                else if (edad < 12)  tipo = 'nino';
+                else if (edad < 18)  tipo = 'adolescente';
                 else if (edad >= 65) tipo = 'adulto_mayor';
                 tipoSel.value = tipo;
                 tipoHid.value = tipo;
             }
-            // Badge visual de edad
             calcPaxEdad(i, iso);
         }
     });
  
-    // Sincronizar el select de tipo con el hidden
     const tipoSelEl = document.getElementById('pax-tipo-sel-' + i);
     if (tipoSelEl) {
         tipoSelEl.addEventListener('change', function() {
@@ -1186,6 +1184,21 @@ function removePax(i) {
     if (sp)  sp.textContent = 'Total: ' + total + ' pasajero' + (total > 1 ? 's' : '');
     const sb = document.getElementById('sb-pasajeros');
     if (sb)  sb.textContent = total > 1 ? '· ' + total + ' pax' : '';
+    
+}
+function togYNPax(btn, idx, campo) {
+    const grp = btn.closest('.yn-grp');
+    grp?.querySelectorAll('.yn-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const isSi = btn.classList.contains('yn-si');
+    const det  = document.getElementById(btn.dataset.target);
+    if (det) det.style.display = isSi ? 'block' : 'none';
+    if (!isSi && det) det.querySelectorAll('textarea,input[type="text"]').forEach(t => t.value = '');
+ 
+    if (campo === 'alergias') {
+        const hid = document.getElementById('pax-tiene-alergias-' + idx);
+        if (hid) hid.value = isSi ? 'si' : 'no';
+    }
 }
 /* ══════════════════════════════════════════════════════════════
    ALERGIAS TOGGLE

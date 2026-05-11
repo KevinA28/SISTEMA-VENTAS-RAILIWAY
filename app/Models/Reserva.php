@@ -54,13 +54,16 @@ class Reserva extends Model
         'tipo_cama',
         'plan_alimentacion',
         'titular_obs_medicas',
+        'email_contacto',          
+        'notificacion_enviada',
     ];
 
     protected $casts = [
         'precio_total' => 'decimal:2',
         'monto_pagado' => 'decimal:2',
-        'hora_recojo'  => 'datetime:H:i',
         'fecha_tour'   => 'date',
+        'hora_recojo'  => 'datetime:H:i',
+        'notificacion_enviada' => 'boolean',
     ];
 
     public function cliente()      { return $this->belongsTo(Cliente::class); }

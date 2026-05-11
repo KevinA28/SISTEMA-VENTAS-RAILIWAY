@@ -192,6 +192,9 @@ class ReservaController extends Controller
                 (float) $reserva->precio_total
             );
 
+            // BUG 7 FIX: capturar estado anterior ANTES del update
+            $estadoAnteriorId = $reserva->estado_id;
+
             $reserva->update([
                 'estado_id'    => $estadoPagado->id,
                 'monto_pagado' => $nuevoMontoPagado,
@@ -199,7 +202,7 @@ class ReservaController extends Controller
 
             \App\Models\HistorialEstado::create([
                 'reserva_id'         => $reserva->id,
-                'estado_anterior_id' => $reserva->getOriginal('estado_id'),
+                'estado_anterior_id' => $estadoAnteriorId,
                 'estado_nuevo_id'    => $estadoPagado->id,
                 'cambiado_por'       => \Auth::id(),
                 'motivo'             => $soloEstado
@@ -225,11 +228,93 @@ class ReservaController extends Controller
         }
     }
 
-    // ── EXPORTAR EXCEL — sin dependencias externas ────────────────────
+    // ── EXPORTAR EXCEL ────────────────────────────────────────────────
+    // Acepta estados y canales múltiples desde el modal de exportación
     public function exportar(Request $request)
     {
-        $filtros = $request->only(['estado', 'canal', 'fecha_desde', 'fecha_hasta', 'buscar']);
+        $filtros = $request->only([
+            'estado',  'estados',
+            'canal',   'canales',
+            'fecha_desde', 'fecha_hasta',
+            'buscar',
+        ]);
         return (new ReservasExport($filtros))->download();
+    }
+
+    // ── REPORTE SALUD PDF ─────────────────────────────────────────────
+    public function reporteSalud(Request $request)
+    {
+        $request->validate([
+            'fecha'        => 'required|date',
+            'tour'         => 'nullable|string|max:200',
+            'solo_alertas' => 'nullable|in:0,1',
+        ]);
+
+        $fecha       = $request->fecha;
+        $tourFiltro  = $request->tour ?? null;
+        $soloAlertas = $request->boolean('solo_alertas', false);
+
+        $query = Reserva::with(['cliente', 'estado', 'pasajeros.salud'])
+            ->whereDate('fecha_tour', $fecha)
+            ->whereHas('estado', fn($q) => $q->whereNotIn('nombre', ['cancelada']))
+            ->orderBy('hora_salida');
+
+        if ($tourFiltro) {
+            $query->where('nombre_tour', 'like', '%' . $tourFiltro . '%');
+        }
+
+        $reservas = $query->get();
+
+        if ($soloAlertas) {
+            $reservas = $reservas->filter(function ($reserva) {
+                $tieneAlertaTitular = $reserva->alergias_titular
+                    || $reserva->restricciones_alimentarias_titular
+                    || $reserva->titular_obs_medicas;
+
+                $tieneAlertaPasajero = $reserva->pasajeros->filter(fn($p) =>
+                    $p->salud && (
+                        $p->salud->alergias
+                        || $p->salud->restricciones_alimentarias
+                        || $p->salud->condiciones_medicas
+                    )
+                )->isNotEmpty();
+
+                return $tieneAlertaTitular || $tieneAlertaPasajero;
+            });
+        }
+
+        $totalPasajeros = $reservas->sum(fn($r) => $r->pasajeros->count());
+
+        $conAlertas = $reservas->sum(fn($r) => $r->pasajeros->filter(function ($p) use ($r) {
+            $tieneAlerta = $p->salud && (
+                $p->salud->alergias
+                || $p->salud->restricciones_alimentarias
+                || $p->salud->condiciones_medicas
+            );
+            if ($p->es_titular) {
+                $tieneAlerta = $tieneAlerta
+                    || $r->alergias_titular
+                    || $r->restricciones_alimentarias_titular
+                    || $r->titular_obs_medicas;
+            }
+            return $tieneAlerta;
+        })->count());
+
+        $pdfOutput = app(\App\Services\Integrations\PdfService::class)
+            ->generarReporteSalud(
+                $reservas,
+                $fecha,
+                $tourFiltro,
+                $soloAlertas,
+                $totalPasajeros,
+                $conAlertas
+            );
+
+        return response()->streamDownload(
+            fn() => print($pdfOutput),
+            'reporte-salud-' . $fecha . '.pdf',
+            ['Content-Type' => 'application/pdf']
+        );
     }
 
     // ── REENVIAR NOTIFICACIÓN ─────────────────────────────────────────

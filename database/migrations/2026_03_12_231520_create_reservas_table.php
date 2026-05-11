@@ -83,7 +83,10 @@ return new class extends Migration
             $table->string('politica_tipo', 20)->nullable();
 
             // ── Misc ───────────────────────────────────────────────────
+            
             $table->text('observaciones')->nullable();
+            $table->string('email_contacto', 200)->nullable();      // ← AGREGAR
+            $table->boolean('notificacion_enviada')->default(false);
 
             $table->timestamps();
         });
