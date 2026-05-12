@@ -49,4 +49,7 @@ class UsuarioAdmin extends Authenticatable
     {
         return $this->nombre . ' ' . $this->apellido;
     }
+    public function getRememberToken() { return null; }
+    public function setRememberToken($value) {}
+    public function getRememberTokenName() { return ''; }
 }

@@ -75,7 +75,6 @@ body { font-family: 'DM Sans', sans-serif; }
     display:grid;grid-template-columns:1fr 1fr;gap:.85rem 1.25rem;
 }
 .datos-grid .dato.full { grid-column:1/-1; }
-.datos-grid .dato.third { grid-column:span 1; }
 
 /* ── SECTION DIVIDER ── */
 .sec-div {
@@ -147,9 +146,6 @@ body { font-family: 'DM Sans', sans-serif; }
 .tipo-saldo         { background:var(--blue-l);color:#1e40af; }
 .tipo-pago_completo { background:var(--green-l);color:#065f46; }
 .tipo-mitad_pago    { background:var(--blue-l);color:#1e40af; }
-.val-pendiente      { background:var(--amber-l);color:#92400e; }
-.val-verificado     { background:var(--green-l);color:#065f46; }
-.val-rechazado      { background:var(--red-l);color:#991b1b; }
 
 /* ── VOUCHER DESPLEGABLE ── */
 .voucher-toggle {
@@ -197,22 +193,12 @@ body { font-family: 'DM Sans', sans-serif; }
 }
 .btn-completar:hover { background:#047857; }
 
-/* ── CHIP TRANSPORTE / HOTEL ── */
+/* ── CHIP INFO ── */
 .chip-info {
     display:inline-flex;align-items:center;gap:.3rem;
     background:var(--line-2);border:1px solid var(--line);
     border-radius:6px;padding:.25rem .6rem;font-size:.76rem;font-weight:600;color:var(--ink-2);
 }
-
-/* ── SALUD ── */
-.salud-item {
-    display:flex;align-items:flex-start;gap:.5rem;
-    padding:.55rem .7rem;background:var(--amber-l);
-    border:1px solid #fde68a;border-radius:8px;margin-bottom:.45rem;font-size:.79rem;
-}
-.salud-item:last-child { margin-bottom:0; }
-.salud-item .si-lbl { font-weight:700;color:#92400e;min-width:110px;flex-shrink:0; }
-.salud-item .si-val { color:var(--ink-2);line-height:1.45; }
 
 /* ── POLITICA ── */
 .politica-box {
@@ -246,11 +232,20 @@ body { font-family: 'DM Sans', sans-serif; }
     border-left:2px solid var(--line);
 }
 
+/* ── EMERGENCIA CARD ── */
+.emerg-card {
+    background:#fff7ed;border:1.5px solid #fed7aa;border-radius:10px;
+    padding:.7rem .875rem;display:flex;flex-wrap:wrap;gap:.5rem 1.2rem;
+    font-size:.79rem;
+}
+.emerg-card .ec-item { display:flex;flex-direction:column;gap:2px; }
+.emerg-card .ec-lbl  { font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#9a3412; }
+.emerg-card .ec-val  { font-weight:600;color:var(--ink); }
+
 /* ── MODAL ── */
 .modal-overlay {
     display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);
     z-index:9999;align-items:center;justify-content:center;
-    animation:fadeIn .15s ease;
 }
 .modal-overlay.open { display:flex; }
 .modal-box {
@@ -260,7 +255,6 @@ body { font-family: 'DM Sans', sans-serif; }
 }
 @keyframes slideUp { from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1} }
 .modal-title { font-size:1.1rem;font-weight:700;color:var(--ink);margin-bottom:.35rem; }
-.modal-body  { font-size:.87rem;color:var(--ink-3);line-height:1.6;margin-bottom:1.25rem; }
 .modal-footer { display:flex;gap:.6rem;justify-content:flex-end; }
 .modal-btn-cancel {
     padding:8px 18px;border-radius:9px;font-size:.84rem;font-weight:600;
@@ -287,16 +281,6 @@ body { font-family: 'DM Sans', sans-serif; }
 .modal-resumen .mr-row .mr-val {
     font-family:'DM Mono',monospace;font-weight:700;color:var(--green);
 }
-
-/* ── EMERGENCIA CARD ── */
-.emerg-card {
-    background:#fff7ed;border:1.5px solid #fed7aa;border-radius:10px;
-    padding:.7rem .875rem;display:flex;flex-wrap:wrap;gap:.5rem 1.2rem;
-    font-size:.79rem;
-}
-.emerg-card .ec-item { display:flex;flex-direction:column;gap:2px; }
-.emerg-card .ec-lbl  { font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#9a3412; }
-.emerg-card .ec-val  { font-weight:600;color:var(--ink); }
 
 /* Responsive */
 @media(max-width:576px){
@@ -365,7 +349,6 @@ body { font-family: 'DM Sans', sans-serif; }
                     <div class="hdr-left"><i class="bi bi-person-circle"></i> Cliente / Titular</div>
                 </div>
                 <div class="info-card-body">
-                    {{-- Avatar + nombre --}}
                     <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.875rem;padding-bottom:.75rem;border-bottom:1px solid var(--line);">
                         <div class="cliente-avatar">
                             {{ strtoupper(substr($reserva->cliente->nombre_completo ?? 'C', 0, 1)) }}
@@ -430,7 +413,8 @@ body { font-family: 'DM Sans', sans-serif; }
                         </div>
                         @endif
 
-                        @if($reserva->cliente->nacionalidad)
+                        {{-- Nacionalidad solo si fue ingresada explícitamente (no default) --}}
+                        @if($reserva->cliente->nacionalidad && $reserva->cliente->nacionalidad !== 'Peruana')
                         <div class="dato">
                             <div class="lbl">Nacionalidad</div>
                             <div class="val">{{ $reserva->cliente->nacionalidad }}</div>
@@ -438,9 +422,10 @@ body { font-family: 'DM Sans', sans-serif; }
                         @endif
                     </div>
 
-                    {{-- Contacto de emergencia --}}
                     @if($reserva->cliente->emergencia_nombre)
-                    <div class="sec-div" style="margin-top:.9rem;"><i class="bi bi-exclamation-triangle-fill" style="color:#d97706;"></i> Emergencia</div>
+                    <div class="sec-div" style="margin-top:.9rem;">
+                        <i class="bi bi-exclamation-triangle-fill" style="color:#d97706;"></i> Emergencia
+                    </div>
                     <div class="emerg-card">
                         <div class="ec-item">
                             <div class="ec-lbl">Nombre</div>
@@ -469,7 +454,7 @@ body { font-family: 'DM Sans', sans-serif; }
             </div>
         </div>
 
-        {{-- TOUR ── --}}
+        {{-- TOUR --}}
         <div class="col-md-6">
             <div class="info-card" style="margin-bottom:0;height:100%;">
                 <div class="info-card-header">
@@ -501,7 +486,7 @@ body { font-family: 'DM Sans', sans-serif; }
                             <div class="val">{{ $reserva->cantidad_ninos > 0 ? $reserva->cantidad_ninos : '—' }}</div>
                         </div>
                         <div class="dato">
-                            <div class="lbl">Total pax</div>
+                            <div class="lbl">Total pasajeros</div>
                             <div class="val">{{ $reserva->cantidad_adultos + $reserva->cantidad_ninos }}</div>
                         </div>
                         <div class="dato">
@@ -521,7 +506,6 @@ body { font-family: 'DM Sans', sans-serif; }
         </div>
         <div class="info-card-body">
 
-            {{-- Destino --}}
             <div class="sec-div"><i class="bi bi-geo-alt-fill"></i> Destino</div>
             <div class="datos-grid">
                 <div class="dato">
@@ -534,52 +518,36 @@ body { font-family: 'DM Sans', sans-serif; }
                 </div>
             </div>
 
-            {{-- Fechas viaje --}}
             <div class="sec-div" style="margin-top:.9rem;"><i class="bi bi-calendar3-range"></i> Fechas del viaje</div>
             <div class="datos-grid">
                 <div class="dato">
                     <div class="lbl">Fecha de arribo</div>
                     <div class="val mono">
-                        @if($reserva->fecha_arribo)
-                            {{ \Carbon\Carbon::parse($reserva->fecha_arribo)->format('d/m/Y') }}
-                        @else
-                            <span class="nd">—</span>
-                        @endif
+                        {{ $reserva->fecha_arribo ? \Carbon\Carbon::parse($reserva->fecha_arribo)->format('d/m/Y') : '—' }}
                     </div>
                 </div>
                 <div class="dato">
                     <div class="lbl">Hora de arribo</div>
-                    <div class="val mono">
-                        {{ $reserva->hora_arribo ? substr($reserva->hora_arribo,0,5) : '—' }}
-                    </div>
+                    <div class="val mono">{{ $reserva->hora_arribo ? substr($reserva->hora_arribo,0,5) : '—' }}</div>
                 </div>
                 <div class="dato">
                     <div class="lbl">Fecha de retorno</div>
                     <div class="val mono">
-                        @if($reserva->fecha_retorno)
-                            {{ \Carbon\Carbon::parse($reserva->fecha_retorno)->format('d/m/Y') }}
-                        @else
-                            <span class="nd">—</span>
-                        @endif
+                        {{ $reserva->fecha_retorno ? \Carbon\Carbon::parse($reserva->fecha_retorno)->format('d/m/Y') : '—' }}
                     </div>
                 </div>
                 <div class="dato">
                     <div class="lbl">Hora de retorno</div>
-                    <div class="val mono">
-                        {{ $reserva->hora_retorno ? substr($reserva->hora_retorno,0,5) : '—' }}
-                    </div>
+                    <div class="val mono">{{ $reserva->hora_retorno ? substr($reserva->hora_retorno,0,5) : '—' }}</div>
                 </div>
                 @if($reserva->dias_viaje)
                 <div class="dato full">
                     <div class="lbl"><i class="bi bi-clock-history"></i> Días de viaje</div>
-                    <div class="val">
-                        <span class="chip-info"><i class="bi bi-sun"></i> {{ $reserva->dias_viaje }}</span>
-                    </div>
+                    <div class="val"><span class="chip-info"><i class="bi bi-sun"></i> {{ $reserva->dias_viaje }}</span></div>
                 </div>
                 @endif
             </div>
 
-            {{-- Transporte --}}
             @if($reserva->tipo_transporte)
             <div class="sec-div" style="margin-top:.9rem;">
                 <i class="bi {{ $reserva->tipo_transporte === 'aereo' ? 'bi-airplane' : 'bi-bus-front' }}"></i>
@@ -592,35 +560,19 @@ body { font-family: 'DM Sans', sans-serif; }
                         <div class="val">{{ $reserva->empresa_transporte ?? '—' }}</div>
                     </div>
                 @else
-                    <div class="dato">
-                        <div class="lbl">Aerolínea</div>
-                        <div class="val">{{ $reserva->aerolinea ?? '—' }}</div>
-                    </div>
-                    <div class="dato">
-                        <div class="lbl">N° vuelo</div>
-                        <div class="val mono">{{ $reserva->numero_vuelo ?? '—' }}</div>
-                    </div>
-                    <div class="dato">
-                        <div class="lbl">Salida vuelo</div>
-                        <div class="val mono">{{ $reserva->hora_salida_vuelo ? substr($reserva->hora_salida_vuelo,0,5) : '—' }}</div>
-                    </div>
-                    <div class="dato">
-                        <div class="lbl">Llegada vuelo</div>
-                        <div class="val mono">{{ $reserva->hora_llegada_vuelo ? substr($reserva->hora_llegada_vuelo,0,5) : '—' }}</div>
-                    </div>
+                    <div class="dato"><div class="lbl">Aerolínea</div><div class="val">{{ $reserva->aerolinea ?? '—' }}</div></div>
+                    <div class="dato"><div class="lbl">N° vuelo</div><div class="val mono">{{ $reserva->numero_vuelo ?? '—' }}</div></div>
+                    <div class="dato"><div class="lbl">Salida vuelo</div><div class="val mono">{{ $reserva->hora_salida_vuelo ? substr($reserva->hora_salida_vuelo,0,5) : '—' }}</div></div>
+                    <div class="dato"><div class="lbl">Llegada vuelo</div><div class="val mono">{{ $reserva->hora_llegada_vuelo ? substr($reserva->hora_llegada_vuelo,0,5) : '—' }}</div></div>
                 @endif
             </div>
             @endif
 
-            {{-- Hospedaje --}}
             @if($reserva->nombre_hotel || $reserva->tipo_establecimiento || $reserva->tipo_habitacion)
             <div class="sec-div" style="margin-top:.9rem;"><i class="bi bi-building"></i> Hospedaje</div>
             <div class="datos-grid">
                 @if($reserva->nombre_hotel)
-                <div class="dato full">
-                    <div class="lbl">Hotel / Alojamiento</div>
-                    <div class="val">{{ $reserva->nombre_hotel }}</div>
-                </div>
+                <div class="dato full"><div class="lbl">Hotel / Alojamiento</div><div class="val">{{ $reserva->nombre_hotel }}</div></div>
                 @endif
                 @if($reserva->tipo_establecimiento)
                 <div class="dato">
@@ -641,10 +593,7 @@ body { font-family: 'DM Sans', sans-serif; }
                 </div>
                 @endif
                 @if($reserva->tipo_habitacion)
-                <div class="dato full">
-                    <div class="lbl">Habitaciones</div>
-                    <div class="val">{{ $reserva->tipo_habitacion }}</div>
-                </div>
+                <div class="dato full"><div class="lbl">Habitaciones</div><div class="val">{{ $reserva->tipo_habitacion }}</div></div>
                 @endif
                 @if($reserva->plan_alimentacion)
                 <div class="dato">
@@ -657,94 +606,189 @@ body { font-family: 'DM Sans', sans-serif; }
                 @endif
             </div>
             @endif
-
         </div>
     </div>
 
-    {{-- ── PASAJEROS ── --}}
+    {{-- ══════════════════════════════════════════════════════════
+         PASAJEROS + SALUD — todos en un solo bloque unificado
+    ══════════════════════════════════════════════════════════ --}}
     <div class="info-card">
         <div class="info-card-header">
-            <div class="hdr-left"><i class="bi bi-people"></i> Pasajeros</div>
+            <div class="hdr-left"><i class="bi bi-people"></i> Pasajeros del grupo</div>
             <span style="font-size:.75rem;color:var(--ink-4);text-transform:none;letter-spacing:0;font-weight:400;">
                 {{ $reserva->pasajeros->count() }} registrado(s)
             </span>
         </div>
+
         @if($reserva->pasajeros->count())
-        <table class="inner-table">
-            <thead>
-                <tr>
-                    <th>Nombre completo</th>
-                    <th>Tipo</th>
-                    <th>Documento</th>
-                    <th class="th-center">Edad</th>
-                    <th class="th-center">Titular</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($reserva->pasajeros as $pasajero)
-                <tr>
-                    <td style="font-weight:600;">
-                        {{ $pasajero->nombre_completo }}
-                        @if($pasajero->es_titular)
-                            <span style="background:var(--blue-l);color:var(--blue);font-size:.65rem;font-weight:700;padding:1px 7px;border-radius:20px;margin-left:.3rem;">TITULAR</span>
-                        @endif
-                    </td>
-                    <td>
-                        <span style="background:var(--line-2);border-radius:6px;padding:2px 8px;font-size:.74rem;font-weight:600;color:var(--ink-3);">
-                            {{ ucfirst($pasajero->tipo) }}
+        @php
+            $seguroLabels = ['essalud'=>'EsSalud','sis'=>'SIS','eps'=>'EPS privada','ffaa'=>'FFAA / PNP','otro'=>'Otro'];
+            $discapLabels = ['motora'=>'Motora','visual'=>'Visual','auditiva'=>'Auditiva','cognitiva'=>'Cognitiva','habla_lenguaje'=>'Habla/Lenguaje','psicosocial'=>'Psicosocial','otro'=>'Otro'];
+        @endphp
+
+        @foreach($reserva->pasajeros as $pasajero)
+        @php
+            $salud       = $pasajero->salud;
+            $tieneSalud  = $salud && ($salud->alergias || $salud->restricciones_alimentarias || $salud->condiciones_medicas || $salud->discapacidades || $salud->seguro_salud);
+            $tieneAlerta = $salud && ($salud->alergias || $salud->restricciones_alimentarias || $salud->condiciones_medicas || $salud->discapacidades);
+            $discaps     = $salud ? collect(explode(',', $salud->discapacidades ?? ''))->filter()->values() : collect();
+        @endphp
+
+        <div style="border-bottom:1px solid var(--line);padding:1rem 1.25rem;
+                    {{ $loop->last ? 'border-bottom:none;' : '' }}">
+
+            {{-- Cabecera pasajero --}}
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;margin-bottom:.6rem;">
+                <div style="display:flex;align-items:center;gap:.65rem;">
+
+                    {{-- Avatar numerado --}}
+                    <div style="width:34px;height:34px;border-radius:50%;flex-shrink:0;
+                                display:flex;align-items:center;justify-content:center;
+                                font-size:.8rem;font-weight:800;
+                                {{ $pasajero->es_titular
+                                    ? 'background:var(--blue-l);color:var(--blue);border:2px solid var(--blue-m);'
+                                    : 'background:var(--line-2);color:var(--ink-3);border:2px solid var(--line);' }}">
+                        {{ $loop->index + 1 }}
+                    </div>
+
+                    <div>
+                        <div style="font-weight:700;font-size:.9rem;color:var(--ink);display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;">
+                            {{ $pasajero->nombre_completo }}
+                            @if($pasajero->es_titular)
+                                <span style="background:var(--blue-l);color:var(--blue);font-size:.6rem;font-weight:800;padding:1px 7px;border-radius:20px;">TITULAR</span>
+                            @endif
+                        </div>
+                        <div style="font-size:.72rem;color:var(--ink-4);margin-top:2px;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">
+                            @if($pasajero->tipo)
+                                <span style="background:var(--line-2);border-radius:5px;padding:1px 7px;font-weight:600;color:var(--ink-3);">
+                                    {{ ucfirst($pasajero->tipo) }}
+                                </span>
+                            @endif
+                            @if($pasajero->tipo_documento && $pasajero->numero_documento)
+                                <span style="font-family:'DM Mono',monospace;">
+                                    {{ $pasajero->tipo_documento }}: {{ $pasajero->numero_documento }}
+                                </span>
+                            @endif
+                            @if($pasajero->edad)
+                                <span>{{ $pasajero->edad }} años</span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Badges salud --}}
+                <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;">
+                    @if($salud?->seguro_salud)
+                        <span style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;
+                                     font-size:.7rem;font-weight:700;padding:3px 9px;border-radius:999px;
+                                     display:inline-flex;align-items:center;gap:.3rem;">
+                            <i class="bi bi-shield-plus" style="font-size:.65rem;"></i>
+                            {{ $seguroLabels[$salud->seguro_salud] ?? ucfirst($salud->seguro_salud) }}
                         </span>
-                    </td>
-                    <td style="font-family:'DM Mono',monospace;font-size:.78rem;">
-                        {{ $pasajero->tipo_documento ? $pasajero->tipo_documento.': '.$pasajero->numero_documento : '—' }}
-                    </td>
-                    <td class="td-center" style="font-family:'DM Mono',monospace;">{{ $pasajero->edad ?? '—' }}</td>
-                    <td class="td-center">
-                        @if($pasajero->es_titular)
-                            <i class="bi bi-check-circle-fill" style="color:var(--green);"></i>
-                        @else
-                            <span style="color:var(--ink-4);">—</span>
-                        @endif
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
+                    @endif
+                    @if($tieneAlerta)
+                        <span style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;
+                                     font-size:.7rem;font-weight:700;padding:3px 9px;border-radius:999px;
+                                     display:inline-flex;align-items:center;gap:.3rem;">
+                            <i class="bi bi-exclamation-triangle-fill" style="font-size:.65rem;"></i>
+                            Alerta médica
+                        </span>
+                    @elseif(!$tieneSalud)
+                        <span style="background:var(--green-l);color:#065f46;border:1px solid var(--green-m);
+                                     font-size:.7rem;font-weight:600;padding:3px 9px;border-radius:999px;
+                                     display:inline-flex;align-items:center;gap:.3rem;">
+                            <i class="bi bi-shield-check" style="font-size:.65rem;"></i>
+                            Sin condiciones
+                        </span>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Panel salud expandido --}}
+            @if($tieneSalud)
+            <div style="background:#fffbf5;border:1px solid #fde68a;border-radius:10px;
+                        padding:.75rem 1rem;display:flex;flex-direction:column;gap:.5rem;margin-top:.1rem;">
+
+                @if($salud->alergias)
+                <div style="display:flex;align-items:flex-start;gap:.6rem;">
+                    <div style="width:24px;height:24px;border-radius:6px;flex-shrink:0;
+                                background:#fee2e2;color:#dc2626;
+                                display:flex;align-items:center;justify-content:center;font-size:.7rem;">
+                        <i class="bi bi-exclamation-circle-fill"></i>
+                    </div>
+                    <div>
+                        <div style="font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#92400e;margin-bottom:2px;">Alergias</div>
+                        <div style="font-size:.82rem;color:var(--ink-2);line-height:1.5;">{{ $salud->alergias }}</div>
+                    </div>
+                </div>
+                @endif
+
+                @if($salud->restricciones_alimentarias)
+                <div style="display:flex;align-items:flex-start;gap:.6rem;">
+                    <div style="width:24px;height:24px;border-radius:6px;flex-shrink:0;
+                                background:#fef9c3;color:#a16207;
+                                display:flex;align-items:center;justify-content:center;font-size:.7rem;">
+                        <i class="bi bi-cup-straw"></i>
+                    </div>
+                    <div>
+                        <div style="font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#92400e;margin-bottom:2px;">Restricciones alimentarias</div>
+                        <div style="font-size:.82rem;color:var(--ink-2);line-height:1.5;">{{ $salud->restricciones_alimentarias }}</div>
+                    </div>
+                </div>
+                @endif
+
+                @if($salud->condiciones_medicas)
+                <div style="display:flex;align-items:flex-start;gap:.6rem;">
+                    <div style="width:24px;height:24px;border-radius:6px;flex-shrink:0;
+                                background:#ede9fe;color:#7c3aed;
+                                display:flex;align-items:center;justify-content:center;font-size:.7rem;">
+                        <i class="bi bi-file-medical"></i>
+                    </div>
+                    <div>
+                        <div style="font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#92400e;margin-bottom:2px;">Observaciones médicas</div>
+                        <div style="font-size:.82rem;color:var(--ink-2);line-height:1.5;">{{ $salud->condiciones_medicas }}</div>
+                    </div>
+                </div>
+                @endif
+
+                @if($discaps->count())
+                <div style="display:flex;align-items:flex-start;gap:.6rem;">
+                    <div style="width:24px;height:24px;border-radius:6px;flex-shrink:0;
+                                background:#e0f2fe;color:#0369a1;
+                                display:flex;align-items:center;justify-content:center;font-size:.7rem;">
+                        <i class="bi bi-accessibility"></i>
+                    </div>
+                    <div>
+                        <div style="font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#92400e;margin-bottom:4px;">Discapacidad</div>
+                        <div style="display:flex;flex-wrap:wrap;gap:.3rem;">
+                            @foreach($discaps as $d)
+                                <span style="background:#dbeafe;color:#1e40af;border-radius:20px;font-size:.7rem;font-weight:600;padding:2px 9px;">
+                                    {{ $discapLabels[$d] ?? ucfirst($d) }}
+                                </span>
+                            @endforeach
+                            @if($salud->discapacidad_otro && !$discaps->contains('otro'))
+                                <span style="background:#dbeafe;color:#1e40af;border-radius:20px;font-size:.7rem;font-weight:600;padding:2px 9px;">
+                                    {{ $salud->discapacidad_otro }}
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                @endif
+
+            </div>
+            @endif
+
+        </div>
+        @endforeach
+
         @else
-        <div style="padding:2rem;text-align:center;color:var(--ink-4);font-size:.84rem;">
+        <div style="padding:2.5rem;text-align:center;color:var(--ink-4);font-size:.84rem;">
             <i class="bi bi-people" style="font-size:1.5rem;display:block;margin-bottom:.5rem;opacity:.4;"></i>
             Sin pasajeros registrados
         </div>
         @endif
     </div>
-
-    {{-- ── SALUD DEL TITULAR ── --}}
-    @if($reserva->alergias_titular || $reserva->restricciones_alimentarias_titular || $reserva->titular_obs_medicas)
-    <div class="info-card">
-        <div class="info-card-header">
-            <div class="hdr-left"><i class="bi bi-heart-pulse"></i> Salud del titular</div>
-        </div>
-        <div class="info-card-body">
-            @if($reserva->alergias_titular)
-            <div class="salud-item">
-                <div class="si-lbl"><i class="bi bi-exclamation-circle me-1"></i>Alergias</div>
-                <div class="si-val">{{ $reserva->alergias_titular }}</div>
-            </div>
-            @endif
-            @if($reserva->restricciones_alimentarias_titular)
-            <div class="salud-item">
-                <div class="si-lbl"><i class="bi bi-cup-straw me-1"></i>Restricciones</div>
-                <div class="si-val">{{ $reserva->restricciones_alimentarias_titular }}</div>
-            </div>
-            @endif
-            @if($reserva->titular_obs_medicas)
-            <div class="salud-item">
-                <div class="si-lbl"><i class="bi bi-file-medical me-1"></i>Obs. médicas</div>
-                <div class="si-val">{{ $reserva->titular_obs_medicas }}</div>
-            </div>
-            @endif
-        </div>
-    </div>
-    @endif
 
     {{-- ── COMPROBANTE ── --}}
     <div class="info-card">
@@ -764,16 +808,10 @@ body { font-family: 'DM Sans', sans-serif; }
                     </div>
                 </div>
                 @if($reserva->ruc_factura)
-                <div class="dato">
-                    <div class="lbl">RUC</div>
-                    <div class="val mono">{{ $reserva->ruc_factura }}</div>
-                </div>
+                <div class="dato"><div class="lbl">RUC</div><div class="val mono">{{ $reserva->ruc_factura }}</div></div>
                 @endif
                 @if($reserva->razon_social)
-                <div class="dato full">
-                    <div class="lbl">Razón social</div>
-                    <div class="val">{{ $reserva->razon_social }}</div>
-                </div>
+                <div class="dato full"><div class="lbl">Razón social</div><div class="val">{{ $reserva->razon_social }}</div></div>
                 @endif
             </div>
         </div>
@@ -785,27 +823,23 @@ body { font-family: 'DM Sans', sans-serif; }
             <div class="hdr-left"><i class="bi bi-credit-card"></i> Pagos registrados</div>
         </div>
 
-        {{-- Barra de progreso --}}
         @php
-            $total  = (float)($reserva->precio_total ?? 0);
-            $pagado = $reserva->pagos->sum('monto'); // ← recalculado desde la relación real
-            $saldo  = max(0, $total - $pagado);
-            $pct    = $total > 0 ? min(100, round($pagado / $total * 100)) : 0;
-            $barColor     = $pct >= 100 ? 'var(--green)' : ($pct >= 50 ? 'var(--blue)' : 'var(--amber)');
-            $barColorHex  = $pct >= 100 ? '#059669' : ($pct >= 50 ? '#1d4ed8' : '#d97706');
-            // Mostrar el banner de "completar pago" si hay saldo pendiente Y el estado no es 'pagado'/'cancelada'/'finalizada'
-            $estadosNoPendiente = ['pagado','cancelada','finalizada'];
+            $total    = (float)($reserva->precio_total ?? 0);
+            $pagado   = $reserva->pagos->sum('monto');
+            $saldo    = max(0, $total - $pagado);
+            $pct      = $total > 0 ? min(100, round($pagado / $total * 100)) : 0;
+            $barColor = $pct >= 100 ? 'var(--green)' : ($pct >= 50 ? 'var(--blue)' : 'var(--amber)');
+            $estadosNoPendiente  = ['pagado','cancelada','finalizada'];
             $mostrarCompletarPago = $saldo > 0 && !in_array($estadoSlug, $estadosNoPendiente);
-            $estadoPagadoId = isset($estados)
-                ? ($estados->firstWhere('nombre','pagado')?->id ?? null)
-                : (\App\Models\EstadoReserva::where('nombre','pagado')->value('id'));
+            $estadoPagadoId = $estados->firstWhere('nombre','pagado')?->id ?? null;
         @endphp
 
+        {{-- Barra de progreso --}}
         <div class="progress-wrap">
             <div class="progress-header">
                 <span style="font-size:.73rem;font-weight:700;color:var(--ink-3);">Progreso de pago</span>
                 <span id="pago-pct-label"
-                      style="font-size:.82rem;font-weight:800;color:{{ $barColor }};font-family:'DM Mono',monospace;letter-spacing:.02em;">
+                      style="font-size:.82rem;font-weight:800;color:{{ $barColor }};font-family:'DM Mono',monospace;">
                     {{ $pct }}%
                 </span>
             </div>
@@ -815,20 +849,13 @@ body { font-family: 'DM Sans', sans-serif; }
             </div>
             <div style="display:flex;justify-content:space-between;margin-top:.3rem;flex-wrap:wrap;gap:.25rem;">
                 <span style="font-size:.7rem;color:var(--ink-4);">
-                    Pagado:
-                    <strong style="color:var(--green);font-family:'DM Mono',monospace;" id="pagado-label">
-                        S/ {{ number_format($pagado,2) }}
-                    </strong>
+                    Pagado: <strong style="color:var(--green);font-family:'DM Mono',monospace;" id="pagado-label">S/ {{ number_format($pagado,2) }}</strong>
                 </span>
                 <span style="font-size:.7rem;color:var(--ink-4);">
-                    Saldo:
-                    <strong style="color:{{ $saldo > 0 ? 'var(--red)' : 'var(--green)' }};font-family:'DM Mono',monospace;" id="saldo-label">
-                        S/ {{ number_format($saldo,2) }}
-                    </strong>
+                    Saldo: <strong style="color:{{ $saldo > 0 ? 'var(--red)' : 'var(--green)' }};font-family:'DM Mono',monospace;" id="saldo-label">S/ {{ number_format($saldo,2) }}</strong>
                 </span>
                 <span style="font-size:.7rem;color:var(--ink-4);">
-                    Total:
-                    <strong style="font-family:'DM Mono',monospace;">S/ {{ number_format($total,2) }}</strong>
+                    Total: <strong style="font-family:'DM Mono',monospace;">S/ {{ number_format($total,2) }}</strong>
                 </span>
             </div>
         </div>
@@ -852,9 +879,7 @@ body { font-family: 'DM Sans', sans-serif; }
                     <td style="font-family:'DM Mono',monospace;font-size:.78rem;white-space:nowrap;">
                         {{ \Carbon\Carbon::parse($pago->fecha_pago)->format('d/m/Y') }}
                     </td>
-                    <td style="font-size:.82rem;font-weight:500;">
-                        {{ $pago->metodoPago->nombre ?? '—' }}
-                    </td>
+                    <td style="font-size:.82rem;font-weight:500;">{{ $pago->metodoPago->nombre ?? '—' }}</td>
                     <td class="td-center">
                         <span class="tipo-badge tipo-{{ $tipoPago }}">
                             {{ ucfirst(str_replace('_',' ',$pago->tipo_pago)) }}
@@ -877,12 +902,9 @@ body { font-family: 'DM Sans', sans-serif; }
                                 <i class="bi bi-chevron-down" style="font-size:.65rem;"></i>
                             </button>
                             <div id="voucher-{{ $pago->id }}" class="voucher-panel">
-                                @php
-                                    $ext = pathinfo($pago->archivo_baucher, PATHINFO_EXTENSION);
-                                @endphp
+                                @php $ext = pathinfo($pago->archivo_baucher, PATHINFO_EXTENSION); @endphp
                                 @if(in_array(strtolower($ext),['jpg','jpeg','png','webp']))
-                                    <img src="{{ Storage::url($pago->archivo_baucher) }}" alt="Voucher"
-                                         onerror="this.closest('.voucher-panel').innerHTML='<span style=\'font-size:.75rem;color:var(--ink-4)\'>No se pudo cargar</span>'">
+                                    <img src="{{ Storage::url($pago->archivo_baucher) }}" alt="Voucher">
                                 @else
                                     <div style="padding:.5rem;font-size:.8rem;color:var(--ink-3);">
                                         <i class="bi bi-file-earmark-pdf" style="font-size:2rem;color:var(--red);display:block;margin-bottom:.3rem;"></i>
@@ -912,7 +934,7 @@ body { font-family: 'DM Sans', sans-serif; }
             </tbody>
         </table>
 
-        {{-- Resumen ── --}}
+        {{-- Resumen --}}
         <div class="pago-resumen">
             <div class="pago-res-item">
                 <div class="pr-label">Total reserva</div>
@@ -930,7 +952,7 @@ body { font-family: 'DM Sans', sans-serif; }
             </div>
         </div>
 
-        {{-- Banner "completar pago" → abre modal ── --}}
+        {{-- Banner completar pago --}}
         @if($mostrarCompletarPago && $estadoPagadoId)
         <div style="padding:.875rem 1.25rem;border-top:1px solid var(--line);background:var(--blue-l);
                     display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
@@ -944,8 +966,7 @@ body { font-family: 'DM Sans', sans-serif; }
             </button>
         </div>
         @endif
-
-    </div>{{-- fin info-card pagos --}}
+    </div>
 
     {{-- ── POLÍTICAS ── --}}
     @if($reserva->politica_descripcion)
@@ -971,9 +992,7 @@ body { font-family: 'DM Sans', sans-serif; }
             <div class="hdr-left"><i class="bi bi-chat-text"></i> Observaciones</div>
         </div>
         <div class="info-card-body">
-            <p style="font-size:.85rem;color:var(--ink-2);line-height:1.65;margin:0;">
-                {{ $reserva->observaciones }}
-            </p>
+            <p style="font-size:.85rem;color:var(--ink-2);line-height:1.65;margin:0;">{{ $reserva->observaciones }}</p>
         </div>
     </div>
     @endif
@@ -995,8 +1014,8 @@ body { font-family: 'DM Sans', sans-serif; }
         </div>
         <div class="historial-timeline">
             @php
-                $historial = $reserva->historialEstados->sortByDesc('fecha_cambio');
-                $dotColors = [
+                $historial  = $reserva->historialEstados->sortByDesc('fecha_cambio');
+                $dotColors  = [
                     'consulta'    => ['bg'=>'#f1f5f9','border'=>'#9ca3af','icon'=>'bi-question-circle','text'=>'#475569'],
                     'pre_reserva' => ['bg'=>'#fffbeb','border'=>'#f59e0b','icon'=>'bi-clock','text'=>'#92400e'],
                     'confirmada'  => ['bg'=>'#ecfdf5','border'=>'#059669','icon'=>'bi-check-circle','text'=>'#065f46'],
@@ -1008,34 +1027,27 @@ body { font-family: 'DM Sans', sans-serif; }
             @endphp
             @forelse($historial as $h)
             @php
-                $slug = strtolower(str_replace(' ','_',$h->estadoNuevo->nombre ?? 'consulta'));
-                $dc   = $dotColors[$slug] ?? $dotColors['consulta'];
-                $fecha = \Carbon\Carbon::parse($h->fecha_cambio);
+                $slug         = strtolower(str_replace(' ','_',$h->estadoNuevo->nombre ?? 'consulta'));
+                $dc           = $dotColors[$slug] ?? $dotColors['consulta'];
+                $fecha        = \Carbon\Carbon::parse($h->fecha_cambio);
                 $slugAnterior = strtolower(str_replace(' ','_',$h->estadoAnterior->nombre ?? ''));
-                // Nombre del usuario que cambió el estado
-                // La relación en el modelo puede ser 'cambiadorPor' o 'usuarioAdmin'
-                $quienCambio = $h->cambiadorPor ?? $h->usuarioAdmin ?? null;
-                $quienNombre = $quienCambio
+                $quienCambio  = $h->cambiadorPor ?? null;
+                $quienNombre  = $quienCambio
                     ? trim(($quienCambio->nombre ?? '') . ' ' . ($quienCambio->apellido ?? ''))
                     : 'Sistema';
             @endphp
             <div class="timeline-item">
                 <div class="tl-left">
-                    <div class="tl-dot"
-                         style="background:{{ $dc['bg'] }};border-color:{{ $dc['border'] }};color:{{ $dc['text'] }};">
+                    <div class="tl-dot" style="background:{{ $dc['bg'] }};border-color:{{ $dc['border'] }};color:{{ $dc['text'] }};">
                         <i class="bi {{ $dc['icon'] }}" style="font-size:.72rem;"></i>
                     </div>
-                    @if(!$loop->last)
-                    <div class="tl-line"></div>
-                    @endif
+                    @if(!$loop->last)<div class="tl-line"></div>@endif
                 </div>
                 <div class="tl-right">
                     <div class="tl-estado" style="color:{{ $dc['text'] }};">
                         {{ ucfirst(str_replace('_',' ',$h->estadoNuevo->nombre ?? '')) }}
-                        @if($slug === 'pagado' && $slugAnterior)
-                            <span style="font-size:.65rem;font-weight:600;background:#f0fdf4;color:#15803d;padding:1px 7px;border-radius:20px;margin-left:.3rem;vertical-align:middle;">
-                                ✓ Pago completo
-                            </span>
+                        @if($slug === 'pagado')
+                            <span style="font-size:.65rem;font-weight:600;background:#f0fdf4;color:#15803d;padding:1px 7px;border-radius:20px;margin-left:.3rem;vertical-align:middle;">✓ Pago completo</span>
                         @endif
                     </div>
                     <div class="tl-meta">
@@ -1073,28 +1085,16 @@ body { font-family: 'DM Sans', sans-serif; }
         <div class="info-card-body">
             <div class="datos-grid">
                 @if($reserva->hora_recojo)
-                <div class="dato">
-                    <div class="lbl">Hora de recojo</div>
-                    <div class="val mono">{{ substr($reserva->hora_recojo,0,5) }}</div>
-                </div>
+                <div class="dato"><div class="lbl">Hora de recojo</div><div class="val mono">{{ substr($reserva->hora_recojo,0,5) }}</div></div>
                 @endif
                 @if($reserva->logistica?->nombre_guia)
-                <div class="dato">
-                    <div class="lbl">Guía asignado</div>
-                    <div class="val">{{ $reserva->logistica->nombre_guia }}</div>
-                </div>
+                <div class="dato"><div class="lbl">Guía asignado</div><div class="val">{{ $reserva->logistica->nombre_guia }}</div></div>
                 @endif
                 @if($reserva->punto_encuentro)
-                <div class="dato full">
-                    <div class="lbl">Punto de encuentro</div>
-                    <div class="val">{{ $reserva->punto_encuentro }}</div>
-                </div>
+                <div class="dato full"><div class="lbl">Punto de encuentro</div><div class="val">{{ $reserva->punto_encuentro }}</div></div>
                 @endif
                 @if($reserva->logistica?->instrucciones_especiales)
-                <div class="dato full">
-                    <div class="lbl">Instrucciones</div>
-                    <div class="val">{{ $reserva->logistica->instrucciones_especiales }}</div>
-                </div>
+                <div class="dato full"><div class="lbl">Instrucciones</div><div class="val">{{ $reserva->logistica->instrucciones_especiales }}</div></div>
                 @endif
             </div>
         </div>
@@ -1108,82 +1108,61 @@ body { font-family: 'DM Sans', sans-serif; }
 @if($mostrarCompletarPago && $estadoPagadoId)
 <div class="modal-overlay" id="modal-completar-pago" onclick="cerrarModalSiOverlay(event)">
     <div class="modal-box" style="max-width:500px;">
- 
-        {{-- Header --}}
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
             <div class="modal-title">
                 <i class="bi bi-check-circle-fill" style="color:var(--green);margin-right:.4rem;"></i>
                 Completar pago
             </div>
             <button type="button" onclick="cerrarModal()"
-                    style="background:none;border:none;cursor:pointer;color:var(--ink-4);font-size:1.1rem;padding:.2rem .4rem;border-radius:6px;"
-                    onmouseenter="this.style.background='var(--line-2)'"
-                    onmouseleave="this.style.background='none'">
+                    style="background:none;border:none;cursor:pointer;color:var(--ink-4);font-size:1.1rem;padding:.2rem .4rem;border-radius:6px;">
                 <i class="bi bi-x-lg"></i>
             </button>
         </div>
- 
-        {{-- Resumen financiero --}}
-        <div class="modal-resumen" style="margin-bottom:1rem;">
-            <div class="mr-row">
-                <span class="mr-lbl">Total reserva</span>
-                <span class="mr-val">S/ {{ number_format($total,2) }}</span>
-            </div>
-            <div class="mr-row">
-                <span class="mr-lbl">Ya pagado</span>
-                <span class="mr-val">S/ {{ number_format($pagado,2) }}</span>
-            </div>
+
+        <div class="modal-resumen">
+            <div class="mr-row"><span class="mr-lbl">Total reserva</span><span class="mr-val">S/ {{ number_format($total,2) }}</span></div>
+            <div class="mr-row"><span class="mr-lbl">Ya pagado</span><span class="mr-val">S/ {{ number_format($pagado,2) }}</span></div>
             <div class="mr-row" style="border-top:1px solid var(--green-m);padding-top:.4rem;margin-top:.25rem;">
                 <span class="mr-lbl" style="font-weight:700;color:var(--ink-2);">Saldo pendiente</span>
                 <span class="mr-val" style="font-size:1.1rem;">S/ {{ number_format($saldo,2) }}</span>
             </div>
         </div>
- 
-        {{-- Tabs: dos opciones --}}
-        <div style="display:flex;gap:.5rem;margin-bottom:1rem;background:var(--line-2);
-                    border-radius:10px;padding:.3rem;">
+
+        {{-- Tabs --}}
+        <div style="display:flex;gap:.5rem;margin-bottom:1rem;background:var(--line-2);border-radius:10px;padding:.3rem;">
             <button type="button" id="tab-btn-solo" onclick="switchTab('solo')"
                     style="flex:1;padding:.5rem .75rem;border-radius:8px;border:none;cursor:pointer;
                            font-size:.8rem;font-weight:700;font-family:'DM Sans',sans-serif;
-                           background:white;color:var(--ink-2);
-                           box-shadow:0 1px 3px rgba(0,0,0,.1);transition:all .15s;">
+                           background:white;color:var(--ink-2);box-shadow:0 1px 3px rgba(0,0,0,.1);">
                 <i class="bi bi-check-circle me-1"></i> Solo marcar pagado
             </button>
             <button type="button" id="tab-btn-pago" onclick="switchTab('pago')"
                     style="flex:1;padding:.5rem .75rem;border-radius:8px;border:none;cursor:pointer;
                            font-size:.8rem;font-weight:700;font-family:'DM Sans',sans-serif;
-                           background:none;color:var(--ink-4);transition:all .15s;">
+                           background:none;color:var(--ink-4);">
                 <i class="bi bi-plus-circle me-1"></i> Registrar nuevo pago
             </button>
         </div>
- 
-        {{-- Panel: Solo marcar pagado --}}
+
         <div id="panel-solo">
             <div style="background:var(--green-l);border:1.5px solid var(--green-m);border-radius:10px;
                         padding:.875rem 1rem;font-size:.83rem;color:#065f46;line-height:1.55;">
                 <i class="bi bi-info-circle-fill me-1"></i>
                 Se marcará la reserva <strong>{{ $reserva->codigo_reserva }}</strong> como
                 <strong>Pagada al 100%</strong> sin registrar un nuevo pago.
-                El monto total quedará en
-                <strong style="font-family:'DM Mono',monospace;">S/ {{ number_format($total,2) }}</strong>.
+                Total: <strong style="font-family:'DM Mono',monospace;">S/ {{ number_format($total,2) }}</strong>.
             </div>
         </div>
- 
-        {{-- Panel: Registrar nuevo pago --}}
+
         <div id="panel-pago" style="display:none;">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
-                <div class="field">
-                    <label class="lbl" style="font-size:.72rem;font-weight:700;color:var(--ink-4);
-                                              text-transform:uppercase;letter-spacing:.06em;">
-                        Método de pago <span style="color:var(--red);">*</span>
+                <div>
+                    <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-4);margin-bottom:.35rem;">
+                        Método <span style="color:var(--red);">*</span>
                     </label>
-                    <select id="modal-metodo" style="width:100%;padding:.55rem .75rem;border:1.5px solid var(--line);
-                                                     border-radius:8px;font-size:.83rem;background:white;
-                                                     color:var(--ink-2);font-family:'DM Sans',sans-serif;">
+                    <select id="modal-metodo" style="width:100%;padding:.55rem .75rem;border:1.5px solid var(--line);border-radius:8px;font-size:.83rem;background:white;color:var(--ink-2);font-family:'DM Sans',sans-serif;">
                         <option value="">— Seleccionar —</option>
-                        <optgroup label="Efectivo">
-                            <option value="efectivo">Efectivo</option>
-                        </optgroup>
+                        <optgroup label="Efectivo"><option value="efectivo">Efectivo</option></optgroup>
                         <optgroup label="Pagos digitales">
                             <option value="yape">Yape</option>
                             <option value="plin">Plin</option>
@@ -1209,346 +1188,171 @@ body { font-family: 'DM Sans', sans-serif; }
                         </optgroup>
                     </select>
                 </div>
- 
-                <div class="field">
-                    <label class="lbl" style="font-size:.72rem;font-weight:700;color:var(--ink-4);
-                                              text-transform:uppercase;letter-spacing:.06em;">
+                <div>
+                    <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-4);margin-bottom:.35rem;">
                         Monto (S/) <span style="color:var(--red);">*</span>
                     </label>
-                    <div style="display:flex;align-items:center;border:1.5px solid var(--line);
-                                border-radius:8px;overflow:hidden;background:white;">
-                        <span style="padding:.55rem .65rem;background:var(--line-2);color:var(--ink-4);
-                                     font-weight:700;font-size:.8rem;border-right:1px solid var(--line);">S/</span>
+                    <div style="display:flex;align-items:center;border:1.5px solid var(--line);border-radius:8px;overflow:hidden;background:white;">
+                        <span style="padding:.55rem .65rem;background:var(--line-2);color:var(--ink-4);font-weight:700;font-size:.8rem;border-right:1px solid var(--line);">S/</span>
                         <input type="number" id="modal-monto" step="0.01" min="0.01"
                                value="{{ number_format($saldo, 2, '.', '') }}"
-                               style="border:none;outline:none;padding:.55rem .75rem;font-size:.88rem;
-                                      font-family:'DM Mono',monospace;font-weight:700;
-                                      color:var(--ink);width:100%;background:white;">
-                    </div>
-                    <div style="font-size:.68rem;color:var(--ink-4);margin-top:.25rem;">
-                        Saldo: <strong style="color:var(--red);font-family:'DM Mono',monospace;">S/ {{ number_format($saldo,2) }}</strong>
+                               style="border:none;outline:none;padding:.55rem .75rem;font-size:.88rem;font-family:'DM Mono',monospace;font-weight:700;color:var(--ink);width:100%;background:white;">
                     </div>
                 </div>
- 
-                <div class="field">
-                    <label class="lbl" style="font-size:.72rem;font-weight:700;color:var(--ink-4);
-                                              text-transform:uppercase;letter-spacing:.06em;">
-                        N° Operación <span style="font-weight:400;opacity:.6;">(opcional)</span>
-                    </label>
-                    <input type="text" id="modal-operacion" maxlength="100"
-                           placeholder="Código de transacción..."
-                           style="width:100%;padding:.55rem .75rem;border:1.5px solid var(--line);
-                                  border-radius:8px;font-size:.82rem;font-family:'DM Sans',sans-serif;
-                                  color:var(--ink-2);background:white;box-sizing:border-box;">
+                <div>
+                    <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-4);margin-bottom:.35rem;">N° Operación</label>
+                    <input type="text" id="modal-operacion" maxlength="100" placeholder="Código..."
+                           style="width:100%;padding:.55rem .75rem;border:1.5px solid var(--line);border-radius:8px;font-size:.82rem;font-family:'DM Sans',sans-serif;color:var(--ink-2);background:white;box-sizing:border-box;">
                 </div>
- 
-                <div class="field">
-                    <label class="lbl" style="font-size:.72rem;font-weight:700;color:var(--ink-4);
-                                              text-transform:uppercase;letter-spacing:.06em;">
-                        Voucher <span style="font-weight:400;opacity:.6;">(opcional)</span>
-                    </label>
-                    <label id="modal-upload-label"
-                           style="display:flex;align-items:center;gap:.5rem;
-                                  padding:.5rem .75rem;border:1.5px dashed var(--line);
-                                  border-radius:8px;cursor:pointer;font-size:.78rem;
-                                  color:var(--ink-4);background:var(--line-2);
-                                  transition:all .15s;"
-                           onmouseenter="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'"
-                           onmouseleave="this.style.borderColor='var(--line)';this.style.color='var(--ink-4)'">
+                <div>
+                    <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-4);margin-bottom:.35rem;">Voucher</label>
+                    <label style="display:flex;align-items:center;gap:.5rem;padding:.5rem .75rem;border:1.5px dashed var(--line);border-radius:8px;cursor:pointer;font-size:.78rem;color:var(--ink-4);background:var(--line-2);">
                         <i class="bi bi-cloud-upload" style="font-size:1rem;"></i>
-                        <span id="modal-upload-txt">Seleccionar archivo...</span>
-                        <input type="file" id="modal-baucher" accept=".jpg,.jpeg,.png,.pdf,.webp"
-                               style="display:none;" onchange="onModalFile(this)">
+                        <span id="modal-upload-txt">Seleccionar...</span>
+                        <input type="file" id="modal-baucher" accept=".jpg,.jpeg,.png,.pdf,.webp" style="display:none;" onchange="onModalFile(this)">
                     </label>
                 </div>
             </div>
         </div>
- 
-        {{-- Error message --}}
-        <div id="modal-error"
-             style="display:none;margin-top:.75rem;padding:.6rem .875rem;
-                    background:var(--red-l);border:1px solid #fca5a5;border-radius:8px;
-                    font-size:.8rem;color:var(--red);font-weight:600;">
-        </div>
- 
-        {{-- Footer --}}
+
+        <div id="modal-error" style="display:none;margin-top:.75rem;padding:.6rem .875rem;background:var(--red-l);border:1px solid #fca5a5;border-radius:8px;font-size:.8rem;color:var(--red);font-weight:600;"></div>
+
         <div class="modal-footer" style="margin-top:1.25rem;">
-            <button type="button" class="modal-btn-cancel" onclick="cerrarModal()" id="modal-btn-cancelar">
-                Cancelar
-            </button>
-            <button type="button" class="modal-btn-confirm" id="modal-btn-confirmar"
-                    onclick="ejecutarPagoCompleto()">
-                <span id="modal-btn-txt">
-                    <i class="bi bi-check-circle-fill"></i> Confirmar
-                </span>
-                <span id="modal-btn-loading" style="display:none;">
-                    <i class="bi bi-hourglass-split"></i> Guardando...
-                </span>
+            <button type="button" class="modal-btn-cancel" onclick="cerrarModal()" id="modal-btn-cancelar">Cancelar</button>
+            <button type="button" class="modal-btn-confirm" id="modal-btn-confirmar" onclick="ejecutarPagoCompleto()">
+                <span id="modal-btn-txt"><i class="bi bi-check-circle-fill"></i> Confirmar</span>
+                <span id="modal-btn-loading" style="display:none;"><i class="bi bi-hourglass-split"></i> Guardando...</span>
             </button>
         </div>
- 
     </div>
 </div>
 @endif
- 
- 
-{{-- =====================================================================
-     PASO 2 — Reemplaza todo el @push('scripts') con esto:
-     ===================================================================== --}}
- 
+
 @push('scripts')
 <script>
-/* ── Variables globales de la reserva ── */
-const RESERVA_ID       = {{ $reserva->id }};
-const PAGO_URL         = "{{ route('reservas.registrarPago', $reserva) }}";
-const CSRF_TOKEN       = "{{ csrf_token() }}";
-const PRECIO_TOTAL     = {{ (float)$reserva->precio_total }};
-let   pagadoActual     = {{ $pagado }};
-let   tabActual        = 'solo'; // 'solo' | 'pago'
- 
-/* ══════════════════════════════════════
-   VOUCHER DESPLEGABLE (tabla de pagos)
-══════════════════════════════════════ */
+const RESERVA_ID   = {{ $reserva->id }};
+const PAGO_URL     = "{{ route('reservas.registrarPago', $reserva) }}";
+const CSRF_TOKEN   = "{{ csrf_token() }}";
+const PRECIO_TOTAL = {{ (float)$reserva->precio_total }};
+let   pagadoActual = {{ $pagado }};
+let   tabActual    = 'solo';
+
+/* ── VOUCHER ── */
 function toggleVoucher(id, btn) {
     const panel   = document.getElementById(id);
     const chevron = btn.querySelector('i:last-child');
-    const isOpen  = panel.classList.contains('open');
- 
     document.querySelectorAll('.voucher-panel.open').forEach(p => {
         if (p.id !== id) {
             p.classList.remove('open');
-            const otherBtn = document.querySelector(`[onclick*="${p.id}"]`);
-            if (otherBtn) {
-                const ch = otherBtn.querySelector('i:last-child');
-                if (ch) ch.className = 'bi bi-chevron-down';
-            }
+            const ob = document.querySelector(`[onclick*="${p.id}"]`);
+            if (ob) { const ch = ob.querySelector('i:last-child'); if(ch) ch.className = 'bi bi-chevron-down'; }
         }
     });
- 
     panel.classList.toggle('open');
-    if (chevron) {
-        chevron.className = panel.classList.contains('open')
-            ? 'bi bi-chevron-up' : 'bi bi-chevron-down';
-    }
+    if (chevron) chevron.className = panel.classList.contains('open') ? 'bi bi-chevron-up' : 'bi bi-chevron-down';
 }
- 
-/* ══════════════════════════════════════
-   MODAL — ABRIR / CERRAR
-══════════════════════════════════════ */
+
+/* ── MODAL ABRIR/CERRAR ── */
 function abrirModalCompletarPago() {
     const m = document.getElementById('modal-completar-pago');
     if (m) { m.classList.add('open'); document.body.style.overflow = 'hidden'; }
-    // Resetear al tab "solo" cada vez que se abre
-    switchTab('solo');
-    ocultarError();
+    switchTab('solo'); ocultarError();
 }
 function cerrarModal() {
     const m = document.getElementById('modal-completar-pago');
     if (m) { m.classList.remove('open'); document.body.style.overflow = ''; }
 }
-function cerrarModalSiOverlay(e) {
-    if (e.target === e.currentTarget) cerrarModal();
-}
+function cerrarModalSiOverlay(e) { if (e.target === e.currentTarget) cerrarModal(); }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarModal(); });
- 
-/* ══════════════════════════════════════
-   MODAL — TABS
-══════════════════════════════════════ */
+
+/* ── TABS ── */
 function switchTab(tab) {
     tabActual = tab;
     const btnSolo = document.getElementById('tab-btn-solo');
     const btnPago = document.getElementById('tab-btn-pago');
     const panSolo = document.getElementById('panel-solo');
     const panPago = document.getElementById('panel-pago');
- 
-    const activeStyle = 'background:white;color:var(--ink-2);box-shadow:0 1px 3px rgba(0,0,0,.1);';
-    const inactiveStyle = 'background:none;color:var(--ink-4);box-shadow:none;';
- 
     if (tab === 'solo') {
-        btnSolo.style.cssText += activeStyle;
-        btnPago.style.cssText += inactiveStyle;
-        panSolo.style.display = 'block';
-        panPago.style.display = 'none';
+        if(btnSolo) { btnSolo.style.background='white'; btnSolo.style.color='var(--ink-2)'; btnSolo.style.boxShadow='0 1px 3px rgba(0,0,0,.1)'; }
+        if(btnPago) { btnPago.style.background='none'; btnPago.style.color='var(--ink-4)'; btnPago.style.boxShadow='none'; }
+        if(panSolo) panSolo.style.display='block';
+        if(panPago) panPago.style.display='none';
     } else {
-        btnPago.style.cssText += activeStyle;
-        btnSolo.style.cssText += inactiveStyle;
-        panSolo.style.display = 'none';
-        panPago.style.display = 'block';
+        if(btnPago) { btnPago.style.background='white'; btnPago.style.color='var(--ink-2)'; btnPago.style.boxShadow='0 1px 3px rgba(0,0,0,.1)'; }
+        if(btnSolo) { btnSolo.style.background='none'; btnSolo.style.color='var(--ink-4)'; btnSolo.style.boxShadow='none'; }
+        if(panSolo) panSolo.style.display='none';
+        if(panPago) panPago.style.display='block';
     }
     ocultarError();
 }
- 
-/* ══════════════════════════════════════
-   MODAL — ARCHIVO VOUCHER
-══════════════════════════════════════ */
+
+/* ── FILE ── */
 function onModalFile(input) {
     const txt = document.getElementById('modal-upload-txt');
     if (input.files.length > 0) {
-        const f = input.files[0];
-        // Validar tamaño 5MB
-        if (f.size > 5 * 1024 * 1024) {
-            mostrarError('El archivo supera los 5 MB permitidos.');
-            input.value = '';
-            if (txt) txt.textContent = 'Seleccionar archivo...';
-            return;
-        }
-        if (txt) txt.textContent = f.name;
-    } else {
-        if (txt) txt.textContent = 'Seleccionar archivo...';
-    }
+        if (input.files[0].size > 5*1024*1024) { mostrarError('El archivo supera los 5 MB.'); input.value=''; if(txt) txt.textContent='Seleccionar...'; return; }
+        if (txt) txt.textContent = input.files[0].name;
+    } else { if(txt) txt.textContent='Seleccionar...'; }
 }
- 
-/* ══════════════════════════════════════
-   MODAL — ERROR / LOADING
-══════════════════════════════════════ */
-function mostrarError(msg) {
-    const el = document.getElementById('modal-error');
-    if (el) { el.textContent = msg; el.style.display = 'block'; }
+
+/* ── ERROR/LOADING ── */
+function mostrarError(msg) { const el=document.getElementById('modal-error'); if(el){el.textContent=msg;el.style.display='block';} }
+function ocultarError()    { const el=document.getElementById('modal-error'); if(el) el.style.display='none'; }
+function setLoading(on) {
+    document.getElementById('modal-btn-txt').style.display     = on ? 'none'        : 'inline-flex';
+    document.getElementById('modal-btn-loading').style.display = on ? 'inline-flex' : 'none';
+    document.getElementById('modal-btn-confirmar').disabled = on;
+    document.getElementById('modal-btn-cancelar').disabled  = on;
 }
-function ocultarError() {
-    const el = document.getElementById('modal-error');
-    if (el) el.style.display = 'none';
-}
-function setLoading(loading) {
-    const btnTxt  = document.getElementById('modal-btn-txt');
-    const btnLoad = document.getElementById('modal-btn-loading');
-    const btnConf = document.getElementById('modal-btn-confirmar');
-    const btnCanc = document.getElementById('modal-btn-cancelar');
-    if (btnTxt)  btnTxt.style.display  = loading ? 'none'  : 'inline-flex';
-    if (btnLoad) btnLoad.style.display = loading ? 'inline-flex' : 'none';
-    if (btnConf) btnConf.disabled = loading;
-    if (btnCanc) btnCanc.disabled = loading;
-}
- 
-/* ══════════════════════════════════════
-   MODAL — EJECUTAR PAGO (AJAX)
-══════════════════════════════════════ */
+
+/* ── EJECUTAR PAGO ── */
 async function ejecutarPagoCompleto() {
     ocultarError();
- 
-    // Validar campos si es tab "pago"
     if (tabActual === 'pago') {
         const metodo = document.getElementById('modal-metodo')?.value;
         const monto  = parseFloat(document.getElementById('modal-monto')?.value || 0);
         if (!metodo) { mostrarError('Selecciona un método de pago.'); return; }
         if (!monto || monto <= 0) { mostrarError('Ingresa un monto válido mayor a 0.'); return; }
     }
- 
     setLoading(true);
- 
     try {
-        const formData = new FormData();
-        formData.append('_token', CSRF_TOKEN);
-        formData.append('solo_estado', tabActual === 'solo' ? '1' : '0');
- 
+        const fd = new FormData();
+        fd.append('_token', CSRF_TOKEN);
+        fd.append('solo_estado', tabActual === 'solo' ? '1' : '0');
         if (tabActual === 'pago') {
-            const metodo    = document.getElementById('modal-metodo').value;
-            const monto     = document.getElementById('modal-monto').value;
-            const operacion = document.getElementById('modal-operacion')?.value || '';
-            const baucher   = document.getElementById('modal-baucher')?.files[0];
- 
-            formData.append('metodo_pago',      metodo);
-            formData.append('monto',            monto);
-            formData.append('numero_operacion', operacion);
-            if (baucher) formData.append('archivo_baucher', baucher);
+            fd.append('metodo_pago',      document.getElementById('modal-metodo').value);
+            fd.append('monto',            document.getElementById('modal-monto').value);
+            fd.append('numero_operacion', document.getElementById('modal-operacion')?.value || '');
+            const baucher = document.getElementById('modal-baucher')?.files[0];
+            if (baucher) fd.append('archivo_baucher', baucher);
         }
- 
-        const resp = await fetch(PAGO_URL, { method: 'POST', body: formData });
+        const resp = await fetch(PAGO_URL, { method:'POST', body:fd });
         const data = await resp.json();
- 
-        if (!data.ok) {
-            mostrarError(data.message || 'Ocurrió un error. Intenta de nuevo.');
-            setLoading(false);
-            return;
-        }
- 
-        // ── ÉXITO: animar barra y actualizar UI ──
-        animarBarraAlCien();
+        if (!data.ok) { mostrarError(data.message || 'Error al guardar.'); setLoading(false); return; }
+
+        // Animar barra
+        const bar   = document.getElementById('pago-progress-bar');
+        const label = document.getElementById('pago-pct-label');
+        if (bar)   { bar.style.width='100%'; bar.style.background='var(--green)'; }
+        if (label) { label.textContent='100%'; label.style.color='var(--green)'; }
+        document.getElementById('pagado-label').textContent = 'S/ ' + PRECIO_TOTAL.toFixed(2);
+        document.getElementById('saldo-label').textContent  = 'S/ 0.00';
+        document.getElementById('saldo-label').style.color  = 'var(--green)';
+
         cerrarModal();
-        mostrarBannerExito(data.message || 'Pago completado correctamente.');
-        ocultarBannerSaldo();
- 
-        // Actualizar labels de la barra
-        pagadoActual = data.monto_pagado || PRECIO_TOTAL;
-        const labelPagado = document.getElementById('pagado-label');
-        const labelSaldo  = document.getElementById('saldo-label');
-        if (labelPagado) labelPagado.textContent = 'S/ ' + pagadoActual.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
-        if (labelSaldo)  { labelSaldo.textContent = 'S/ 0.00'; labelSaldo.style.color = 'var(--green)'; }
- 
-        // Recargar después de 1.8s para mostrar el historial actualizado
-        setTimeout(() => window.location.reload(), 1800);
- 
-    } catch (err) {
-        mostrarError('Error de conexión. Verifica tu internet e intenta de nuevo.');
+
+        // Toast
+        const t = document.createElement('div');
+        t.style.cssText = 'position:fixed;top:1rem;left:50%;transform:translateX(-50%);background:var(--green);color:white;padding:.7rem 1.4rem;border-radius:12px;font-size:.86rem;font-weight:700;z-index:99999;box-shadow:0 4px 20px rgba(5,150,105,.4);white-space:nowrap;';
+        t.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> ' + (data.message || 'Pago completado');
+        document.body.appendChild(t);
+        setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity .3s'; }, 1400);
+        setTimeout(() => { t.remove(); window.location.reload(); }, 1800);
+
+    } catch(e) {
+        mostrarError('Error de conexión. Intenta de nuevo.');
         setLoading(false);
     }
-}
- 
-/* ══════════════════════════════════════
-   ANIMACIONES POST-PAGO
-══════════════════════════════════════ */
-function animarBarraAlCien() {
-    const bar   = document.getElementById('pago-progress-bar');
-    const label = document.getElementById('pago-pct-label');
- 
-    if (bar) {
-        bar.style.transition = 'width .8s cubic-bezier(.4,0,.2,1)';
-        bar.style.width      = '100%';
-        bar.style.background = 'var(--green)';
-    }
-    if (label) {
-        // Animar el número del 0 al 100 progresivamente
-        let current = {{ $pct }};
-        const target  = 100;
-        const step    = (target - current) / 40; // 40 frames
-        const timer   = setInterval(() => {
-            current = Math.min(current + step, target);
-            label.textContent = Math.round(current) + '%';
-            label.style.color = 'var(--green)';
-            if (current >= target) clearInterval(timer);
-        }, 20);
-    }
-}
- 
-function mostrarBannerExito(msg) {
-    // Crear banner de éxito temporal en la parte superior
-    const banner = document.createElement('div');
-    banner.style.cssText = `
-        position:fixed;top:1rem;left:50%;transform:translateX(-50%);
-        background:var(--green);color:white;
-        padding:.75rem 1.5rem;border-radius:12px;
-        font-size:.88rem;font-weight:700;
-        box-shadow:0 4px 20px rgba(5,150,105,.4);
-        z-index:99999;display:flex;align-items:center;gap:.5rem;
-        animation:slideDown .3s ease;
-    `;
-    banner.innerHTML = '<i class="bi bi-check-circle-fill"></i> ' + msg;
-    document.body.appendChild(banner);
- 
-    // Agregar animación CSS si no existe
-    if (!document.getElementById('banner-anim-style')) {
-        const s = document.createElement('style');
-        s.id = 'banner-anim-style';
-        s.textContent = '@keyframes slideDown{from{opacity:0;transform:translateX(-50%) translateY(-10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}';
-        document.head.appendChild(s);
-    }
- 
-    setTimeout(() => { banner.style.opacity = '0'; banner.style.transition = 'opacity .4s'; }, 1400);
-    setTimeout(() => banner.remove(), 1800);
-}
- 
-function ocultarBannerSaldo() {
-    // Ocultar el banner inferior "Saldo pendiente / Marcar como pagado"
-    const banner = document.querySelector('[style*="var(--blue-l)"]');
-    // Buscar más específico: el div con el botón "Marcar como pagado al 100%"
-    document.querySelectorAll('.btn-completar').forEach(btn => {
-        const parent = btn.closest('div');
-        if (parent) {
-            parent.style.transition = 'opacity .4s';
-            parent.style.opacity = '0';
-            setTimeout(() => parent.style.display = 'none', 400);
-        }
-    });
 }
 </script>
 @endpush

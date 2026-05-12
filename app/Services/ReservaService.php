@@ -427,6 +427,14 @@ class ReservaService
     // ══════════════════════════════════════════════════════════════════
     private function guardarSaludTitular(Pasajero $pasajero, array $datos): void
     {
+    \Log::info('DEBUG salud titular', [
+    'tiene_alergias'   => $datos['titular_tiene_alergias'] ?? 'NO VIENE',
+    'alergias_detalle' => $datos['titular_alergias_detalle'] ?? 'NO VIENE',
+    'seguro'           => $datos['titular_seguro_salud'] ?? 'NO VIENE',
+    'discapacidades'   => $datos['titular_discapacidades'] ?? 'NO VIENE',
+    'restricciones'    => $datos['titular_restricciones'] ?? 'NO VIENE',
+    'obs_medicas'      => $datos['titular_obs_medicas'] ?? 'NO VIENE',
+    ]);
         $tieneAlergias      = ($datos['titular_tiene_alergias'] ?? 'no') === 'si';
         $tieneRestricciones = !empty(trim($datos['titular_restricciones']  ?? ''));
         $tieneObsMedicas    = !empty(trim($datos['titular_obs_medicas']    ?? ''));

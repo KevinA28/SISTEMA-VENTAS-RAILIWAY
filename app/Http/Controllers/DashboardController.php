@@ -4,23 +4,22 @@ namespace App\Http\Controllers;
 use App\Models\Reserva;
 use App\Models\Cliente;
 use App\Models\EstadoReserva;
-use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        // KPIs
-        $reservasHoy    = Reserva::whereDate('created_at', today())->count();
-        $confirmadas    = Reserva::whereHas('estado', fn($q) => $q->where('nombre', 'confirmada'))
-                            ->whereMonth('created_at', now()->month)->count();
-        $totalClientes  = Cliente::count();
+        $reservasHoy = Reserva::whereDate('created_at', today())->count();
 
-        // Últimas 8 reservas
+        $pagadas = Reserva::whereHas('estado', fn($q) => $q->where('nombre', 'pagado'))
+            ->whereMonth('created_at', now()->month)
+            ->count();
+
+        $totalClientes = Cliente::count();
+
         $ultimasReservas = Reserva::with(['cliente', 'estado', 'fechaTour.tour'])
-                            ->latest()->limit(8)->get();
+            ->latest()->limit(8)->get();
 
-        // Resumen por estado
         $estadosResumen = EstadoReserva::withCount('reservas')
             ->get()
             ->map(fn($e) => [
@@ -39,7 +38,7 @@ class DashboardController extends Controller
             ]);
 
         return view('dashboard', compact(
-            'reservasHoy', 'confirmadas', 'totalClientes',
+            'reservasHoy', 'pagadas', 'totalClientes',
             'ultimasReservas', 'estadosResumen'
         ));
     }

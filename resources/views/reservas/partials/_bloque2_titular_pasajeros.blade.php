@@ -15,6 +15,14 @@
             <p>Datos personales, contacto, salud y grupo de viaje</p>
         </div>
     </div>
+    {{-- Campos hidden para garantizar que salud del titular siempre se envía --}}
+    <input type="hidden" name="titular_tiene_alergias"   id="hid_titular_tiene_alergias"   value="{{ old('titular_tiene_alergias', 'no') }}">
+    <input type="hidden" name="titular_alergias_detalle" id="hid_titular_alergias_detalle" value="{{ old('titular_alergias_detalle') }}">
+    <input type="hidden" name="titular_restricciones"    id="hid_titular_restricciones"    value="{{ old('titular_restricciones') }}">
+    <input type="hidden" name="titular_obs_medicas"      id="hid_titular_obs_medicas"      value="{{ old('titular_obs_medicas') }}">
+    <input type="hidden" name="titular_discapacidades"   id="hid_titular_discapacidades"   value="{{ old('titular_discapacidades') }}">
+    <input type="hidden" name="titular_discapacidad_otro" id="hid_titular_discapacidad_otro" value="{{ old('titular_discapacidad_otro') }}">
+    <input type="hidden" name="titular_seguro_salud"     id="hid_titular_seguro_salud"     value="{{ old('titular_seguro_salud') }}">
     <div class="fb-body">
         <input type="hidden" name="cliente_id" id="cliente_id" value="{{ old('cliente_id') }}">
 
@@ -340,9 +348,9 @@
                             <button type="button" class="yn-btn yn-si"
                                     data-target="titular-alerg-det" onclick="togYN(this)">Sí</button>
                         </div>
-                        <input type="hidden" name="titular_tiene_alergias" id="titular_tiene_alergias" value="no">
+                        <input type="hidden" id="titular_tiene_alergias" value="no">
                         <div id="titular-alerg-det" style="display:none;margin-top:.4rem">
-                            <textarea name="titular_alergias_detalle" class="fi" rows="2"
+                            <textarea id="titular_alergias_detalle_input" class="fi" rows="2"
                                       placeholder="Medicamentos, alimentos, materiales...">{{ old('titular_alergias_detalle') }}</textarea>
                         </div>
                     </div>
@@ -356,7 +364,7 @@
                                     data-target="titular-rest-det" onclick="togYN(this)">Sí</button>
                         </div>
                         <div id="titular-rest-det" style="display:none;margin-top:.4rem">
-                            <textarea name="titular_restricciones" class="fi" rows="2"
+                            <textarea id="titular_restricciones_input" class="fi" rows="2"
                                       placeholder="Sin gluten, vegano, sin lactosa...">{{ old('titular_restricciones') }}</textarea>
                         </div>
                     </div>
@@ -379,7 +387,7 @@
                                 <span class="discap-chip" data-val="psicosocial"    onclick="togDiscap(this)">Psicosocial</span>
                                 <span class="discap-chip" data-val="otro"           onclick="togDiscap(this)">Otro</span>
                             </div>
-                            <input type="hidden" name="titular_discapacidades"
+                            <input type="hidden" id="titular_discapacidades_input"
                                    value="{{ old('titular_discapacidades') }}">
                             <input type="text" class="fi discap-otro"
                                    name="titular_discapacidad_otro"
@@ -397,7 +405,7 @@
                                     data-target="titular-obs-det" onclick="togYN(this)">Sí</button>
                         </div>
                         <div id="titular-obs-det" style="display:none;margin-top:.4rem">
-                            <textarea name="titular_obs_medicas" class="fi" rows="2"
+                            <textarea id="titular_obs_medicas_input" class="fi" rows="2"
                                       placeholder="Condiciones crónicas, medicamentos habituales...">{{ old('titular_obs_medicas') }}</textarea>
                         </div>
                     </div>
@@ -552,7 +560,7 @@ document.addEventListener('click', e => {
     }
 });
 
-/* Si / No toggle — actualiza también el hidden de tiene_alergias */
+/* Si / No toggle */
 function togYN(btn) {
     const grp = btn.closest('.yn-grp');
     grp?.querySelectorAll('.yn-btn').forEach(b => b.classList.remove('active'));
@@ -562,12 +570,10 @@ function togYN(btn) {
     if (det) det.style.display = isSi ? 'block' : 'none';
     if (!isSi && det) det.querySelectorAll('textarea,input[type="text"]').forEach(t => t.value = '');
 
-    // Actualizar hidden tiene_alergias del titular
     if (btn.dataset.target === 'titular-alerg-det') {
-        const hid = document.getElementById('titular_tiene_alergias');
-        if (hid) hid.value = isSi ? 'si' : 'no';
-    }
-    // Para pasajeros el hidden se maneja en el template de addPax()
+    const hid = document.getElementById('titular_tiene_alergias');
+    if (hid) hid.value = isSi ? 'si' : 'no';
+     }
 }
 
 /* Discapacidad chips */
@@ -582,6 +588,33 @@ function togDiscap(chip) {
     if (otro) otro.style.display = vals.includes('otro') ? 'block' : 'none';
 }
 
+/* ══════════════════════════════════════════════
+   SINCRONIZAR SALUD A HIDDENS ANTES DEL SUBMIT
+   Se registra UNA sola vez en DOMContentLoaded
+══════════════════════════════════════════════ */
+function sincronizarSaludHiddens() {
+    const seguro = document.getElementById('titular_seguro_salud');
+    if (seguro) document.getElementById('hid_titular_seguro_salud').value = seguro.value;
+
+    const tieneAlerg = document.getElementById('titular_tiene_alergias');
+    if (tieneAlerg) document.getElementById('hid_titular_tiene_alergias').value = tieneAlerg.value;
+
+    const detAlerg = document.getElementById('titular_alergias_detalle_input');
+    if (detAlerg) document.getElementById('hid_titular_alergias_detalle').value = detAlerg.value;
+
+    const rest = document.getElementById('titular_restricciones_input');
+    if (rest) document.getElementById('hid_titular_restricciones').value = rest.value;
+
+    const obs = document.getElementById('titular_obs_medicas_input');
+    if (obs) document.getElementById('hid_titular_obs_medicas').value = obs.value;
+
+    const discap = document.getElementById('titular_discapacidades_input');
+    if (discap) document.getElementById('hid_titular_discapacidades').value = discap.value;
+
+    const discapOtro = document.getElementById('titular_discapacidad_otro_input');
+    if (discapOtro) document.getElementById('hid_titular_discapacidad_otro').value = discapOtro.value;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     onTitularChange();
 
@@ -589,9 +622,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const discapOld = document.querySelector('[name="titular_discapacidades"]')?.value || '';
     if (discapOld) {
         discapOld.split(',').filter(Boolean).forEach(val => {
-            const chip = document.querySelector(
-                `#titular-discap-det .discap-chip[data-val="${val}"]`
-            );
+            const chip = document.querySelector(`#titular-discap-det .discap-chip[data-val="${val}"]`);
             if (chip) chip.classList.add('sel');
         });
         const otro = document.querySelector('[name="titular_discapacidad_otro"]');
@@ -619,5 +650,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // Registrar listener del submit UNA sola vez aquí
+    document.getElementById('form-reserva')?.addEventListener('submit', sincronizarSaludHiddens, true);
 });
 </script>
