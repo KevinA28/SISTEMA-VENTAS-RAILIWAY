@@ -244,78 +244,98 @@ class ReservaController extends Controller
     // ── REPORTE SALUD PDF ─────────────────────────────────────────────
     public function reporteSalud(Request $request)
     {
-        $request->validate([
-            'fecha'        => 'required|date',
-            'tour'         => 'nullable|string|max:200',
-            'solo_alertas' => 'nullable|in:0,1',
-        ]);
+      $request->validate([
+        'fecha'        => 'required|date',
+        'tour'         => 'nullable|string|max:200',
+        'solo_alertas' => 'nullable|in:0,1',
+    ]);
 
-        $fecha       = $request->fecha;
-        $tourFiltro  = $request->tour ?? null;
-        $soloAlertas = $request->boolean('solo_alertas', false);
+    $fecha       = $request->fecha;
+    $tourFiltro  = $request->tour ?? null;
+    $soloAlertas = $request->boolean('solo_alertas', false);
 
-        $query = Reserva::with(['cliente', 'estado', 'pasajeros.salud'])
-            ->whereDate('fecha_tour', $fecha)
-            ->whereHas('estado', fn($q) => $q->whereNotIn('nombre', ['cancelada']))
-            ->orderBy('hora_salida');
+    // ✅ Agregar fechaTour.tour al eager load para el fallback de nombre
+    $query = Reserva::with(['cliente', 'estado', 'pasajeros.salud', 'fechaTour.tour'])
+        ->where(function ($q) use ($fecha) {
+            // ✅ Buscar por campo directo O por la relación fechaTour
+            $q->whereDate('fecha_tour', $fecha)
+              ->orWhereHas('fechaTour', fn($fq) => $fq->whereDate('fecha', $fecha));
+        })
+        ->whereHas('estado', fn($q) => $q->whereNotIn('nombre', ['cancelada']))
+        ->orderBy('hora_recojo'); // ✅ Usar hora_recojo (campo real del modelo)
 
-        if ($tourFiltro) {
-            $query->where('nombre_tour', 'like', '%' . $tourFiltro . '%');
-        }
-
-        $reservas = $query->get();
-
-        if ($soloAlertas) {
-            $reservas = $reservas->filter(function ($reserva) {
-                $tieneAlertaTitular = $reserva->alergias_titular
-                    || $reserva->restricciones_alimentarias_titular
-                    || $reserva->titular_obs_medicas;
-
-                $tieneAlertaPasajero = $reserva->pasajeros->filter(fn($p) =>
-                    $p->salud && (
-                        $p->salud->alergias
-                        || $p->salud->restricciones_alimentarias
-                        || $p->salud->condiciones_medicas
-                    )
-                )->isNotEmpty();
-
-                return $tieneAlertaTitular || $tieneAlertaPasajero;
-            });
-        }
-
-        $totalPasajeros = $reservas->sum(fn($r) => $r->pasajeros->count());
-
-        $conAlertas = $reservas->sum(fn($r) => $r->pasajeros->filter(function ($p) use ($r) {
-            $tieneAlerta = $p->salud && (
-                $p->salud->alergias
-                || $p->salud->restricciones_alimentarias
-                || $p->salud->condiciones_medicas
-            );
-            if ($p->es_titular) {
-                $tieneAlerta = $tieneAlerta
-                    || $r->alergias_titular
-                    || $r->restricciones_alimentarias_titular
-                    || $r->titular_obs_medicas;
-            }
-            return $tieneAlerta;
-        })->count());
-
-        $pdfOutput = app(\App\Services\Integrations\PdfService::class)
-            ->generarReporteSalud(
-                $reservas,
-                $fecha,
-                $tourFiltro,
-                $soloAlertas,
-                $totalPasajeros,
-                $conAlertas
-            );
-
-        return response()->streamDownload(
-            fn() => print($pdfOutput),
-            'reporte-salud-' . $fecha . '.pdf',
-            ['Content-Type' => 'application/pdf']
-        );
+    if ($tourFiltro) {
+        $query->where(function ($q) use ($tourFiltro) {
+            $q->where('nombre_tour', 'like', '%' . $tourFiltro . '%')
+              ->orWhereHas('fechaTour.tour', fn($tq) =>
+                  $tq->where('nombre', 'like', '%' . $tourFiltro . '%')
+              );
+        });
     }
+
+    $reservas = $query->get();
+
+    // ✅ Asegurar que nombre_tour tenga valor para la vista
+    $reservas->each(function ($reserva) {
+        if (empty($reserva->nombre_tour) && $reserva->fechaTour?->tour) {
+            $reserva->nombre_tour = $reserva->fechaTour->tour->nombre;
+        }
+    });
+
+    if ($soloAlertas) {
+        $reservas = $reservas->filter(function ($reserva) {
+            $tieneAlertaTitular = $reserva->alergias_titular
+                || $reserva->restricciones_alimentarias_titular
+                || $reserva->titular_obs_medicas;
+
+            $tieneAlertaPasajero = $reserva->pasajeros->contains(fn($p) =>
+                $p->salud && (
+                    $p->salud->alergias
+                    || $p->salud->restricciones_alimentarias
+                    || $p->salud->condiciones_medicas
+                )
+            );
+
+            return $tieneAlertaTitular || $tieneAlertaPasajero;
+        });
+    }
+
+    $totalPasajeros = $reservas->sum(fn($r) => $r->pasajeros->count());
+
+    $conAlertas = $reservas->sum(fn($r) => $r->pasajeros->filter(function ($p) use ($r) {
+    $salud = $p->salud;
+    $tieneAlerta = $salud && (
+        $salud->alergias
+        || $salud->restricciones_alimentarias
+        || $salud->condiciones_medicas
+        || $salud->discapacidades
+        || $salud->seguro_salud
+    );
+    if ($p->es_titular) {
+        $tieneAlerta = $tieneAlerta
+            || $r->alergias_titular
+            || $r->restricciones_alimentarias_titular
+            || $r->titular_obs_medicas;
+    }
+    return $tieneAlerta;
+})->count());
+
+    $pdfOutput = app(\App\Services\Integrations\PdfService::class)
+        ->generarReporteSalud(
+            $reservas,
+            $fecha,
+            $tourFiltro,
+            $soloAlertas,
+            $totalPasajeros,
+            $conAlertas
+        );
+
+    return response()->streamDownload(
+        fn() => print($pdfOutput),
+        'reporte-salud-' . $fecha . '.pdf',
+        ['Content-Type' => 'application/pdf']
+    );
+}
 
     // ── REENVIAR NOTIFICACIÓN ─────────────────────────────────────────
     public function reenviarNotificacion(Request $request, Reserva $reserva)

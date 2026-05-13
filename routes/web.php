@@ -9,7 +9,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     if (auth()->check()) {
-        return redirect()->route('dashboard');
+        return redirect()->route('dashboard');Route::get('reservas/exportar/excel', [ReservaController::class, 'exportar'])
+         ->name('reservas.exportar');
     }
     return redirect()->route('login');
 });
@@ -23,6 +24,7 @@ Route::middleware('auth')->group(function () {
     // para que no colisione con {reserva} de show/edit
     Route::get('reservas/exportar/excel', [ReservaController::class, 'exportar'])
          ->name('reservas.exportar');
+    Route::get('/reservas/reporte-salud', [ReservaController::class, 'reporteSalud']) ->name('reservas.reporteSalud');
 
     Route::resource('reservas', ReservaController::class);
 
@@ -42,7 +44,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile',    [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile',  [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    Route::get('/reservas/reporte-salud', [ReservaController::class, 'reporteSalud']) ->name('reservas.reporteSalud');
+    
 });
 
 Route::get('/api/buscar-dni/{dni}', [ClienteController::class, 'buscarDni']);
