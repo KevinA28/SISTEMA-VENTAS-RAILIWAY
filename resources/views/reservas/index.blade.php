@@ -61,7 +61,7 @@ body { font-family:'DM Sans',sans-serif; }
     display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;
 }
 
-.search-wrap { position:relative;flex:1;min-width:220px; }
+.search-wrap { position:relative;flex:1;min-width:200px; }
 .search-ico {
     position:absolute;left:11px;top:50%;transform:translateY(-50%);
     color:var(--ink-4);font-size:.85rem;pointer-events:none;transition:color .15s;
@@ -235,7 +235,8 @@ body { font-family:'DM Sans',sans-serif; }
 
 .pag-footer {
     padding:.875rem 1.25rem;border-top:1px solid var(--line);
-    display:flex;justify-content:space-between;align-items:center;background:var(--line-2);
+    display:flex;justify-content:space-between;align-items:center;
+    flex-wrap:wrap;gap:.5rem;background:var(--line-2);
 }
 .pag-info { font-size:.78rem;color:var(--ink-4); }
 
@@ -251,6 +252,7 @@ body { font-family:'DM Sans',sans-serif; }
     width:100%;
     box-shadow:0 20px 60px rgba(0,0,0,.2);margin:1rem;
     animation:mSlide .2s ease;
+    max-height:90vh;overflow-y:auto;
 }
 @keyframes mSlide { from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1} }
 .modal-title { font-size:1rem;font-weight:700;color:var(--ink);margin-bottom:.25rem; }
@@ -263,7 +265,7 @@ body { font-family:'DM Sans',sans-serif; }
 }
 .modal-resumen .mr-lbl { color:var(--ink-4);font-size:.75rem; }
 .modal-resumen .mr-val { font-family:'DM Mono',monospace;font-weight:700;color:var(--green); }
-.modal-footer { display:flex;gap:.6rem;justify-content:flex-end;margin-top:1rem; }
+.modal-footer { display:flex;gap:.6rem;justify-content:flex-end;margin-top:1rem;flex-wrap:wrap; }
 .modal-btn-cancel {
     padding:8px 18px;border-radius:9px;font-size:.84rem;font-weight:600;
     background:var(--line-2);color:var(--ink-3);border:1.5px solid var(--line);
@@ -369,11 +371,39 @@ body { font-family:'DM Sans',sans-serif; }
 .flatpickr-day.selected,.flatpickr-day.selected:hover { background:var(--blue)!important;border-color:var(--blue)!important; }
 .flatpickr-day:hover { background:var(--blue-l)!important; }
 
-@media(max-width:640px){
-    .cards-grid { grid-template-columns:1fr; }
-    .filtros-card { flex-direction:column;align-items:stretch; }
-    .estado-btns { justify-content:flex-start; }
+/* ── RESPONSIVE ── */
+@media(max-width:640px) {
+    /* Top bar */
+    .page-topbar { gap:.75rem; }
+    .page-topbar > div:last-child { width:100%; }
+    .page-topbar > div:last-child .btn-reportes,
+    .page-topbar > div:last-child .btn-pdf-salud { flex:1;justify-content:center; }
+
+    /* Filtros */
+    .filtros-card { flex-direction:column;align-items:stretch;padding:.875rem 1rem; }
     .filtros-divider { display:none; }
+    .f-ctrl { width:100%; }
+    .date-wrap { flex:1; }
+    .input-date { width:100% !important;box-sizing:border-box; }
+
+    /* Botones estado */
+    .estado-btns { gap:.3rem; }
+    .btn-estado { font-size:.74rem;padding:6px 11px; }
+
+    /* Grid tarjetas */
+    .cards-grid { grid-template-columns:1fr;padding:1rem; }
+
+    /* Modal panel pago — 1 col en móvil */
+    #panel-pago > div { grid-template-columns:1fr !important; }
+
+    /* Paginación */
+    .pag-footer { flex-direction:column;align-items:flex-start; }
+}
+
+@media(max-width:480px) {
+    .page-topbar .page-title { font-size:1.1rem; }
+    .modal-box { padding:1.25rem;margin:.5rem; }
+    .modal-tab { font-size:.72rem;padding:.4rem .4rem; }
 }
 </style>
 @endpush
@@ -388,7 +418,6 @@ body { font-family:'DM Sans',sans-serif; }
         </div>
         <div class="page-subtitle">Gestiona y monitorea todas las reservas</div>
     </div>
-    {{-- Botones de reporte --}}
     <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
         <button type="button" class="btn-reportes" onclick="abrirModalExcel()" title="Exportar reservas a Excel con filtros">
             <i class="bi bi-file-earmark-excel-fill"></i> Exportar Excel
@@ -427,7 +456,6 @@ body { font-family:'DM Sans',sans-serif; }
             <option value="referido"       {{ request('canal')=='referido'       ?'selected':'' }}>Referido</option>
         </select>
 
-        {{-- FECHA DESDE: FIX — flatpickr necesita input de texto, no type=date --}}
         <div class="date-wrap">
             <i class="bi bi-calendar3"></i>
             <input type="text" name="fecha_desde" id="fecha-desde"
@@ -450,7 +478,7 @@ body { font-family:'DM Sans',sans-serif; }
         @endif
     </div>
 
-    {{-- Botones estado ── --}}
+    {{-- Botones estado --}}
     <div style="margin-bottom:1.1rem;">
         <div class="estado-btns">
             <span style="font-size:.78rem;color:var(--ink-4);font-weight:600;margin-right:.2rem;">Estado:</span>
@@ -574,9 +602,7 @@ body { font-family:'DM Sans',sans-serif; }
     </div>
 </div>
 
-{{-- ══════════════════════════════════════════════════════════════
-     MODAL — EXPORTAR EXCEL CON FILTROS
-══════════════════════════════════════════════════════════════ --}}
+{{-- ══ MODAL — EXPORTAR EXCEL ══ --}}
 <div class="modal-overlay" id="modal-excel" onclick="if(event.target===this)cerrarModalExcel()">
     <div class="modal-box" style="max-width:520px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
@@ -589,8 +615,6 @@ body { font-family:'DM Sans',sans-serif; }
                 <i class="bi bi-x-lg"></i>
             </button>
         </div>
-
-        {{-- Estado --}}
         <div class="filtro-grupo">
             <div class="filtro-grupo-title"><i class="bi bi-circle-fill" style="font-size:.5rem;"></i> Estado de la reserva</div>
             <div class="check-group">
@@ -604,8 +628,6 @@ body { font-family:'DM Sans',sans-serif; }
                 @endforeach
             </div>
         </div>
-
-        {{-- Canal --}}
         <div class="filtro-grupo">
             <div class="filtro-grupo-title"><i class="bi bi-broadcast" style="font-size:.65rem;"></i> Canal de contacto</div>
             <div class="check-group">
@@ -618,8 +640,6 @@ body { font-family:'DM Sans',sans-serif; }
                 @endforeach
             </div>
         </div>
-
-        {{-- Rango de fechas --}}
         <div class="filtro-grupo">
             <div class="filtro-grupo-title"><i class="bi bi-calendar3-range" style="font-size:.65rem;"></i> Rango de fechas de registro</div>
             <div style="display:flex;gap:.65rem;align-items:center;flex-wrap:wrap;">
@@ -635,14 +655,11 @@ body { font-family:'DM Sans',sans-serif; }
                            class="input-date" style="width:100%;box-sizing:border-box;" readonly>
                 </div>
                 <button type="button" onclick="limpiarFechasXls()"
-                        style="background:none;border:1.5px solid var(--line);border-radius:8px;padding:7px 10px;cursor:pointer;color:var(--ink-4);font-size:.75rem;white-space:nowrap;"
-                        title="Limpiar fechas">
+                        style="background:none;border:1.5px solid var(--line);border-radius:8px;padding:7px 10px;cursor:pointer;color:var(--ink-4);font-size:.75rem;white-space:nowrap;">
                     <i class="bi bi-x"></i> Limpiar
                 </button>
             </div>
         </div>
-
-        {{-- Búsqueda texto --}}
         <div style="margin-bottom:.75rem;">
             <label class="modal-field-label">Buscar (código, nombre, DNI)</label>
             <div class="search-wrap" style="min-width:unset;">
@@ -650,11 +667,9 @@ body { font-family:'DM Sans',sans-serif; }
                 <input type="text" id="xls-buscar" class="input-search" placeholder="Opcional…" style="padding-left:34px;">
             </div>
         </div>
-
         <div id="xls-preview" style="font-size:.75rem;color:var(--ink-4);margin-bottom:.75rem;padding:.5rem .7rem;background:var(--line-2);border-radius:8px;">
             <i class="bi bi-info-circle"></i> Se exportarán todas las reservas con los filtros seleccionados.
         </div>
-
         <div class="modal-footer">
             <button type="button" class="modal-btn-cancel" onclick="cerrarModalExcel()">Cancelar</button>
             <button type="button" class="modal-btn-confirm" onclick="descargarExcel()">
@@ -664,9 +679,7 @@ body { font-family:'DM Sans',sans-serif; }
     </div>
 </div>
 
-{{-- ══════════════════════════════════════════════════════════════
-     MODAL — REPORTE PDF SALUD POR DÍA DE TOUR
-══════════════════════════════════════════════════════════════ --}}
+{{-- ══ MODAL — REPORTE PDF SALUD ══ --}}
 <div class="modal-overlay" id="modal-salud" onclick="if(event.target===this)cerrarModalSalud()">
     <div class="modal-box" style="max-width:480px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
@@ -679,13 +692,9 @@ body { font-family:'DM Sans',sans-serif; }
                 <i class="bi bi-x-lg"></i>
             </button>
         </div>
-
         <p style="font-size:.82rem;color:var(--ink-3);margin-bottom:1rem;line-height:1.55;">
             Genera un PDF con el listado de pasajeros por reserva para un día de tour específico.
-            Incluye alergias, restricciones alimentarias, condiciones médicas y documentos de identidad.
         </p>
-
-        {{-- Fecha del tour --}}
         <div style="margin-bottom:.875rem;">
             <label class="modal-field-label" for="salud-fecha">
                 Fecha del tour <span style="color:var(--red);">*</span>
@@ -696,8 +705,6 @@ body { font-family:'DM Sans',sans-serif; }
                        class="input-date" style="width:100%;box-sizing:border-box;" readonly>
             </div>
         </div>
-
-        {{-- Nombre del tour (opcional) --}}
         <div style="margin-bottom:.875rem;">
             <label class="modal-field-label" for="salud-tour">
                 Filtrar por nombre de tour <span style="font-weight:400;opacity:.6;">(opcional)</span>
@@ -705,22 +712,17 @@ body { font-family:'DM Sans',sans-serif; }
             <input type="text" id="salud-tour" class="modal-input"
                    placeholder="Ej: Ruta Inca, Tour Amazonas…">
         </div>
-
-        {{-- Solo con alertas médicas --}}
         <div style="margin-bottom:1rem;display:flex;align-items:center;gap:.6rem;">
             <input type="checkbox" id="salud-solo-alertas" style="width:16px;height:16px;cursor:pointer;">
             <label for="salud-solo-alertas" style="font-size:.83rem;color:var(--ink-2);cursor:pointer;font-weight:500;">
                 Incluir solo pasajeros con alertas médicas
             </label>
         </div>
-
         <div id="salud-error" class="modal-error"></div>
-
         <div style="background:var(--red-l);border:1px solid #fca5a5;border-radius:8px;padding:.65rem .875rem;font-size:.76rem;color:#991b1b;margin-bottom:1rem;display:flex;gap:.4rem;">
             <i class="bi bi-shield-lock-fill" style="flex-shrink:0;margin-top:1px;"></i>
             <span>Este reporte contiene información médica sensible. Úsalo solo para operaciones del tour.</span>
         </div>
-
         <div class="modal-footer">
             <button type="button" class="modal-btn-cancel" onclick="cerrarModalSalud()">Cancelar</button>
             <button type="button" class="modal-btn-danger" onclick="descargarPdfSalud()" id="salud-btn">
@@ -730,7 +732,7 @@ body { font-family:'DM Sans',sans-serif; }
     </div>
 </div>
 
-{{-- ══ MODAL COMPLETAR PAGO (sin cambios) ════════════════════════ --}}
+{{-- ══ MODAL COMPLETAR PAGO ══ --}}
 <div class="modal-overlay" id="modal-pago" onclick="if(event.target===this)cerrarModal()">
     <div class="modal-box" style="max-width:460px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.875rem;">
@@ -825,31 +827,20 @@ body { font-family:'DM Sans',sans-serif; }
 <script>
 (function () {
 
-/* ════════════════════════════════════════
-   FLATPICKR — FILTRO PRINCIPAL
-   FIX: onChange dispara submitForm que hace
-   un submit normal del formulario.
-   El problema anterior era que el value del
-   input no se actualizaba antes del submit.
-   Solución: usar onClose en lugar de onChange
-   para asegurar que el valor ya está escrito.
-════════════════════════════════════════ */
 const fpCfg = {
     locale: 'es',
-    dateFormat: 'Y-m-d',        // valor que se envía al servidor
+    dateFormat: 'Y-m-d',
     altInput: true,
-    altFormat: 'd/m/Y',         // lo que ve el usuario
+    altFormat: 'd/m/Y',
     allowInput: false,
     disableMobile: true,
     onClose(selectedDates, dateStr, instance) {
-        // Asegurarse que el input real tiene el valor antes de submit
         instance.input.value = dateStr;
         if (dateStr) instance.input.classList.add('active');
         else instance.input.classList.remove('active');
         submitForm();
     },
     onReady(selectedDates, dateStr, instance) {
-        // Al cargar la página, marcar como activo si ya tiene valor
         if (instance.input.value) instance.input.classList.add('active');
     }
 };
@@ -857,17 +848,12 @@ const fpCfg = {
 flatpickr('#fecha-desde', fpCfg);
 flatpickr('#fecha-hasta', fpCfg);
 
-/* FLATPICKR — MODAL EXCEL */
 const fpXlsCfg = { locale:'es', dateFormat:'Y-m-d', altInput:true, altFormat:'d/m/Y', allowInput:false, disableMobile:true };
 flatpickr('#xls-desde', fpXlsCfg);
 flatpickr('#xls-hasta', fpXlsCfg);
 
-/* FLATPICKR — MODAL SALUD */
 flatpickr('#salud-fecha', { locale:'es', dateFormat:'Y-m-d', altInput:true, altFormat:'d M Y', allowInput:false, disableMobile:true });
 
-/* ════════════════════════════════════════
-   SUBMIT + ESTADO TOGGLE
-════════════════════════════════════════ */
 window.submitForm = function () {
     document.getElementById('form-filtros').submit();
 };
@@ -884,9 +870,6 @@ window.toggleEstado = function (btn) {
     submitForm();
 };
 
-/* ════════════════════════════════════════
-   BÚSQUEDA AJAX
-════════════════════════════════════════ */
 const inputBuscar = document.getElementById('input-buscar');
 const btnClear    = document.getElementById('btn-search-clear');
 const searchWrap  = document.getElementById('search-wrap');
@@ -952,136 +935,81 @@ function doSearch(query) {
     .catch(() => {});
 }
 
-/* ════════════════════════════════════════
-   MODAL EXCEL — ABRIR / CERRAR
-════════════════════════════════════════ */
 window.abrirModalExcel = function () {
-    // Pre-llenar con los filtros actuales de la página
     const urlParams = new URLSearchParams(window.location.search);
-    const buscarActual = urlParams.get('buscar') || '';
-    const desdeActual  = urlParams.get('fecha_desde') || '';
-    const hastaActual  = urlParams.get('fecha_hasta') || '';
-
-    document.getElementById('xls-buscar').value = buscarActual;
-
-    // Setear fechas en flatpickr si existen
+    document.getElementById('xls-buscar').value = urlParams.get('buscar') || '';
     const fpDesde = document.getElementById('xls-desde')._flatpickr;
     const fpHasta = document.getElementById('xls-hasta')._flatpickr;
-    if (fpDesde && desdeActual) fpDesde.setDate(desdeActual);
-    if (fpHasta && hastaActual) fpHasta.setDate(hastaActual);
-
+    if (fpDesde && urlParams.get('fecha_desde')) fpDesde.setDate(urlParams.get('fecha_desde'));
+    if (fpHasta && urlParams.get('fecha_hasta')) fpHasta.setDate(urlParams.get('fecha_hasta'));
     document.getElementById('modal-excel').classList.add('open');
     document.body.style.overflow = 'hidden';
 };
-
 window.cerrarModalExcel = function () {
     document.getElementById('modal-excel').classList.remove('open');
     document.body.style.overflow = '';
 };
-
 window.toggleTodos = function (cb) {
     document.querySelectorAll('.xls-estado').forEach(c => c.checked = cb.checked);
 };
-
 window.toggleTodosCanal = function (cb) {
     document.querySelectorAll('.xls-canal').forEach(c => c.checked = cb.checked);
 };
-
 window.limpiarFechasXls = function () {
     const fpDesde = document.getElementById('xls-desde')._flatpickr;
     const fpHasta = document.getElementById('xls-hasta')._flatpickr;
     if (fpDesde) fpDesde.clear();
     if (fpHasta) fpHasta.clear();
 };
-
 window.descargarExcel = function () {
     const params = new URLSearchParams();
-
-    // Estados seleccionados
     const estados = [...document.querySelectorAll('.xls-estado:checked')].map(c => c.value);
-    // Si no hay ninguno seleccionado o están todos, no mandar filtro de estado
     const todosEstados = document.querySelectorAll('.xls-estado').length;
-    if (estados.length > 0 && estados.length < todosEstados) {
-        // Manda el primero seleccionado (el export actual solo soporta 1 estado)
-        // Si quieres múltiples, ajusta ReservasExport
-        params.set('estados', estados.join(','));
-    }
-
-    // Canales seleccionados
+    if (estados.length > 0 && estados.length < todosEstados) params.set('estados', estados.join(','));
     const canales = [...document.querySelectorAll('.xls-canal:checked')].map(c => c.value);
     const todosCanales = document.querySelectorAll('.xls-canal').length;
-    if (canales.length > 0 && canales.length < todosCanales) {
-        params.set('canales', canales.join(','));
-    }
-
-    // Fechas
+    if (canales.length > 0 && canales.length < todosCanales) params.set('canales', canales.join(','));
     const desde = document.getElementById('xls-desde').value;
     const hasta = document.getElementById('xls-hasta').value;
     if (desde) params.set('fecha_desde', desde);
     if (hasta) params.set('fecha_hasta', hasta);
-
-    // Búsqueda
     const buscar = document.getElementById('xls-buscar').value.trim();
     if (buscar) params.set('buscar', buscar);
-
-    const url = "{{ route('reservas.exportar') }}" + '?' + params.toString();
-    window.location.href = url;
+    window.location.href = "{{ route('reservas.exportar') }}" + '?' + params.toString();
     cerrarModalExcel();
 };
 
-/* ════════════════════════════════════════
-   MODAL SALUD — ABRIR / CERRAR
-════════════════════════════════════════ */
 window.abrirModalSalud = function () {
     document.getElementById('salud-error').style.display = 'none';
     document.getElementById('modal-salud').classList.add('open');
     document.body.style.overflow = 'hidden';
 };
-
 window.cerrarModalSalud = function () {
     document.getElementById('modal-salud').classList.remove('open');
     document.body.style.overflow = '';
 };
-
 window.descargarPdfSalud = function () {
     const fecha = document.getElementById('salud-fecha').value;
     const errEl = document.getElementById('salud-error');
-
     if (!fecha) {
         errEl.textContent = 'Selecciona una fecha de tour para generar el reporte.';
         errEl.style.display = 'block';
         return;
     }
     errEl.style.display = 'none';
-
     const params = new URLSearchParams();
     params.set('fecha', fecha);
-
     const tour = document.getElementById('salud-tour').value.trim();
     if (tour) params.set('tour', tour);
-
-    const soloAlertas = document.getElementById('salud-solo-alertas').checked;
-    if (soloAlertas) params.set('solo_alertas', '1');
-
-    const url = "{{ route('reservas.reporteSalud') }}" + '?' + params.toString();
-    window.open(url, '_blank');
+    if (document.getElementById('salud-solo-alertas').checked) params.set('solo_alertas', '1');
+    window.open("{{ route('reservas.reporteSalud') }}" + '?' + params.toString(), '_blank');
     cerrarModalSalud();
 };
 
-/* ════════════════════════════════════════
-   ESC cierra cualquier modal abierto
-════════════════════════════════════════ */
 document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-        cerrarModal();
-        cerrarModalExcel();
-        cerrarModalSalud();
-    }
+    if (e.key === 'Escape') { cerrarModal(); cerrarModalExcel(); cerrarModalSalud(); }
 });
 
-/* ════════════════════════════════════════
-   MODAL COMPLETAR PAGO (sin cambios)
-════════════════════════════════════════ */
 let modalReservaId = null;
 let modalPagoUrl   = null;
 let modalTab       = 'solo';
@@ -1107,12 +1035,10 @@ window.abrirModalPago = function (reservaId, pagoUrl, codigo, total, pagado, sal
     document.getElementById('modal-pago').classList.add('open');
     document.body.style.overflow = 'hidden';
 };
-
 window.cerrarModal = function () {
     document.getElementById('modal-pago').classList.remove('open');
     document.body.style.overflow = '';
 };
-
 window.switchTab = function (tab) {
     modalTab = tab;
     document.getElementById('tab-solo').classList.toggle('act', tab === 'solo');
@@ -1121,7 +1047,6 @@ window.switchTab = function (tab) {
     document.getElementById('panel-pago').style.display = tab === 'pago' ? 'block' : 'none';
     ocultarError();
 };
-
 window.onModalFile = function (input) {
     const txt = document.getElementById('m-upload-txt');
     if (input.files.length && input.files[0].size > 5*1024*1024) {
@@ -1132,7 +1057,6 @@ window.onModalFile = function (input) {
     }
     txt.textContent = input.files.length ? input.files[0].name : 'Seleccionar...';
 };
-
 window.ejecutarPago = async function () {
     ocultarError();
     if (modalTab === 'pago') {
@@ -1174,7 +1098,6 @@ function animarTarjeta(reservaId) {
     if (bar) { bar.style.width = '100%'; bar.style.background = '#059669'; }
     if (pct) { pct.textContent = '100%'; pct.style.color = '#059669'; }
 }
-
 function mostrarToast(msg) {
     const t = document.createElement('div');
     t.style.cssText = `position:fixed;top:1rem;left:50%;transform:translateX(-50%);
@@ -1187,7 +1110,6 @@ function mostrarToast(msg) {
     setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity .3s'; }, 1200);
     setTimeout(() => t.remove(), 1500);
 }
-
 function fmtNum(n) { return parseFloat(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
 function mostrarError(msg) { const el = document.getElementById('m-error'); if(el){el.textContent=msg;el.style.display='block';} }
 function ocultarError()    { const el = document.getElementById('m-error'); if(el) el.style.display='none'; }

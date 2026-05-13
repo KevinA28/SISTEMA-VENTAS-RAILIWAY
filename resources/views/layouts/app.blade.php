@@ -48,6 +48,7 @@
             z-index: 100;
             overflow-y: auto;
             scrollbar-width: none;
+            transition: transform .25s ease;
         }
         .adv-sidebar::-webkit-scrollbar { display: none; }
 
@@ -74,9 +75,7 @@
             letter-spacing: .1em; text-transform: uppercase;
         }
 
-        .sb-section {
-            padding: 1.25rem .75rem .5rem;
-        }
+        .sb-section { padding: 1.25rem .75rem .5rem; }
         .sb-section-label {
             font-size: .6rem; font-weight: 700; letter-spacing: .12em;
             text-transform: uppercase; color: rgba(255,255,255,.25);
@@ -94,11 +93,7 @@
         }
         .sb-link i { font-size: .95rem; width: 18px; text-align: center; flex-shrink: 0; }
         .sb-link:hover { background: rgba(255,255,255,.06); color: rgba(255,255,255,.9); }
-        .sb-link.active {
-            background: rgba(245,158,11,.12);
-            color: var(--amber);
-            font-weight: 600;
-        }
+        .sb-link.active { background: rgba(245,158,11,.12); color: var(--amber); font-weight: 600; }
         .sb-link.active i { color: var(--amber); }
 
         .sb-footer {
@@ -142,6 +137,7 @@
         .topbar-title {
             font-size: .95rem; font-weight: 700; color: var(--ink);
             flex: 1;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         .topbar-title span {
             font-weight: 400; color: var(--ink-4); font-size: .84rem; margin-left: .4rem;
@@ -155,6 +151,7 @@
             font-family: 'Inter', sans-serif;
             cursor: pointer; text-decoration: none;
             transition: all .15s; border: none;
+            white-space: nowrap;
         }
         .tb-btn-primary { background: var(--amber); color: var(--navy); }
         .tb-btn-primary:hover { background: var(--amber-h); color: var(--navy); }
@@ -205,13 +202,81 @@
 
         /* ── MAIN AREA ── */
         .adv-main { flex: 1; padding: 1.5rem; }
+
+        /* ── HAMBURGUESA ── */
+        .sb-toggle {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--ink);
+            font-size: 1.3rem;
+            padding: 4px 6px;
+            border-radius: 6px;
+            transition: background .15s;
+            flex-shrink: 0;
+        }
+        .sb-toggle:hover { background: var(--line); }
+
+        /* ── OVERLAY MÓVIL ── */
+        .sb-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.5);
+            z-index: 99;
+        }
+        .sb-overlay.open { display: block; }
+
+        /* ── MEDIA QUERIES ── */
+        @media (max-width: 768px) {
+            .adv-sidebar {
+                transform: translateX(-100%);
+                z-index: 100;
+            }
+            .adv-sidebar.open {
+                transform: translateX(0);
+            }
+            .adv-content {
+                margin-left: 0 !important;
+            }
+            .sb-toggle {
+                display: flex;
+                align-items: center;
+            }
+            .adv-topbar {
+                padding: 0 1rem;
+                gap: .75rem;
+            }
+            .adv-main {
+                padding: 1rem;
+            }
+            /* Ocultar texto "Nueva Reserva" en móvil, solo icono */
+            .tb-btn-primary .tb-btn-text {
+                display: none;
+            }
+            /* Ocultar nombre de usuario en móvil */
+            .tb-user-name {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .adv-topbar {
+                padding: 0 .75rem;
+                gap: .5rem;
+            }
+        }
     </style>
 </head>
 <body>
 <div class="adv-layout">
 
+    {{-- ══ OVERLAY MÓVIL ══ --}}
+    <div class="sb-overlay" id="sb-overlay" onclick="cerrarSidebar()"></div>
+
     {{-- ══ SIDEBAR ══ --}}
-    <aside class="adv-sidebar">
+    <aside class="adv-sidebar" id="adv-sidebar">
         <a href="{{ route('dashboard') }}" class="sb-brand">
             <div class="sb-brand-icon"><span>ADV</span></div>
             <div class="sb-brand-text">
@@ -220,7 +285,6 @@
             </div>
         </a>
 
-        {{-- Principal: solo Dashboard y Reservas --}}
         <div class="sb-section">
             <div class="sb-section-label">Principal</div>
             <a href="{{ route('dashboard') }}"
@@ -233,7 +297,6 @@
             </a>
         </div>
 
-        {{-- Cuenta: solo Configuración y Cerrar sesión --}}
         <div class="sb-section">
             <div class="sb-section-label">Cuenta</div>
             <a href="{{ route('profile.edit') }}"
@@ -265,15 +328,22 @@
 
         {{-- TOPBAR --}}
         <header class="adv-topbar">
+            {{-- Botón hamburguesa (solo visible en móvil) --}}
+            <button class="sb-toggle" id="sb-toggle" onclick="abrirSidebar()" aria-label="Abrir menú">
+                <i class="bi bi-list"></i>
+            </button>
+
             <div class="topbar-title">
                 @yield('titulo', 'Panel')
                 @hasSection('subtitulo')
                     <span>/ @yield('subtitulo')</span>
                 @endif
             </div>
+
             <div class="topbar-actions">
                 <a href="{{ route('reservas.create') }}" class="tb-btn tb-btn-primary">
-                    <i class="bi bi-plus-lg"></i> Nueva Reserva
+                    <i class="bi bi-plus-lg"></i>
+                    <span class="tb-btn-text">Nueva Reserva</span>
                 </a>
                 <div class="tb-dropdown" id="tb-dropdown">
                     <button class="tb-user-btn" onclick="toggleDropdown()">
@@ -315,6 +385,7 @@
 </div>
 
 <script>
+// ── DROPDOWN USUARIO ──
 function toggleDropdown() {
     document.getElementById('tb-dd-menu').classList.toggle('open');
 }
@@ -324,12 +395,38 @@ document.addEventListener('click', function (e) {
         document.getElementById('tb-dd-menu')?.classList.remove('open');
     }
 });
+
+// ── SIDEBAR MÓVIL ──
+function abrirSidebar() {
+    document.getElementById('adv-sidebar').classList.add('open');
+    document.getElementById('sb-overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+function cerrarSidebar() {
+    document.getElementById('adv-sidebar').classList.remove('open');
+    document.getElementById('sb-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+// Cerrar sidebar al hacer clic en un enlace en móvil
+document.querySelectorAll('#adv-sidebar .sb-link').forEach(link => {
+    link.addEventListener('click', function() {
+        if (window.innerWidth <= 768) cerrarSidebar();
+    });
+});
+
+// Cerrar sidebar al presionar ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') cerrarSidebar();
+});
 </script>
+
 {{-- ── TOAST NOTIFICATIONS ── --}}
 @if(session('success') || session('error') || session('warning'))
 <div id="toast-container" style="
     position: fixed; top: 20px; right: 20px; z-index: 9999;
     display: flex; flex-direction: column; gap: 10px;
+    max-width: calc(100vw - 40px);
 ">
     @if(session('success'))
     <div class="toast-msg toast-success" style="
@@ -339,7 +436,7 @@ document.addEventListener('click', function (e) {
         padding: 12px 16px; border-radius: 10px;
         box-shadow: 0 4px 16px rgba(0,0,0,.1);
         font-size: .85rem; font-weight: 500; color: #15803d;
-        min-width: 300px; max-width: 420px;
+        min-width: 280px; max-width: 420px;
         animation: slideIn .25s ease;
     ">
         <i class="bi bi-check-circle-fill" style="font-size:1.1rem;flex-shrink:0;"></i>
@@ -358,7 +455,7 @@ document.addEventListener('click', function (e) {
         padding: 12px 16px; border-radius: 10px;
         box-shadow: 0 4px 16px rgba(0,0,0,.1);
         font-size: .85rem; font-weight: 500; color: #dc2626;
-        min-width: 300px; max-width: 420px;
+        min-width: 280px; max-width: 420px;
         animation: slideIn .25s ease;
     ">
         <i class="bi bi-exclamation-circle-fill" style="font-size:1.1rem;flex-shrink:0;"></i>
@@ -377,7 +474,7 @@ document.addEventListener('click', function (e) {
         padding: 12px 16px; border-radius: 10px;
         box-shadow: 0 4px 16px rgba(0,0,0,.1);
         font-size: .85rem; font-weight: 500; color: #b45309;
-        min-width: 300px; max-width: 420px;
+        min-width: 280px; max-width: 420px;
         animation: slideIn .25s ease;
     ">
         <i class="bi bi-exclamation-triangle-fill" style="font-size:1.1rem;flex-shrink:0;"></i>
@@ -396,7 +493,6 @@ document.addEventListener('click', function (e) {
 }
 </style>
 <script>
-// Auto-cerrar toasts después de 5 segundos
 setTimeout(() => {
     document.querySelectorAll('.toast-msg').forEach(t => {
         t.style.animation = 'slideIn .25s ease reverse';
@@ -405,6 +501,7 @@ setTimeout(() => {
 }, 5000);
 </script>
 @endif
+
 @stack('scripts')
 </body>
 </html>

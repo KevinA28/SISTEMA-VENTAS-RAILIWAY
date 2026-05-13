@@ -31,13 +31,9 @@
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 
 /* Cards */
-.panel {
-    background: white; border: 1px solid #e2e8f0;
-    border-radius: 12px; overflow: hidden;
-}
+.panel { background: white; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
 .panel-head {
-    padding: .875rem 1.25rem;
-    border-bottom: 1px solid #e2e8f0;
+    padding: .875rem 1.25rem; border-bottom: 1px solid #e2e8f0;
     display: flex; justify-content: space-between; align-items: center;
 }
 .panel-head-title {
@@ -79,7 +75,7 @@
 .acc-item.acc-red     .acc-text .acc-desc  { color: rgba(255,255,255,.45); }
 .acc-arrow { margin-left: auto; font-size: .8rem; }
 
-/* Estados — solo 4 */
+/* Estados */
 .est-list { display: flex; flex-direction: column; gap: .55rem; padding: 1rem 1.25rem; }
 .est-row  { display: flex; align-items: center; gap: .75rem; }
 .est-dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
@@ -141,7 +137,7 @@
     background: linear-gradient(135deg, #0f1f3d 0%, #1e3160 100%);
     border-radius: 12px; padding: 1.5rem 1.75rem;
     display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.5rem; gap: 1rem;
 }
 .welcome h2 { color: white; font-size: 1.25rem; font-weight: 800; margin-bottom: .2rem; }
 .welcome p  { color: rgba(255,255,255,.5); font-size: .82rem; }
@@ -150,14 +146,59 @@
     color: #f59e0b; padding: 6px 14px; border-radius: 999px;
     font-size: .75rem; font-weight: 700;
     display: flex; align-items: center; gap: .35rem;
+    white-space: nowrap; flex-shrink: 0;
 }
 
+/* ── RESPONSIVE ── */
 @media(max-width:900px) {
     .kpi-row { grid-template-columns: repeat(2,1fr); }
     .grid-2  { grid-template-columns: 1fr; }
 }
+@media(max-width:640px) {
+    .welcome {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 1.25rem;
+    }
+    .welcome h2 { font-size: 1.1rem; }
+    .welcome p  { font-size: .78rem; }
+
+    /* Tabla → tarjetas en móvil */
+    .res-tbl thead { display: none; }
+    .res-tbl tbody tr {
+        display: block;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        margin: 0 1rem .75rem;
+        padding: .75rem 1rem;
+        background: white;
+    }
+    .res-tbl tbody td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: .3rem 0;
+        border: none;
+        font-size: .82rem;
+    }
+    .res-tbl tbody td::before {
+        content: attr(data-label);
+        font-size: .67rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #94a3b8;
+        letter-spacing: .06em;
+        flex-shrink: 0;
+        margin-right: .5rem;
+    }
+    .res-tbl tbody td[data-label=""] { justify-content: flex-end; }
+    .res-tbl tbody td[data-label=""]::before { display: none; }
+    .res-tbl tbody tr:last-child { border-bottom: 1px solid #e2e8f0; }
+}
 @media(max-width:480px) {
-    .kpi-row { grid-template-columns: 1fr; }
+    .kpi-row { grid-template-columns: repeat(2,1fr); gap: .75rem; }
+    .kpi { padding: 1rem; }
+    .kpi-value { font-size: 1.6rem; }
 }
 </style>
 @endpush
@@ -225,7 +266,6 @@
         </div>
         <div class="panel-body">
             <div class="acc-list">
-
                 <a href="{{ route('reservas.create') }}" class="acc-item acc-primary">
                     <div class="acc-ico" style="background:rgba(245,158,11,.2);color:#f59e0b;">
                         <i class="bi bi-calendar-plus"></i>
@@ -236,7 +276,6 @@
                     </div>
                     <i class="bi bi-arrow-right acc-arrow" style="color:rgba(255,255,255,.3);"></i>
                 </a>
-
                 <a href="{{ route('reservas.index') }}" class="acc-item">
                     <div class="acc-ico" style="background:#ecfdf5;color:#059669;">
                         <i class="bi bi-list-check"></i>
@@ -247,7 +286,6 @@
                     </div>
                     <i class="bi bi-arrow-right acc-arrow" style="color:#e2e8f0;"></i>
                 </a>
-
                 <button type="button" class="acc-item acc-green" onclick="abrirModalExcelDash()" style="width:100%;text-align:left;cursor:pointer;font-family:inherit;">
                     <div class="acc-ico" style="background:rgba(255,255,255,.15);color:#fff;">
                         <i class="bi bi-file-earmark-excel-fill"></i>
@@ -258,7 +296,6 @@
                     </div>
                     <i class="bi bi-arrow-right acc-arrow" style="color:rgba(255,255,255,.3);"></i>
                 </button>
-
                 <button type="button" class="acc-item acc-red" onclick="abrirModalSaludDash()" style="width:100%;text-align:left;cursor:pointer;font-family:inherit;">
                     <div class="acc-ico" style="background:rgba(255,255,255,.15);color:#fff;">
                         <i class="bi bi-file-earmark-medical-fill"></i>
@@ -269,46 +306,44 @@
                     </div>
                     <i class="bi bi-arrow-right acc-arrow" style="color:rgba(255,255,255,.3);"></i>
                 </button>
-
             </div>
         </div>
     </div>
 
-    {{-- Reservas por estado — solo 4 --}}
-<div class="panel">
-    <div class="panel-head">
-        <div class="panel-head-title">
-            <i class="bi bi-bar-chart-line" style="color:#1d4ed8;"></i>
-            Reservas por estado
+    {{-- Reservas por estado --}}
+    <div class="panel">
+        <div class="panel-head">
+            <div class="panel-head-title">
+                <i class="bi bi-bar-chart-line" style="color:#1d4ed8;"></i>
+                Reservas por estado
+            </div>
         </div>
-    </div>
-    <div class="est-list">
-        @php
-            $estadosFiltrados = collect([
-                ['nombre' => 'pagado',     'label' => 'Pagadas',           'color' => '#15803d'],
-                ['nombre' => 'mitad_pago', 'label' => '50% Pagado',        'color' => '#1d4ed8'],
-                ['nombre' => 'confirmada', 'label' => 'Otros porcentajes', 'color' => '#d97706'],
-                ['nombre' => 'cancelada',  'label' => 'Canceladas',        'color' => '#dc2626'],
-            ]);
-            $maxCnt = collect($estadosResumen)->max('cnt') ?: 1;
-        @endphp
-        @foreach($estadosFiltrados as $ef)
+        <div class="est-list">
             @php
-                $encontrado = collect($estadosResumen)->first(fn($e) => strtolower($e['nombre'] ?? $e['label'] ?? '') === $ef['nombre']);
-                $cnt = $encontrado['cnt'] ?? 0;
+                $estadosFiltrados = collect([
+                    ['nombre' => 'pagado',     'label' => 'Pagadas',           'color' => '#15803d'],
+                    ['nombre' => 'mitad_pago', 'label' => '50% Pagado',        'color' => '#1d4ed8'],
+                    ['nombre' => 'confirmada', 'label' => 'Otros porcentajes', 'color' => '#d97706'],
+                    ['nombre' => 'cancelada',  'label' => 'Canceladas',        'color' => '#dc2626'],
+                ]);
+                $maxCnt = collect($estadosResumen)->max('cnt') ?: 1;
             @endphp
-            <div class="est-row">
-                <div class="est-dot" style="background:{{ $ef['color'] }};"></div>
-                <div class="est-name">{{ $ef['label'] }}</div>
-                <div class="est-bar-wrap">
-                    <div class="est-bar-fill"
-                         style="width:{{ $maxCnt > 0 ? round($cnt / $maxCnt * 100) : 0 }}%;background:{{ $ef['color'] }};"></div>
+            @foreach($estadosFiltrados as $ef)
+                @php
+                    $encontrado = collect($estadosResumen)->first(fn($e) => strtolower($e['nombre'] ?? $e['label'] ?? '') === $ef['nombre']);
+                    $cnt = $encontrado['cnt'] ?? 0;
+                @endphp
+                <div class="est-row">
+                    <div class="est-dot" style="background:{{ $ef['color'] }};"></div>
+                    <div class="est-name">{{ $ef['label'] }}</div>
+                    <div class="est-bar-wrap">
+                        <div class="est-bar-fill" style="width:{{ $maxCnt > 0 ? round($cnt / $maxCnt * 100) : 0 }}%;background:{{ $ef['color'] }};"></div>
+                    </div>
+                    <div class="est-num">{{ $cnt }}</div>
                 </div>
-                <div class="est-num">{{ $cnt }}</div>
-            </div>
-        @endforeach
+            @endforeach
+        </div>
     </div>
-</div>
 
 </div>
 
@@ -321,64 +356,66 @@
         </div>
         <a href="{{ route('reservas.index') }}" class="panel-link">Ver todas →</a>
     </div>
-    <table class="res-tbl">
-        <thead>
-            <tr>
-                <th>Código</th>
-                <th>Cliente</th>
-                <th>Tour</th>
-                <th>Estado</th>
-                <th>Pago</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($ultimasReservas as $r)
-            @php
-                $slug   = str_replace(' ', '_', strtolower($r->estado->nombre ?? 'consulta'));
-                $total  = $r->precio_total ?? 0;
-                $pagado = $r->monto_pagado ?? 0;
-                $pct    = $total > 0 ? min(100, round($pagado / $total * 100)) : 0;
-                $pc     = $pct >= 100 ? '#059669' : ($pct >= 50 ? '#1d4ed8' : '#d97706');
-            @endphp
-            <tr>
-                <td><span class="cod">{{ $r->codigo_reserva }}</span></td>
-                <td style="font-weight:600;color:#0f172a;">{{ $r->cliente->nombre_completo ?? '—' }}</td>
-                <td style="color:#64748b;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                    {{ $r->nombre_tour ?? ($r->fechaTour?->tour?->nombre ?? '—') }}
-                </td>
-                <td>
-                    <span class="badge-est est-{{ $slug }}">
-                        {{ ucfirst(str_replace('_', ' ', $r->estado->nombre ?? '')) }}
-                    </span>
-                </td>
-                <td>
-                    <div class="pct-wrap">
-                        <div class="pct-bar">
-                            <div class="pct-fill" style="width:{{ $pct }}%;background:{{ $pc }};"></div>
+    <div style="overflow-x:auto;">
+        <table class="res-tbl">
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Cliente</th>
+                    <th>Tour</th>
+                    <th>Estado</th>
+                    <th>Pago</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($ultimasReservas as $r)
+                @php
+                    $slug   = str_replace(' ', '_', strtolower($r->estado->nombre ?? 'consulta'));
+                    $total  = $r->precio_total ?? 0;
+                    $pagado = $r->monto_pagado ?? 0;
+                    $pct    = $total > 0 ? min(100, round($pagado / $total * 100)) : 0;
+                    $pc     = $pct >= 100 ? '#059669' : ($pct >= 50 ? '#1d4ed8' : '#d97706');
+                @endphp
+                <tr>
+                    <td data-label="Código"><span class="cod">{{ $r->codigo_reserva }}</span></td>
+                    <td data-label="Cliente" style="font-weight:600;color:#0f172a;">{{ $r->cliente->nombre_completo ?? '—' }}</td>
+                    <td data-label="Tour" style="color:#64748b;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                        {{ $r->nombre_tour ?? ($r->fechaTour?->tour?->nombre ?? '—') }}
+                    </td>
+                    <td data-label="Estado">
+                        <span class="badge-est est-{{ $slug }}">
+                            {{ ucfirst(str_replace('_', ' ', $r->estado->nombre ?? '')) }}
+                        </span>
+                    </td>
+                    <td data-label="Pago">
+                        <div class="pct-wrap">
+                            <div class="pct-bar">
+                                <div class="pct-fill" style="width:{{ $pct }}%;background:{{ $pc }};"></div>
+                            </div>
+                            <span class="pct-num" style="color:{{ $pc }};">{{ $pct }}%</span>
                         </div>
-                        <span class="pct-num" style="color:{{ $pc }};">{{ $pct }}%</span>
-                    </div>
-                </td>
-                <td>
-                    <a href="{{ route('reservas.show', $r) }}" class="view-btn">
-                        <i class="bi bi-eye" style="font-size:.7rem;"></i> Ver
-                    </a>
-                </td>
-            </tr>
-            @empty
-            <tr>
-                <td colspan="6" style="text-align:center;padding:3rem;color:#94a3b8;">
-                    <i class="bi bi-calendar-x" style="font-size:1.5rem;display:block;margin-bottom:.5rem;"></i>
-                    Sin reservas registradas aún
-                </td>
-            </tr>
-            @endforelse
-        </tbody>
-    </table>
+                    </td>
+                    <td data-label="">
+                        <a href="{{ route('reservas.show', $r) }}" class="view-btn">
+                            <i class="bi bi-eye" style="font-size:.7rem;"></i> Ver
+                        </a>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="6" style="text-align:center;padding:3rem;color:#94a3b8;">
+                        <i class="bi bi-calendar-x" style="font-size:1.5rem;display:block;margin-bottom:.5rem;"></i>
+                        Sin reservas registradas aún
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
 </div>
 
-{{-- ══ MODAL EXCEL (Dashboard) ════════════════════════════════ --}}
+{{-- ══ MODAL EXCEL (Dashboard) ══ --}}
 <div id="dash-modal-excel" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;" onclick="if(event.target===this)cerrarModalExcelDash()">
     <div style="background:white;border-radius:16px;padding:1.5rem;width:100%;max-width:400px;margin:1rem;box-shadow:0 20px 60px rgba(0,0,0,.2);">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
@@ -390,7 +427,7 @@
         <p style="font-size:.83rem;color:#64748b;margin-bottom:1.25rem;line-height:1.6;">
             Se exportarán todas las reservas registradas en el sistema. Para filtros específicos usa la sección de Reservas.
         </p>
-        <div style="display:flex;gap:.6rem;justify-content:flex-end;">
+        <div style="display:flex;gap:.6rem;justify-content:flex-end;flex-wrap:wrap;">
             <button onclick="cerrarModalExcelDash()" style="padding:8px 18px;border-radius:9px;font-size:.84rem;font-weight:600;background:#f1f5f9;color:#374151;border:1.5px solid #e2e8f0;cursor:pointer;">
                 Cancelar
             </button>
@@ -402,7 +439,7 @@
     </div>
 </div>
 
-{{-- ══ MODAL SALUD (Dashboard) ════════════════════════════════ --}}
+{{-- ══ MODAL SALUD (Dashboard) ══ --}}
 <div id="dash-modal-salud" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;" onclick="if(event.target===this)cerrarModalSaludDash()">
     <div style="background:white;border-radius:16px;padding:1.5rem;width:100%;max-width:420px;margin:1rem;box-shadow:0 20px 60px rgba(0,0,0,.2);">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
@@ -414,7 +451,6 @@
         <p style="font-size:.83rem;color:#64748b;margin-bottom:1rem;line-height:1.6;">
             Genera un PDF con los pasajeros para un día de tour específico. Incluye alergias, condiciones médicas y documentos.
         </p>
-
         <div style="margin-bottom:.875rem;">
             <label style="display:block;font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:.35rem;">
                 Fecha del tour <span style="color:#dc2626;">*</span>
@@ -430,8 +466,7 @@
                    style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:.88rem;outline:none;box-sizing:border-box;">
         </div>
         <div id="dash-salud-error" style="display:none;padding:.5rem .75rem;background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;font-size:.79rem;color:#991b1b;font-weight:600;margin-bottom:.75rem;"></div>
-
-        <div style="display:flex;gap:.6rem;justify-content:flex-end;">
+        <div style="display:flex;gap:.6rem;justify-content:flex-end;flex-wrap:wrap;">
             <button onclick="cerrarModalSaludDash()" style="padding:8px 18px;border-radius:9px;font-size:.84rem;font-weight:600;background:#f1f5f9;color:#374151;border:1.5px solid #e2e8f0;cursor:pointer;">
                 Cancelar
             </button>

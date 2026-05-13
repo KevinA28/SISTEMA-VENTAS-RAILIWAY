@@ -1,25 +1,20 @@
 /**
  * UBICACIÓN: public/css/reservas-form-fixes.css
- * DESCRIPCIÓN: Fixes puntuales sobre reservas-form.css
- * Fix 1: Barra de progreso que desaparecía (top sticky)
- * Fix 2: Bloque salud fusionado con pasajeros
+ * VERSION: 2.0
  */
 
 /* ══════════════════════════════════════════════════════════════
-   FIX 1 — PROGRESS SIDEBAR: dejar de usar top:50% + transform
-   porque en algunos layouts el sidebar se salía del viewport.
-   Se usa top fijo con scroll natural.
+   FIX 1 — PROGRESS SIDEBAR sticky correcto
 ══════════════════════════════════════════════════════════════ */
 .progress-sidebar {
     position: sticky;
     top: 2rem;
-    transform: none;           /* quitar el translateY(-50%) anterior */
+    transform: none;
     max-height: calc(100vh - 4rem);
     overflow-y: auto;
     align-self: start;
 }
 
-/* Lo mismo para el panel resumen derecho */
 .summary-panel {
     position: sticky;
     top: 2rem;
@@ -30,16 +25,14 @@
 }
 
 /* ══════════════════════════════════════════════════════════════
-   FIX 2 — PAGE WRAP: asegurar que el grid tenga
-   grid-template-rows correcto para que los stickies funcionen
+   FIX 2 — PAGE WRAP align-items
 ══════════════════════════════════════════════════════════════ */
 .page-wrap {
     align-items: start;
 }
 
 /* ══════════════════════════════════════════════════════════════
-   FIX 3 — SALUD: separador visual entre titular y pasajeros
-   dentro del mismo bloque
+   FIX 3 — SALUD separador visual
 ══════════════════════════════════════════════════════════════ */
 #salud-pax-seccion {
     border-top: 2px solid var(--adv-blue-l);
@@ -53,11 +46,34 @@
     display: flex; align-items: center; gap: .4rem;
 }
 
-/* Pasajeros dentro del bloque salud — mismo estilo que pax-card */
 #pax-lista .pax-card {
     background: var(--adv-slate-l);
     border: 1.5px solid var(--border);
     border-radius: var(--r);
     margin-bottom: .65rem;
     animation: fadeUp .2s ease;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FIX 4 — SBAR en móvil sin sidebar de app
+══════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+    .progress-sidebar,
+    .summary-panel {
+        position: static;
+        max-height: none;
+        overflow: visible;
+        transform: none;
+    }
+    .sbar {
+        left: .75rem !important;
+        right: .75rem !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .sbar {
+        left: .5rem !important;
+        right: .5rem !important;
+    }
 }
