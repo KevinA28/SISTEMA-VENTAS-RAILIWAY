@@ -71,25 +71,30 @@ class ReservaController extends Controller
     }
 
     public function store(StoreReservaRequest $request)
-    {
-        try {
-            $this->reservaService->crear($request->validated());
-            return redirect()->route('reservas.index')
-                ->with('success', 'Reserva creada correctamente.');
-        } catch (\Exception $e) {
-            \Log::error('Error al crear reserva', [
-                'message' => $e->getMessage(),
-                'file'    => $e->getFile(),
-                'line'    => $e->getLine(),
-                'trace'   => $e->getTraceAsString(),
-                'input'   => $request->except(['archivo_baucher']),
-            ]);
-            return back()
-                ->withInput()
-                ->with('error', 'Error: ' . $e->getMessage()
-                    . ' (' . basename($e->getFile()) . ':' . $e->getLine() . ')');
-        }
+{
+    try {
+        $datos   = $request->validated();
+        $reserva = $this->reservaService->crear($datos);
+
+        // ✅ Disparar email en proceso separado (no bloquea)
+        $this->reservaService->enviarNotificacionesCreacion($reserva, $datos);
+
+        return redirect()->route('reservas.index')
+            ->with('success', 'Reserva creada correctamente.');
+
+    } catch (\Exception $e) {
+        \Log::error('Error al crear reserva', [
+            'message' => $e->getMessage(),
+            'file'    => $e->getFile(),
+            'line'    => $e->getLine(),
+            'input'   => $request->except(['archivo_baucher']),
+        ]);
+        return back()
+            ->withInput()
+            ->with('error', 'Error: ' . $e->getMessage()
+                . ' (' . basename($e->getFile()) . ':' . $e->getLine() . ')');
     }
+}
 
     public function show(Reserva $reserva)
     {

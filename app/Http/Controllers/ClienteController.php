@@ -38,18 +38,44 @@ class ClienteController extends Controller
         return view('clientes.create');
     }
 
-    public function store(StoreClienteRequest $request)
-    {
-        $cliente = $this->clienteService->crear($request->validated());
+    public function store(StoreReservaRequest $request)
+{
+    try {
+        $datos   = $request->validated();
+        $reserva = $this->reservaService->crear($datos);
 
-        if ($request->expectsJson()) {
-            return response()->json(['cliente' => $cliente]);
+        // ✅ Preparar la respuesta
+        $redirect = redirect()->route('reservas.index')
+            ->with('success', 'Reserva creada correctamente.');
+
+        // ✅ Enviar respuesta al navegador AHORA y continuar en segundo plano
+        ob_end_clean();
+        header('Connection: close');
+        header('Content-Length: 0');
+        flush();
+
+        if (function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request(); // ← libera el navegador en PHP-FPM
         }
 
-        return redirect()->route('clientes.show', $cliente)
-            ->with('success', 'Cliente registrado correctamente.');
-    }
+        // ✅ Esto corre DESPUÉS de que el navegador ya fue redirigido
+        $this->reservaService->enviarNotificacionesCreacion($reserva, $datos);
 
+        return $redirect;
+
+    } catch (\Exception $e) {
+        \Log::error('Error al crear reserva', [
+            'message' => $e->getMessage(),
+            'file'    => $e->getFile(),
+            'line'    => $e->getLine(),
+            'input'   => $request->except(['archivo_baucher']),
+        ]);
+        return back()
+            ->withInput()
+            ->with('error', 'Error: ' . $e->getMessage()
+                . ' (' . basename($e->getFile()) . ':' . $e->getLine() . ')');
+    }
+}
     public function show(Cliente $cliente)
     {
         $cliente = $this->clienteService->cargarDetalle($cliente);

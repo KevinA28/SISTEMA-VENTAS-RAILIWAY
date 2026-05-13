@@ -208,7 +208,6 @@ class ReservaService
         }); // ← cierra DB::transaction
 
         // Notificaciones FUERA de la transacción
-        $this->enviarNotificacionesCreacion($reserva, $datos);
         return $reserva;
     }
     
@@ -495,40 +494,29 @@ class ReservaService
     // NOTIFICACIONES CREACIÓN
     // ══════════════════════════════════════════════════════════════════
     public function enviarNotificacionesCreacion(Reserva $reserva, array $datos): void
-    {
-        try {
-            $notifWhatsapp = ($datos['notif_whatsapp'] ?? '0') === '1';
-            $notifEmail    = ($datos['notif_email']    ?? '0') === '1';
+{
+    $notifWhatsapp = ($datos['notif_whatsapp'] ?? '0') === '1';
+    $notifEmail    = ($datos['notif_email']    ?? '0') === '1';
 
-            if (!$notifWhatsapp && !$notifEmail) {
-                return;
-            }
-
-            $reserva->load(['cliente', 'pasajeros.salud', 'pagos.metodoPago']);
-
-            $pdfPath = null;
-            if ($notifEmail) {
-                $pdfPath = $this->pdfService->generarConfirmacion($reserva);
-            }
-
-            if ($notifWhatsapp) {
-                $this->whatsAppService->enviarConfirmacionReserva($reserva);
-            }
-
-            if ($notifEmail) {
-                $this->mailService->enviarConfirmacion($reserva, $pdfPath);
-            }
-            if ($notifEmail) {
-                $this->mailService->enviarConfirmacion($reserva, $pdfPath);
-            }
-
-            $reserva->update(['notificacion_enviada' => true]); 
-
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('ReservaService: error en notificaciones creación', [
-                'reserva_id' => $reserva->id,
-                'mensaje'    => $e->getMessage(),
-            ]);
-        }
+    if (!$notifWhatsapp && !$notifEmail) {
+        return;
     }
+
+    $payload = json_encode([
+        'reserva_id'     => $reserva->id,
+        'notif_email'    => $notifEmail,
+        'notif_whatsapp' => $notifWhatsapp,
+    ]);
+
+    $phpBin  = PHP_BINARY;
+    $artisan = base_path('artisan');
+
+    // ✅ Escribir payload a archivo temporal para evitar problemas con comillas
+    $tmpFile = storage_path('app/notif_' . $reserva->id . '_' . time() . '.json');
+    file_put_contents($tmpFile, $payload);
+
+    // ✅ Pasar ruta del archivo en vez del JSON directamente
+    $cmd = "start /B \"\" \"{$phpBin}\" \"{$artisan}\" reserva:notificar-file \"{$tmpFile}\"";
+    pclose(popen($cmd, "r"));
+}
 }

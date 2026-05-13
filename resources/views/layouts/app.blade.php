@@ -325,6 +325,86 @@ document.addEventListener('click', function (e) {
     }
 });
 </script>
+{{-- ── TOAST NOTIFICATIONS ── --}}
+@if(session('success') || session('error') || session('warning'))
+<div id="toast-container" style="
+    position: fixed; top: 20px; right: 20px; z-index: 9999;
+    display: flex; flex-direction: column; gap: 10px;
+">
+    @if(session('success'))
+    <div class="toast-msg toast-success" style="
+        display: flex; align-items: center; gap: 10px;
+        background: #f0fdf4; border: 1.5px solid #86efac;
+        border-left: 4px solid #16a34a;
+        padding: 12px 16px; border-radius: 10px;
+        box-shadow: 0 4px 16px rgba(0,0,0,.1);
+        font-size: .85rem; font-weight: 500; color: #15803d;
+        min-width: 300px; max-width: 420px;
+        animation: slideIn .25s ease;
+    ">
+        <i class="bi bi-check-circle-fill" style="font-size:1.1rem;flex-shrink:0;"></i>
+        <span>{{ session('success') }}</span>
+        <button onclick="this.parentElement.remove()" style="
+            margin-left:auto; background:none; border:none;
+            cursor:pointer; color:#16a34a; font-size:1rem; padding:0;
+        ">×</button>
+    </div>
+    @endif
+    @if(session('error'))
+    <div class="toast-msg toast-error" style="
+        display: flex; align-items: center; gap: 10px;
+        background: #fef2f2; border: 1.5px solid #fca5a5;
+        border-left: 4px solid #dc2626;
+        padding: 12px 16px; border-radius: 10px;
+        box-shadow: 0 4px 16px rgba(0,0,0,.1);
+        font-size: .85rem; font-weight: 500; color: #dc2626;
+        min-width: 300px; max-width: 420px;
+        animation: slideIn .25s ease;
+    ">
+        <i class="bi bi-exclamation-circle-fill" style="font-size:1.1rem;flex-shrink:0;"></i>
+        <span>{{ session('error') }}</span>
+        <button onclick="this.parentElement.remove()" style="
+            margin-left:auto; background:none; border:none;
+            cursor:pointer; color:#dc2626; font-size:1rem; padding:0;
+        ">×</button>
+    </div>
+    @endif
+    @if(session('warning'))
+    <div class="toast-msg toast-warning" style="
+        display: flex; align-items: center; gap: 10px;
+        background: #fffbeb; border: 1.5px solid #fcd34d;
+        border-left: 4px solid #d97706;
+        padding: 12px 16px; border-radius: 10px;
+        box-shadow: 0 4px 16px rgba(0,0,0,.1);
+        font-size: .85rem; font-weight: 500; color: #b45309;
+        min-width: 300px; max-width: 420px;
+        animation: slideIn .25s ease;
+    ">
+        <i class="bi bi-exclamation-triangle-fill" style="font-size:1.1rem;flex-shrink:0;"></i>
+        <span>{{ session('warning') }}</span>
+        <button onclick="this.parentElement.remove()" style="
+            margin-left:auto; background:none; border:none;
+            cursor:pointer; color:#d97706; font-size:1rem; padding:0;
+        ">×</button>
+    </div>
+    @endif
+</div>
+<style>
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+</style>
+<script>
+// Auto-cerrar toasts después de 5 segundos
+setTimeout(() => {
+    document.querySelectorAll('.toast-msg').forEach(t => {
+        t.style.animation = 'slideIn .25s ease reverse';
+        setTimeout(() => t.remove(), 250);
+    });
+}, 5000);
+</script>
+@endif
 @stack('scripts')
 </body>
 </html>

@@ -626,32 +626,6 @@
       </div>
     </div>
   </div>
-
-  {{-- ════════════════════ 6. COMPROBANTE / VOUCHER ════════════════════ --}}
-  @php
-    $pagoConVoucher = $reserva->pagos->first(fn($p) => !empty($p->archivo_baucher));
-  @endphp
-  @if($pagoConVoucher)
-  <div class="seccion">
-    <div class="sec-titulo">6. Comprobante de Pago (Voucher)</div>
-    <div class="caja-voucher">
-      @php
-        $ext = strtolower(pathinfo($pagoConVoucher->archivo_baucher, PATHINFO_EXTENSION));
-      @endphp
-      @if(in_array($ext, ['jpg','jpeg','png','webp']))
-        <img class="voucher-img"
-             src="{{ storage_path('app/public/'.$pagoConVoucher->archivo_baucher) }}"
-             alt="Voucher de pago">
-      @else
-        <div style="color:#6b7280;font-size:8pt;padding:20px">
-          Voucher adjunto: {{ basename($pagoConVoucher->archivo_baucher) }}
-          (formato PDF — ver archivo adjunto)
-        </div>
-      @endif
-    </div>
-  </div>
-  @endif
-
 </div>{{-- fin contenido --}}
 
 {{-- ════════════════════ 7. POLÍTICAS (página aparte) ════════════════════ --}}
