@@ -77,3 +77,11 @@
         right: .5rem !important;
     }
 }
+/* ══════════════════════════════════════════════════════════════
+   FIX 5 — LABEL WHATSAPP inline con ícono
+══════════════════════════════════════════════════════════════ */
+.lbl-wa {
+    display: flex;
+    align-items: center;
+    gap: .3rem;
+}
