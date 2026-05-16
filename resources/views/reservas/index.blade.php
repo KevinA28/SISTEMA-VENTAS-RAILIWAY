@@ -615,29 +615,26 @@ body { font-family:'DM Sans',sans-serif; }
                 <i class="bi bi-x-lg"></i>
             </button>
         </div>
-        <div class="filtro-grupo">
-            <div class="filtro-grupo-title"><i class="bi bi-circle-fill" style="font-size:.5rem;"></i> Estado de la reserva</div>
+         <div class="filtro-grupo">
+            <div class="filtro-grupo-title"><i class="bi bi-circle-fill" style="font-size:.5rem;"></i> Estado de pago</div>
             <div class="check-group">
                 <div class="check-pill"><input type="checkbox" id="xls-est-todos" checked onchange="toggleTodos(this)"><label for="xls-est-todos">Todos</label></div>
-                @foreach($estados as $est)
-                @php $slug = str_replace(' ','_',strtolower($est->nombre)); @endphp
-                <div class="check-pill pill-{{ in_array($slug,['pagado']) ? 'pagado' : (in_array($slug,['cancelada']) ? 'cancelada' : 'mitad') }}">
-                    <input type="checkbox" id="xls-est-{{ $est->id }}" class="xls-estado" value="{{ $est->id }}" checked>
-                    <label for="xls-est-{{ $est->id }}">{{ ucfirst(str_replace('_',' ',$est->nombre)) }}</label>
+                <div class="check-pill pill-pagado">
+                    <input type="checkbox" id="xls-est-pagado" class="xls-estado" value="pagado" checked>
+                    <label for="xls-est-pagado">Pagado</label>
                 </div>
-                @endforeach
-            </div>
-        </div>
-        <div class="filtro-grupo">
-            <div class="filtro-grupo-title"><i class="bi bi-broadcast" style="font-size:.65rem;"></i> Canal de contacto</div>
-            <div class="check-group">
-                <div class="check-pill"><input type="checkbox" id="xls-canal-todos" checked onchange="toggleTodosCanal(this)"><label for="xls-canal-todos">Todos</label></div>
-                @foreach(['whatsapp'=>'WhatsApp','presencial'=>'Presencial','llamada'=>'Llamada','redes_sociales'=>'Redes Sociales','web'=>'Web','referido'=>'Referido'] as $val => $lbl)
+                <div class="check-pill pill-mitad">
+                    <input type="checkbox" id="xls-est-mitad" class="xls-estado" value="mitad_pago" checked>
+                    <label for="xls-est-mitad">50% Pagado</label>
+                </div>
                 <div class="check-pill">
-                    <input type="checkbox" id="xls-canal-{{ $val }}" class="xls-canal" value="{{ $val }}" checked>
-                    <label for="xls-canal-{{ $val }}">{{ $lbl }}</label>
+                    <input type="checkbox" id="xls-est-otros" class="xls-estado" value="otros" checked>
+                    <label for="xls-est-otros">Otros porcentajes</label>
                 </div>
-                @endforeach
+                <div class="check-pill pill-cancelada">
+                    <input type="checkbox" id="xls-est-cancelada" class="xls-estado" value="cancelada" checked>
+                    <label for="xls-est-cancelada">Cancelado</label>
+                </div>
             </div>
         </div>
         <div class="filtro-grupo">
@@ -963,12 +960,11 @@ window.limpiarFechasXls = function () {
 };
 window.descargarExcel = function () {
     const params = new URLSearchParams();
-    const estados = [...document.querySelectorAll('.xls-estado:checked')].map(c => c.value);
-    const todosEstados = document.querySelectorAll('.xls-estado').length;
-    if (estados.length > 0 && estados.length < todosEstados) params.set('estados', estados.join(','));
-    const canales = [...document.querySelectorAll('.xls-canal:checked')].map(c => c.value);
-    const todosCanales = document.querySelectorAll('.xls-canal').length;
-    if (canales.length > 0 && canales.length < todosCanales) params.set('canales', canales.join(','));
+    const estadosMarcados = [...document.querySelectorAll('.xls-estado:checked')].map(c => c.value);
+    const totalEstados = document.querySelectorAll('.xls-estado').length;
+    if (estadosMarcados.length > 0 && estadosMarcados.length < totalEstados) {
+        params.set('estados_pago', estadosMarcados.join(','));
+    }
     const desde = document.getElementById('xls-desde').value;
     const hasta = document.getElementById('xls-hasta').value;
     if (desde) params.set('fecha_desde', desde);

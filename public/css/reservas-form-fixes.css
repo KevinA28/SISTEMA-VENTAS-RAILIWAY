@@ -1,87 +1,72 @@
 /**
  * UBICACIÓN: public/css/reservas-form-fixes.css
- * VERSION: 2.0
+ * VERSION: 4.0 — Limpio, sin redundancias con reservas-form.css
  */
 
-/* ══════════════════════════════════════════════════════════════
-   FIX 1 — PROGRESS SIDEBAR sticky correcto
-══════════════════════════════════════════════════════════════ */
+/* FIX 1 — PROGRESS SIDEBAR sticky correcto */
 .progress-sidebar {
-    position: sticky;
-    top: 2rem;
-    transform: none;
-    max-height: calc(100vh - 4rem);
-    overflow-y: auto;
-    align-self: start;
+    position: sticky; top: 2rem; transform: none;
+    max-height: calc(100vh - 4rem); overflow-y: auto; align-self: start;
 }
-
 .summary-panel {
-    position: sticky;
-    top: 2rem;
-    transform: none;
-    max-height: calc(100vh - 4rem);
-    overflow-y: auto;
-    align-self: start;
+    position: sticky; top: 2rem; transform: none;
+    max-height: calc(100vh - 4rem); overflow-y: auto; align-self: start;
 }
 
-/* ══════════════════════════════════════════════════════════════
-   FIX 2 — PAGE WRAP align-items
-══════════════════════════════════════════════════════════════ */
-.page-wrap {
-    align-items: start;
-}
+/* FIX 2 — PAGE WRAP align-items */
+.page-wrap { align-items: start; }
 
-/* ══════════════════════════════════════════════════════════════
-   FIX 3 — SALUD separador visual
-══════════════════════════════════════════════════════════════ */
-#salud-pax-seccion {
-    border-top: 2px solid var(--adv-blue-l);
-    padding-top: 1.25rem;
-}
-
+/* FIX 3 — SALUD separador visual */
+#salud-pax-seccion { border-top: 2px solid var(--adv-blue-l); padding-top: 1.25rem; }
 #salud-pax-seccion .st-salud-pax {
     font-size: .62rem; font-weight: 800; text-transform: uppercase;
-    letter-spacing: .1em; color: var(--adv-blue);
-    margin-bottom: .85rem;
+    letter-spacing: .1em; color: var(--adv-blue); margin-bottom: .85rem;
     display: flex; align-items: center; gap: .4rem;
 }
-
 #pax-lista .pax-card {
-    background: var(--adv-slate-l);
-    border: 1.5px solid var(--border);
-    border-radius: var(--r);
-    margin-bottom: .65rem;
-    animation: fadeUp .2s ease;
+    background: var(--adv-slate-l); border: 1.5px solid var(--border);
+    border-radius: var(--r); margin-bottom: .65rem; animation: fadeUp .2s ease;
 }
 
-/* ══════════════════════════════════════════════════════════════
-   FIX 4 — SBAR en móvil sin sidebar de app
-══════════════════════════════════════════════════════════════ */
+/* FIX 4 — SBAR en movil sin sidebar de app */
 @media (max-width: 768px) {
-    .progress-sidebar,
-    .summary-panel {
-        position: static;
-        max-height: none;
-        overflow: visible;
-        transform: none;
+    .progress-sidebar, .summary-panel {
+        position: static; max-height: none; overflow: visible; transform: none;
     }
-    .sbar {
-        left: .75rem !important;
-        right: .75rem !important;
-    }
+    .sbar { left: .75rem !important; right: .75rem !important; }
+}
+@media (max-width: 480px) {
+    .sbar { left: .5rem !important; right: .5rem !important; }
 }
 
-@media (max-width: 480px) {
-    .sbar {
-        left: .5rem !important;
-        right: .5rem !important;
+/* FIX 5 — LABEL WHATSAPP inline con icono */
+.lbl-wa { display: flex; align-items: center; gap: .3rem; }
+
+/* FIX 6 — FECHA-HORA ROW en movil */
+@media (max-width: 768px) {
+    .fecha-hora-row {
+        display: grid; grid-template-columns: 1fr 1fr; gap: .85rem;
     }
+    .fecha-hora-row .field:last-child { display: none; }
+    .fecha-hora-row > .field { padding-bottom: 0; }
 }
-/* ══════════════════════════════════════════════════════════════
-   FIX 5 — LABEL WHATSAPP inline con ícono
-══════════════════════════════════════════════════════════════ */
-.lbl-wa {
-    display: flex;
-    align-items: center;
-    gap: .3rem;
+@media (max-width: 480px) {
+    .fecha-hora-row { grid-template-columns: 1fr; gap: 0; }
+    .fecha-hora-row > .field { padding-bottom: 1.25rem; }
+    .fecha-hora-row .field:last-child { display: none; }
+}
+
+/* FIX 7 — CAMPO NUMERO DE DOCUMENTO en movil */
+@media (max-width: 768px) {
+    .dni-row { height: 40px; flex-wrap: nowrap; }
+    .dni-row .fi { min-width: 0; flex: 1; }
+    .btn-dni-lookup { padding: 0 10px; font-size: .72rem; flex-shrink: 0; white-space: nowrap; }
+}
+@media (max-width: 480px) {
+    .dni-row { flex-wrap: wrap; height: auto; }
+    .dni-row .ia { display: none; }
+    .btn-dni-lookup {
+        width: 100%; height: 36px; justify-content: center;
+        border-left: none; border-top: 1.5px solid var(--adv-blue);
+    }
 }

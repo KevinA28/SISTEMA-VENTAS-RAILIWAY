@@ -168,6 +168,12 @@ class ReservaService
                     $this->guardarSaludPasajero($pasajero, $p);
                 }
             }
+            // Registrar uso del tour para el autocomplete
+if (!empty($datos['nombre_tour'])) {
+    \App\Models\Tour::where('nombre', trim($datos['nombre_tour']))
+        ->first()
+        ?->registrarUso();
+}
 
             // ── 6. Método de pago ─────────────────────────────────
             $metodoPago = MetodoPago::where('clave', $datos['metodo_pago'])

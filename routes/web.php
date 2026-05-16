@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ReservaController;
 use App\Http\Controllers\ClienteController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\EstadisticasController;
 
 Route::get('/', function () {
     if (auth()->check()) {
@@ -25,7 +26,7 @@ Route::middleware('auth')->group(function () {
     Route::get('reservas/exportar/excel', [ReservaController::class, 'exportar'])
          ->name('reservas.exportar');
     Route::get('/reservas/reporte-salud', [ReservaController::class, 'reporteSalud']) ->name('reservas.reporteSalud');
-
+    
     Route::resource('reservas', ReservaController::class);
 
     Route::post('reservas/{reserva}/estado', [ReservaController::class, 'cambiarEstado'])
@@ -36,9 +37,10 @@ Route::middleware('auth')->group(function () {
 
     Route::post('reservas/{reserva}/reenviar-notificacion', [ReservaController::class, 'reenviarNotificacion'])
          ->name('reservas.reenviarNotificacion');
+     Route::get('/estadisticas', [EstadisticasController::class, 'index'])->name('estadisticas.index');
 
     // ── Clientes ──────────────────────────────────────────────────────
-    Route::resource('clientes', ClienteController::class);
+    Route::resource('clientes', ClienteController::class)->only(['index','show','edit','update']);
 
     // ── Perfil ────────────────────────────────────────────────────────
     Route::get('/profile',    [ProfileController::class, 'edit'])->name('profile.edit');

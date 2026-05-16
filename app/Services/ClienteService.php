@@ -72,6 +72,7 @@ class ClienteService
         $cliente->load([
             'reservas.fechaTour.tour',
             'reservas.estado',
+            'reservas.pasajeros.salud',
         ]);
 
         return $cliente;

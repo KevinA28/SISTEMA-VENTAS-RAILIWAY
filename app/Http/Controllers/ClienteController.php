@@ -21,18 +21,20 @@ class ClienteController extends Controller
     ) {}
 
     public function index(Request $request)
-    {
-        $clientes = Cliente::when($request->buscar, function ($q, $buscar) {
-                $q->where('nombre_completo', 'like', "%$buscar%")
-                  ->orWhere('numero_documento', 'like', "%$buscar%");
-            })
-            ->withCount('reservas')
-            ->latest()
-            ->paginate(20);
+{
+    $clientes = Cliente::when($request->buscar, function ($q, $buscar) {
+            $q->where('nombre_completo', 'like', "%$buscar%")
+              ->orWhere('numero_documento', 'like', "%$buscar%")
+              ->orWhere('telefono', 'like', "%$buscar%")
+              ->orWhere('email', 'like', "%$buscar%");
+        })
+        ->withCount('reservas')
+        ->withSum('reservas', 'precio_total')
+        ->orderByDesc('reservas_count')
+        ->paginate(25);
 
-        return view('clientes.index', compact('clientes'));
-    }
-
+    return view('clientes.index', compact('clientes'));
+}
     public function create()
     {
         return view('clientes.create');

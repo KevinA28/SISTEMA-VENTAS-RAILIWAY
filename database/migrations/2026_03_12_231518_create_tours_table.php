@@ -12,8 +12,10 @@ return new class extends Migration
         Schema::create('tours', function (Blueprint $table) {
             $table->id();
             $table->string('nombre');
+            $table->string('categoria')->default('nacional');
+            $table->unsignedInteger('veces_usado')->default(0);
             $table->text('descripcion')->nullable();
-            $table->decimal('precio_adulto', 8, 2);
+            $table->decimal('precio_adulto', 8, 2)->nullable();
             $table->decimal('precio_nino', 8, 2)->nullable();
             $table->integer('duracion_horas')->nullable();
             $table->boolean('activo')->default(true);

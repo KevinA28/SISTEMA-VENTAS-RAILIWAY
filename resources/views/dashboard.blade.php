@@ -397,10 +397,15 @@
                         </div>
                     </td>
                     <td data-label="">
-                        <a href="{{ route('reservas.show', $r) }}" class="view-btn">
-                            <i class="bi bi-eye" style="font-size:.7rem;"></i> Ver
-                        </a>
-                    </td>
+    <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
+        <a href="{{ route('reservas.show', $r) }}" class="view-btn">
+            <i class="bi bi-eye" style="font-size:.7rem;"></i> Ver
+         </a>
+         <a href="{{ route('reservas.edit', $r) }}" class="view-btn" style="border-color:#fde68a;color:#b45309;background:#fffbeb;">
+            <i class="bi bi-pencil" style="font-size:.7rem;"></i> Editar
+         </a>
+              </div>
+           </td>
                 </tr>
                 @empty
                 <tr>

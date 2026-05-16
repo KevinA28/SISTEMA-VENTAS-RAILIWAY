@@ -49,12 +49,14 @@ function getBloqueStatus(n) {
             return 'incomplete';
         }
         case 4: {
-            const met  = (document.getElementById('metodo_pago')?.value || '').trim();
-            const mon  = parseFloat(document.getElementById('monto_pagado_inicial')?.value) || 0;
-            const comp = (document.getElementById('tipo_comprobante')?.value || '').trim();
-            if (!met || !comp || mon <= 0) return 'incomplete';
-            return 'done';
-        }
+    const comp = (document.getElementById('tipo_comprobante')?.value || '').trim();
+    if (!comp) return 'incomplete';
+    const met = (document.getElementById('metodo_pago')?.value || '').trim();
+    const mon = parseFloat(document.getElementById('monto_pagado_inicial')?.value) || 0;
+    // En edición el pago es opcional — si método está vacío igual se considera completo
+    if (met && mon <= 0) return 'incomplete';
+    return 'done';
+}
         case 5:
             return (document.getElementById('politica_descripcion')?.value || '').trim().length >= 20
                 ? 'done' : 'incomplete';
@@ -1350,7 +1352,7 @@ document.getElementById('form-reserva')?.addEventListener('submit', function(e) 
         'nombre_tour','precio_tour',
         'ciudad_destino','ciudad_procedencia',
         'canal_contacto',
-        'tipo_comprobante','metodo_pago',
+        'tipo_comprobante',
         'politica_descripcion'
     ];
     let valid = true;
@@ -1367,14 +1369,13 @@ document.getElementById('form-reserva')?.addEventListener('submit', function(e) 
         }
     });
 
-    const mi = document.getElementById('monto_pagado_inicial');
-    if (mi && (!mi.value || parseFloat(mi.value) <= 0)) {
-        calcTotal();
-        if (!mi.value || parseFloat(mi.value) <= 0) {
-            valid = false;
-            mi.classList.add('err');
-        }
-    }
+    const mi  = document.getElementById('monto_pagado_inicial');
+const met = (document.getElementById('metodo_pago')?.value || '').trim();
+// Solo validar monto si se seleccionó método de pago
+if (met && mi && (!mi.value || parseFloat(mi.value) <= 0)) {
+    valid = false;
+    mi.classList.add('err');
+}
 
     // Voucher: ahora es opcional en el cliente (el servidor tampoco lo requiere)
     // Solo mostrar advertencia visual sin bloquear

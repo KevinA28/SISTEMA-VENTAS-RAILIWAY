@@ -104,7 +104,6 @@
         ]);
     }
 
-    // Datos para JS — siempre frescos desde $reserva (no desde old())
     $jsReserva = [
         'fecha_tour'         => $reserva->fecha_tour ? \Carbon\Carbon::parse($reserva->fecha_tour)->format('Y-m-d') : '',
         'hora_salida'        => $reserva->hora_salida ? substr($reserva->hora_salida,0,5) : '',
@@ -343,13 +342,21 @@
                             </div>
                         </div>
                     </div>
+
                     <div class="field" style="max-width:360px">
                         <label class="lbl">N° operación <span class="opt">(opcional)</span></label>
                         <input type="text" name="numero_operacion" value="{{ old('numero_operacion') }}" class="fi" placeholder="Código de transacción..." maxlength="100">
                     </div>
+
+                    {{-- Voucher — solo si hay saldo pendiente --}}
+                    @if($saldoActual > 0)
                     <div class="st">Voucher del nuevo pago <span class="opt">(opcional)</span></div>
-                    <div class="upload-zone" id="uz" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="onDrop(event)">
-                        <input type="file" name="archivo_baucher" id="archivo_baucher" accept=".jpg,.jpeg,.png,.pdf,.webp" onchange="onFile(event)">
+                    <div class="upload-zone" id="uz"
+                         ondragover="event.preventDefault();this.classList.add('over')"
+                         ondragleave="this.classList.remove('over')"
+                         ondrop="onDrop(event)">
+                        <input type="file" name="archivo_baucher" id="archivo_baucher"
+                               accept=".jpg,.jpeg,.png,.pdf,.webp" onchange="onFile(event)">
                         <div class="uz-icon"><i class="bi bi-cloud-arrow-up"></i></div>
                         <div class="uz-text">Arrastra aquí o <strong style="color:var(--adv-blue)">haz clic para seleccionar</strong></div>
                         <div class="uz-sub">JPG · PNG · PDF · WEBP — máx. 5 MB</div>
@@ -358,14 +365,47 @@
                         <img id="prev-img" src="" alt="">
                         <div class="file-preview-bar">
                             <span class="fn" id="prev-name">—</span>
-                            <button type="button" class="fr" onclick="removeFile()"><i class="bi bi-x-circle me-1"></i> Quitar</button>
+                            <button type="button" class="fr" onclick="removeFile()">
+                                <i class="bi bi-x-circle me-1"></i> Quitar
+                            </button>
                         </div>
                     </div>
+                    @else
+                    <div style="background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:10px;padding:.75rem 1rem;font-size:.82rem;color:#15803d;display:flex;align-items:center;gap:.5rem;margin-top:.5rem;">
+                        <i class="bi bi-patch-check-fill"></i>
+                        <span>Esta reserva ya está <strong>100% pagada</strong>. No se requiere voucher adicional.</span>
+                    </div>
+                    @endif
+
                 </div>
             </div>
 
             @include('reservas.partials._bloque5_politicas')
         </form>
+
+        {{-- Form oculto para cancelar reserva --}}
+        @if($reserva->estado?->nombre !== 'cancelada')
+        <form id="form-cancelar"
+              method="POST"
+              action="{{ route('reservas.update', $reserva) }}"
+              style="display:none;">
+            @csrf
+            @method('PUT')
+            <input type="hidden" name="cliente_id"           value="{{ $reserva->cliente_id }}">
+            <input type="hidden" name="nombre_tour"          value="{{ $reserva->nombre_tour }}">
+            <input type="hidden" name="precio_tour"          value="{{ $reserva->precio_total }}">
+            <input type="hidden" name="ciudad_procedencia"   value="{{ $reserva->ciudad_procedencia }}">
+            <input type="hidden" name="canal_contacto"       value="{{ $reserva->canal_contacto }}">
+            <input type="hidden" name="estado_inicial"       value="cancelada">
+            <input type="hidden" name="tipo_comprobante"     value="{{ $reserva->tipo_comprobante }}">
+            <input type="hidden" name="metodo_pago"          value="">
+            <input type="hidden" name="monto_pagado_inicial" value="0">
+            <input type="hidden" name="tipo_pago"            value="adelanto">
+            <input type="hidden" name="titular_nombre"       value="{{ $reserva->cliente?->nombre_completo }}">
+            <input type="hidden" name="titular_telefono"     value="{{ $reserva->cliente?->telefono }}">
+            <input type="hidden" name="politica_descripcion" value="{{ $reserva->politica_descripcion }}">
+        </form>
+        @endif
 
         {{-- Submit bar --}}
         <div class="sbar">
@@ -379,7 +419,16 @@
                 </div>
             </div>
             <div class="sbar-actions">
-                <a href="{{ route('reservas.show', $reserva) }}" class="btn-secondary"><i class="bi bi-x"></i> Cancelar</a>
+                @if($reserva->estado?->nombre !== 'cancelada')
+                <button type="button" class="btn-secondary"
+                        style="border-color:#fecaca;color:#dc2626;"
+                        onclick="if(confirm('¿Cancelar esta reserva? Esta acción cambiará el estado a Cancelada.')) document.getElementById('form-cancelar').submit()">
+                    <i class="bi bi-x-circle"></i> Cancelar reserva
+                </button>
+                @endif
+                <a href="{{ route('reservas.show', $reserva) }}" class="btn-secondary">
+                    <i class="bi bi-x"></i> Descartar
+                </a>
                 <button type="submit" form="form-reserva" class="btn-primary" id="btn-submit">
                     <i class="bi bi-check-circle"></i> Guardar cambios
                 </button>
@@ -397,7 +446,6 @@
 <script src="{{ asset('js/reservas-create.js') }}"></script>
 
 <script>
-// Datos de la reserva para JS — frescos desde PHP, no desde old()
 window._EDIT = @json($jsReserva);
 </script>
 
@@ -405,7 +453,6 @@ window._EDIT = @json($jsReserva);
 document.addEventListener('DOMContentLoaded', function () {
     const D = window._EDIT;
 
-    /* ── HELPER: flatpickr fecha ── */
     function iniF(dispId, hidId, val) {
         if (!val) return;
         const d = document.getElementById(dispId);
@@ -419,7 +466,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    /* ── HELPER: flatpickr hora ── */
     function iniH(dispId, hidId, val) {
         if (!val || val==='N/D') return;
         const d = document.getElementById(dispId);
@@ -434,7 +480,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    /* ── 1. FECHAS Y HORAS ── */
     iniF('fecha_tour_display',        'fecha_tour',         D.fecha_tour);
     iniH('hora_salida_display',       'hora_salida',        D.hora_salida);
     iniF('fecha_arribo_display',      'fecha_arribo',       D.fecha_arribo);
@@ -444,7 +489,6 @@ document.addEventListener('DOMContentLoaded', function () {
     iniH('hora_salida_vuelo_display', 'hora_salida_vuelo',  D.hora_salida_vuelo);
     iniH('hora_llegada_vuelo_display','hora_llegada_vuelo', D.hora_llegada_vuelo);
 
-    /* ── Fecha nacimiento titular ── */
     if (D.titular_nacimiento) {
         const fpEl = document.getElementById('titular_fecha_nacimiento');
         if (fpEl) {
@@ -466,7 +510,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    /* ── 2. EMAIL PARTIDO ── */
     if (D.email_user || D.email_domain) {
         const eu = document.getElementById('email-user');
         const ed = document.getElementById('email-domain');
@@ -476,20 +519,15 @@ document.addEventListener('DOMContentLoaded', function () {
         if (eh) eh.value = D.email_user + (D.email_domain ? '@'+D.email_domain : '');
     }
 
-    /* ── 3. TRANSPORTE ── */
     if (D.tipo_transporte && typeof toggleTransporte === 'function') {
         toggleTransporte();
     }
 
-    /* ── 4. HABITACIONES — asegurar que el hidden tiene el valor y re-renderizar ── */
     const habHidden = document.getElementById('tipo_habitacion_hidden');
     if (habHidden && !habHidden.value && D.tipo_habitacion) {
         habHidden.value = D.tipo_habitacion;
     }
-    // Si el valor ya está en el hidden (vía old()), el DOMContentLoaded
-    // del bloque1 ya ejecutó _renderHabs(). Si no, forzamos aquí.
     if (habHidden?.value && typeof _renderHabs === 'function') {
-        // Reconstruir _habitaciones desde el string si está vacío
         if (typeof _habitaciones !== 'undefined' && Object.keys(_habitaciones).length === 0 && habHidden.value) {
             const labelInv = {
                 'sgl — simple (1 persona)':'sgl','dbl — doble matrimonial':'dbl',
@@ -500,7 +538,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 const m = p.trim().match(/^(.+?)\s*x(\d+)$/i);
                 if (!m) return;
                 const lbl = m[1].trim().toLowerCase();
-                // Buscar en labelInv o intentar extraer clave de 3 chars
                 let tipo = null;
                 for (const [k,v] of Object.entries(labelInv)) {
                     if (lbl.startsWith(k.substring(0,3))) { tipo=v; break; }
@@ -513,46 +550,29 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    /* ── 5. PASAJEROS ADICIONALES ── */
-   if (D.pasajeros && D.pasajeros.length > 0) {
+    if (D.pasajeros && D.pasajeros.length > 0) {
         const paxLista = document.getElementById('pax-lista');
         if (paxLista && paxLista.querySelectorAll('.pax-card').length === 0) {
- 
-            // Llamar addPax() una vez por cada pasajero adicional
             D.pasajeros.forEach(function() {
                 if (typeof addPax === 'function') addPax();
             });
- 
-            // Esperar a que el DOM se actualice y luego llenar los campos
             setTimeout(function() {
                 const cards = document.querySelectorAll('#pax-lista .pax-card');
                 D.pasajeros.forEach(function(p, i) {
                     const card = cards[i];
                     if (!card) return;
- 
-                    // Nombre completo
                     const nombre = card.querySelector('input[name*="nombre_completo"]');
                     if (nombre) nombre.value = (p.nombre_completo || '').toUpperCase();
- 
-                    // Tipo documento (select)
                     const tipodoc = card.querySelector('select[name*="tipo_documento"]');
                     if (tipodoc && p.tipo_documento) tipodoc.value = p.tipo_documento;
- 
-                    // Número documento
                     const numdoc = card.querySelector('input[name*="numero_documento"]');
                     if (numdoc && p.numero_documento) numdoc.value = p.numero_documento;
- 
-                    // Tipo pasajero (select visible + hidden)
                     const tipoSel = card.querySelector('select[name*="[tipo]"]');
                     const tipoHid = card.querySelector('input[type="hidden"][name*="[tipo]"]');
                     if (tipoSel && p.tipo) tipoSel.value = p.tipo;
                     if (tipoHid && p.tipo) tipoHid.value = p.tipo;
- 
-                    // Fecha nacimiento — inicializar flatpickr con el valor
                     if (p.fecha_nacimiento) {
-                        // Obtener el índice real del input (viene del id pax-N)
-                        const cardId = card.id; // 'pax-0', 'pax-1', etc.
-                        const idx    = cardId.replace('pax-', '');
+                        const idx    = card.id.replace('pax-', '');
                         const dispEl = document.getElementById('pax-fnac-display-' + idx);
                         const hidEl  = document.getElementById('pax-fnac-' + idx);
                         const edadEl = document.getElementById('pax-edad-' + idx);
@@ -560,17 +580,14 @@ document.addEventListener('DOMContentLoaded', function () {
                         if (dispEl) {
                             if (dispEl._flatpickr) dispEl._flatpickr.destroy();
                             flatpickr('#pax-fnac-display-' + idx, {
-                                locale:'es', dateFormat:'d/m/Y',
-                                maxDate:'today', allowInput:false,
+                                locale:'es', dateFormat:'d/m/Y', maxDate:'today', allowInput:false,
                                 defaultDate: p.fecha_nacimiento,
                                 onChange(sel, str, inst) {
                                     const iso = inst.formatDate(sel[0], 'Y-m-d');
                                     if (hidEl) hidEl.value = iso;
-                                    // Calcular edad
-                                    const hoy  = new Date();
-                                    const nac  = new Date(iso);
-                                    let edad   = hoy.getFullYear() - nac.getFullYear();
-                                    const mes  = hoy.getMonth() - nac.getMonth();
+                                    const hoy = new Date(); const nac = new Date(iso);
+                                    let edad = hoy.getFullYear() - nac.getFullYear();
+                                    const mes = hoy.getMonth() - nac.getMonth();
                                     if (mes < 0 || (mes===0 && hoy.getDate()<nac.getDate())) edad--;
                                     if (edadEl) edadEl.value = edad >= 0 ? edad : '';
                                     if (typeof calcPaxEdad === 'function') calcPaxEdad(idx, iso);
@@ -578,39 +595,29 @@ document.addEventListener('DOMContentLoaded', function () {
                             });
                         }
                     }
- 
-                    // Edad (hidden)
                     if (p.edad) {
-                        const cardId = card.id;
-                        const idx    = cardId.replace('pax-', '');
+                        const idx    = card.id.replace('pax-', '');
                         const edadEl = document.getElementById('pax-edad-' + idx);
                         if (edadEl) edadEl.value = p.edad;
                     }
                 });
- 
-                // Actualizar contador
                 if (typeof paxCnt === 'function') paxCnt();
- 
-            }, 80); // pequeño delay para que addPax() termine de renderizar
+            }, 80);
         }
     }
-    /* ── 6. DÍAS DE VIAJE ── */
+
     const diasEl = document.getElementById('dias_calculados');
     if (diasEl && !diasEl.value && D.dias_viaje) {
         diasEl.value = D.dias_viaje;
     }
 
-    /* ── 7. TITULAR → actualizar display bloque2 ── */
-    if (typeof onTitularChange === 'function') onTitularChange();
-
-    /* ── 8. RECALCULAR TODO ── */
-    if (typeof calcTotal    === 'function') calcTotal();
-    if (typeof togFactura   === 'function') togFactura();
+    if (typeof onTitularChange  === 'function') onTitularChange();
+    if (typeof calcTotal        === 'function') calcTotal();
+    if (typeof togFactura       === 'function') togFactura();
 
     setTimeout(function(){
         if (typeof updateProgressSteps === 'function') updateProgressSteps();
     }, 200);
-
 });
 </script>
 @endpush
