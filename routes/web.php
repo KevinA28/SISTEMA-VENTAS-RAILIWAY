@@ -72,6 +72,21 @@ Route::middleware('auth')->group(function () {
             ->get(['nombre', 'categoria', 'veces_usado']);
     });
 
+    // ── Archivos privados ─────────────────────────────────────────────
+    Route::get('/bauchers/{pago}', function (\App\Models\Pago $pago) {
+        if (!$pago->archivo_baucher) abort(404);
+        $path = storage_path('app/bauchers/' . basename($pago->archivo_baucher));
+        if (!file_exists($path)) abort(404);
+        return response()->file($path);
+    })->name('bauchers.ver');
+
+    Route::get('/pdfs/reserva/{reserva}', function (\App\Models\Reserva $reserva) {
+        $archivo = 'confirmacion-' . $reserva->codigo_reserva . '.pdf';
+        $path    = storage_path('app/pdfs/' . $archivo);
+        if (!file_exists($path)) abort(404);
+        return response()->file($path, ['Content-Type' => 'application/pdf']);
+    })->name('pdfs.reserva');
+
 });
 
 // ── Panel administración ──────────────────────────────────────────

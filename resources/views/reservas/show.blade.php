@@ -904,7 +904,7 @@ body { font-family: 'DM Sans', sans-serif; }
                             <div id="voucher-{{ $pago->id }}" class="voucher-panel">
                                 @php $ext = pathinfo($pago->archivo_baucher, PATHINFO_EXTENSION); @endphp
                                 @if(in_array(strtolower($ext),['jpg','jpeg','png','webp']))
-                                    <img src="{{ Storage::url($pago->archivo_baucher) }}" alt="Voucher">
+                                    <img src="{{ route('bauchers.ver', $pago) }}" alt="Voucher">
                                 @else
                                     <div style="padding:.5rem;font-size:.8rem;color:var(--ink-3);">
                                         <i class="bi bi-file-earmark-pdf" style="font-size:2rem;color:var(--red);display:block;margin-bottom:.3rem;"></i>
@@ -912,7 +912,7 @@ body { font-family: 'DM Sans', sans-serif; }
                                     </div>
                                 @endif
                                 <div>
-                                    <a href="{{ Storage::url($pago->archivo_baucher) }}" target="_blank" class="ver-full">
+                                    <a href="{{ route('bauchers.ver', $pago) }}" target="_blank" class="ver-full">
                                         <i class="bi bi-box-arrow-up-right"></i> Abrir en nueva pestaña
                                     </a>
                                 </div>

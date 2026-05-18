@@ -38,13 +38,13 @@ class MailService
                         ->to($emailDestino, $reserva->cliente->nombre_completo)
                         ->subject('Confirmación de Reserva — ' . $reserva->codigo_reserva);
 
-                    if ($pdfPath && Storage::disk('public')->exists($pdfPath)) {
-                        $message->attachData(
-                            Storage::disk('public')->get($pdfPath),
-                            'confirmacion-' . $reserva->codigo_reserva . '.pdf',
-                            ['mime' => 'application/pdf']
-                        );
-                    }
+                    if ($pdfPath && Storage::disk('local')->exists($pdfPath)) {
+                $message->attachData(
+                    Storage::disk('local')->get($pdfPath),
+                     'confirmacion-' . $reserva->codigo_reserva . '.pdf',
+                     ['mime' => 'application/pdf']
+                    );
+                  }
                 }
             );
 

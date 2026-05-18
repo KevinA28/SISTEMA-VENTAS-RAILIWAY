@@ -16,16 +16,11 @@ class DatabaseSeeder extends Seeder
     {
         // Estados de reserva
         $estados = [
-                     ['nombre' => 'consulta',     'color_hex' => '#6b7280'],
-                     ['nombre' => 'pre-reserva',  'color_hex' => '#f59e0b'],
-                     ['nombre' => 'confirmada',   'color_hex' => '#10b981'],
-                     ['nombre' => 'lista espera', 'color_hex' => '#8b5cf6'],
-                     ['nombre' => 'cancelada',    'color_hex' => '#ef4444'],
-                     ['nombre' => 'no show',      'color_hex' => '#f97316'],
-                     ['nombre' => 'finalizada',   'color_hex' => '#1d4ed8'],
-                     ['nombre' => 'mitad_pago',   'color_hex' => '#f59e0b'],
-                     ['nombre' => 'pagado',       'color_hex' => '#10b981'],
-                   ];
+                 ['nombre' => 'mitad_pago',        'color_hex' => '#f59e0b'],
+                 ['nombre' => 'otros_porcentajes', 'color_hex' => '#8b5cf6'],
+                 ['nombre' => 'pagado',            'color_hex' => '#10b981'],
+                 ['nombre' => 'cancelada',         'color_hex' => '#ef4444'],
+                 ];
         foreach ($estados as $e) {
             DB::table('estados_reserva')->insertOrIgnore([...$e, 'created_at' => now(), 'updated_at' => now()]);
         }

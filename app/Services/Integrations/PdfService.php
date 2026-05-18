@@ -17,18 +17,18 @@ class PdfService
     // GENERA PDF DE CONFIRMACIÓN DE RESERVA
     // -----------------------------------------------------------------
     public function generarConfirmacion(Reserva $reserva): string
-    {
-        $pdf = Pdf::loadView('pdf.confirmacion-reserva', [
-            'reserva' => $reserva,
-        ]);
+{
+    $pdf = Pdf::loadView('pdf.confirmacion-reserva', [
+        'reserva' => $reserva,
+    ]);
 
-        $pdf->setPaper('A4', 'portrait');
+    $pdf->setPaper('A4', 'portrait');
 
-        $path = 'reservas/confirmacion-' . $reserva->codigo_reserva . '.pdf';
-        Storage::disk('public')->put($path, $pdf->output());
+    $nombre = 'confirmacion-' . $reserva->codigo_reserva . '.pdf';
+    Storage::disk('local')->put('pdfs/' . $nombre, $pdf->output());
 
-        return $path;
-    }
+    return 'pdfs/' . $nombre;
+}
 
     // -----------------------------------------------------------------
     // GENERA PDF DE COMPROBANTE DE PAGO

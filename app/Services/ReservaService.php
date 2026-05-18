@@ -189,7 +189,7 @@ if (!empty($datos['metodo_pago']) && !empty($datos['monto_pagado_inicial'])) {
         // ── 7. Baucher ────────────────────────────────────────
         $rutaBaucher = null;
         if (!empty($datos['archivo_baucher']) && $datos['archivo_baucher'] instanceof UploadedFile) {
-            $rutaBaucher = $datos['archivo_baucher']->store('baucherss', 'public');
+            $rutaBaucher = $datos['archivo_baucher']->store('bauchers', 'local');
         }
 
         // ── 8. Pago inicial ───────────────────────────────────
@@ -401,7 +401,7 @@ if (!empty($datos['metodo_pago']) && !empty($datos['monto_pagado_inicial'])) {
 
                 $rutaBaucher = null;
                 if (!empty($datos['archivo_baucher']) && $datos['archivo_baucher'] instanceof UploadedFile) {
-                    $rutaBaucher = $datos['archivo_baucher']->store('baucherss', 'public');
+                    $rutaBaucher = $datos['archivo_baucher']->store('bauchers', 'local');
                 }
 
                 $reserva->pagos()->create([

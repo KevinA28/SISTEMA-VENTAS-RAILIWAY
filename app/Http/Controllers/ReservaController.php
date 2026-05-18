@@ -176,7 +176,7 @@ class ReservaController extends Controller
 
                 $rutaBaucher = null;
                 if ($request->hasFile('archivo_baucher')) {
-                    $rutaBaucher = $request->file('archivo_baucher')->store('baucherss', 'public');
+                    $rutaBaucher = $request->file('archivo_baucher')->store('bauchers', 'local');
                 }
 
                 $reserva->pagos()->create([
