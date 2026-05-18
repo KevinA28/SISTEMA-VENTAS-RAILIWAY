@@ -39,45 +39,6 @@ class ClienteController extends Controller
     {
         return view('clientes.create');
     }
-
-    public function store(StoreReservaRequest $request)
-{
-    try {
-        $datos   = $request->validated();
-        $reserva = $this->reservaService->crear($datos);
-
-        // ✅ Preparar la respuesta
-        $redirect = redirect()->route('reservas.index')
-            ->with('success', 'Reserva creada correctamente.');
-
-        // ✅ Enviar respuesta al navegador AHORA y continuar en segundo plano
-        ob_end_clean();
-        header('Connection: close');
-        header('Content-Length: 0');
-        flush();
-
-        if (function_exists('fastcgi_finish_request')) {
-            fastcgi_finish_request(); // ← libera el navegador en PHP-FPM
-        }
-
-        // ✅ Esto corre DESPUÉS de que el navegador ya fue redirigido
-        $this->reservaService->enviarNotificacionesCreacion($reserva, $datos);
-
-        return $redirect;
-
-    } catch (\Exception $e) {
-        \Log::error('Error al crear reserva', [
-            'message' => $e->getMessage(),
-            'file'    => $e->getFile(),
-            'line'    => $e->getLine(),
-            'input'   => $request->except(['archivo_baucher']),
-        ]);
-        return back()
-            ->withInput()
-            ->with('error', 'Error: ' . $e->getMessage()
-                . ' (' . basename($e->getFile()) . ':' . $e->getLine() . ')');
-    }
-}
     public function show(Cliente $cliente)
     {
         $cliente = $this->clienteService->cargarDetalle($cliente);
@@ -110,26 +71,18 @@ class ClienteController extends Controller
      */
     public function buscarDocumento(Request $request)
     {
-        $resultado = $this->clienteService->buscarOConsultarDocumento(
-            $request->numero,
-            $request->tipo ?? 'DNI'
-        );
+    $request->validate([
+        'numero' => ['required', 'string', 'max:20', 'regex:/^\d+$/'],
+        'tipo'   => ['nullable', 'in:DNI,RUC,CE,PASAPORTE'],
+    ]);
 
-        return response()->json($resultado);
+    $resultado = $this->clienteService->buscarOConsultarDocumento(
+        $request->numero,
+        $request->tipo ?? 'DNI'
+    );
+
+      return response()->json($resultado);
     }
-
-    // =========================================================================
-    // AJAX — SUNAT / RENIEC
-    // Rutas en web.php (fuera del grupo auth):
-    //   Route::get('/api/buscar-dni/{dni}', [ClienteController::class, 'buscarDni']);
-    //   Route::get('/api/buscar-ruc/{ruc}', [ClienteController::class, 'buscarRuc']);
-    // =========================================================================
-
-    /**
-     * Buscar persona por DNI.
-     * Flujo: BD local → ReniecService (apis.net.pe)
-     * GET /api/buscar-dni/{dni}
-     */
     public function buscarDni(string $dni)
     {
         if (!preg_match('/^\d{8}$/', $dni)) {

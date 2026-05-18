@@ -431,7 +431,7 @@ function onNombreTourInput(inp) {
 
     _tourTimer = setTimeout(async () => {
         try {
-            const res  = await fetch('/api/tours/sugerencias?q=' + encodeURIComponent(q));
+            const res  = await fetch('/api/tours/sugerencias?q=' + encodeURIComponent(q), { credentials: 'same-origin' });
             const data = await res.json();
             if (!data.length) { ul.style.display = 'none'; return; }
             ul.innerHTML = data.map(t =>
@@ -471,7 +471,7 @@ function onCiudadDestinoInput(inp) {
 
 async function _buscarCiudad(q) {
     try {
-        const res  = await fetch('/api/ciudades/buscar?q=' + encodeURIComponent(q));
+        const res  = await fetch('/api/ciudades/buscar?q=' + encodeURIComponent(q), { credentials: 'same-origin' });
         const data = await res.json();
         const cont = document.getElementById('ciudad-destino-suggestions');
         if (!cont) return;

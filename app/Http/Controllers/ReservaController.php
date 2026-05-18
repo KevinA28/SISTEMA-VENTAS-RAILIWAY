@@ -83,16 +83,15 @@ class ReservaController extends Controller
             ->with('success', 'Reserva creada correctamente.');
 
     } catch (\Exception $e) {
-        \Log::error('Error al crear reserva', [
-            'message' => $e->getMessage(),
-            'file'    => $e->getFile(),
-            'line'    => $e->getLine(),
-            'input'   => $request->except(['archivo_baucher']),
-        ]);
-        return back()
-            ->withInput()
-            ->with('error', 'Error: ' . $e->getMessage()
-                . ' (' . basename($e->getFile()) . ':' . $e->getLine() . ')');
+    \Log::error('Error al crear reserva', [
+        'message' => $e->getMessage(),
+        'file'    => $e->getFile(),
+        'line'    => $e->getLine(),
+        'input'   => $request->except(['archivo_baucher']),
+    ]);
+    return back()
+        ->withInput()
+        ->with('error', 'Ocurrió un error al crear la reserva. Por favor intenta de nuevo.');
     }
 }
 
@@ -129,8 +128,8 @@ class ReservaController extends Controller
                 'reserva' => $reserva->id,
             ]);
             return back()
-                ->withInput()
-                ->with('error', 'Error al actualizar: ' . $e->getMessage());
+          ->withInput()
+          ->with('error', 'Ocurrió un error al actualizar la reserva. Por favor intenta de nuevo.');
         }
     }
 
@@ -372,7 +371,7 @@ class ReservaController extends Controller
             return back()->with('success', 'Notificación reenviada correctamente.');
 
         } catch (\Exception $e) {
-            return back()->with('error', 'Error al reenviar: ' . $e->getMessage());
+            return back()->with('error', 'Ocurrió un error al reenviar la notificación. Por favor intenta de nuevo.');
         }
     }
 }

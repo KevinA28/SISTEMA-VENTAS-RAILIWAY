@@ -587,32 +587,39 @@ async function buscarPorDoc() {
     const doc  = (document.getElementById('titular_numero_documento')?.value || '').trim();
     const tipo = document.getElementById('titular_tipo_documento')?.value || 'DNI';
     const btn  = document.getElementById('btn-lookup');
-    if (!doc) { showDniResult('err','Ingresa el número.'); return; }
-    if (tipo === 'DNI' && doc.length !== 8)  { showDniResult('err','DNI debe tener 8 dígitos.'); return; }
-    if (tipo === 'RUC' && doc.length !== 11) { showDniResult('err','RUC debe tener 11 dígitos.'); return; }
+ 
+    if (!doc) { showDniResult('err', 'Ingresa el número.'); return; }
+    if (tipo === 'DNI' && doc.length !== 8)  { showDniResult('err', 'DNI debe tener 8 dígitos.'); return; }
+    if (tipo === 'RUC' && doc.length !== 11) { showDniResult('err', 'RUC debe tener 11 dígitos.'); return; }
+ 
     setLookupLoading(btn, true, 'btn-lookup');
-    showDniResult('load','<span class="spinner"></span> Consultando...');
+    showDniResult('load', '<span class="spinner"></span> Consultando...');
+ 
     try {
-        const url   = tipo === 'RUC' ? '/api/buscar-ruc/'+doc : '/api/buscar-dni/'+doc;
-        const local = await fetchJSON(url);
-        if (local?.success && local.nombre) { aplicarDatosPersona(local); return; }
-        const extUrl = tipo === 'RUC'
-            ? 'https://api.apis.net.pe/v2/sunat/ruc?numero='+doc
-            : 'https://api.apis.net.pe/v2/reniec/dni?numero='+doc;
-        const ext = await fetchJSON(extUrl);
-        if (!ext) throw new Error('sin respuesta');
-        if (tipo === 'RUC' && ext.razonSocial) {
-            aplicarDatosPersona({ nombre: ext.razonSocial, success: true });
-            const rs = document.getElementById('razon_social');
-            if (rs) rs.value = ext.razonSocial.toUpperCase();
-        } else if (ext?.nombres || ext?.nombre || ext?.apellidoPaterno) {
-         const n = ext.nombre || [ext.apellidoPaterno, ext.apellidoMaterno, ext.nombres].filter(Boolean).join(' ');
-         aplicarDatosPersona({ nombre: n, success: true });
+        const url  = tipo === 'RUC' ? '/api/buscar-ruc/' + doc : '/api/buscar-dni/' + doc;
+        const data = await fetchJSON(url);
+ 
+        // El proxy puede devolver nombre o nombre_completo según ReniecService
+        const nombre = data?.nombre_completo || data?.nombre || null;
+ 
+        if (data?.success && nombre) {
+            aplicarDatosPersona({ ...data, nombre });
+ 
+            // Si es RUC también rellenar razón social
+            if (tipo === 'RUC') {
+                const rs = document.getElementById('razon_social');
+                if (rs) rs.value = nombre.toUpperCase();
+            }
         } else {
-            showDniResult('err','No encontrado. Ingresa manualmente.');
+            const msg = data?.error || data?.message || 'No encontrado. Ingresa manualmente.';
+            showDniResult('err', msg);
         }
-    } catch(err) { console.error('buscarPorDoc:', err); showDniResult('err','Sin conexión. Ingresa manualmente.'); }
-    finally   { setLookupLoading(btn, false, 'btn-lookup'); }
+    } catch (err) {
+        console.error('buscarPorDoc:', err);
+        showDniResult('err', 'Sin conexión. Ingresa manualmente.');
+    } finally {
+        setLookupLoading(btn, false, 'btn-lookup');
+    }
 }
 
 let _rucTimer = null;
@@ -654,36 +661,32 @@ async function buscarPaxDNI(i) {
     const doc = (document.getElementById('pd-' + i)?.value || '').trim();
     const btn = document.getElementById('btn-pax-lookup-' + i);
     const res = document.getElementById('pax-dni-result-' + i);
+ 
     if (!doc || doc.length !== 8) {
         if (res) { res.className = 'dni-result visible err'; res.innerHTML = 'DNI debe tener 8 dígitos.'; }
         return;
     }
+ 
     if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner" style="width:10px;height:10px;border-width:2px"></span>'; }
     if (res) { res.className = 'dni-result visible load'; res.innerHTML = '<span class="spinner"></span> Consultando...'; }
+ 
     try {
-        let nombre = null;
-        const local = await fetchJSON('/api/buscar-dni/' + doc);
-        if (local?.success && local.nombre) {
-            nombre = local.nombre;
-        } else {
-            const ext = await fetchJSON('https://api.apis.net.pe/v2/reniec/dni?numero=' + doc);
-            if (ext) {
-                nombre = ext.nombre
-                    || [ext.apellidoPaterno, ext.apellidoMaterno, ext.nombres].filter(Boolean).join(' ')
-                    || ext.nombreCompleto
-                    || null;
-            }
-        }
-        if (nombre) {
+        const data = await fetchJSON('/api/buscar-dni/' + doc);
+ 
+        // El proxy puede devolver nombre o nombre_completo según ReniecService
+        const nombre = data?.nombre_completo || data?.nombre || null;
+ 
+        if (data?.success && nombre) {
             const n = nombre.toUpperCase();
             const ni = document.getElementById('pax-nombre-' + i);
-            if (ni) ni.value = n;
+            if (ni) { ni.value = n; ni.dispatchEvent(new Event('input')); }
             if (res) { res.className = 'dni-result visible ok'; res.innerHTML = '<i class="bi bi-check-circle-fill"></i> ' + n; }
             updateProgressSteps();
         } else {
-            if (res) { res.className = 'dni-result visible err'; res.innerHTML = 'No encontrado — si es menor de edad o extranjero, ingresa el nombre manualmente.'; }
+            const msg = data?.error || data?.message || 'No encontrado — ingresa el nombre manualmente.';
+            if (res) { res.className = 'dni-result visible err'; res.innerHTML = msg; }
         }
-    } catch(err) {
+    } catch (err) {
         console.error('buscarPaxDNI error:', err);
         if (res) { res.className = 'dni-result visible err'; res.innerHTML = 'Error al consultar. Ingresa el nombre manualmente.'; }
     } finally {
@@ -1408,3 +1411,413 @@ if (met && mi && (!mi.value || parseFloat(mi.value) <= 0)) {
         b.disabled = true;
     }
 });
+const FORM_STORAGE_KEY = 'reserva_create_draft';
+ 
+/* ── Campos que NO se deben guardar (seguridad / archivos) ── */
+const SKIP_FIELDS = new Set([
+    '_token',
+    'archivo_baucher',
+    'password',
+]);
+ 
+/* ── Guardar todo el formulario en sessionStorage ── */
+function saveFormDraft() {
+    const form = document.getElementById('form-reserva');
+    if (!form) return;
+ 
+    const draft = {};
+    const elements = form.querySelectorAll('input, select, textarea');
+ 
+    elements.forEach(el => {
+        const name = el.name || el.id;
+        if (!name || SKIP_FIELDS.has(name)) return;
+ 
+        if (el.type === 'checkbox' || el.type === 'radio') {
+            draft[name] = el.checked;
+        } else if (el.type === 'file') {
+            // no guardamos archivos
+        } else {
+            draft[name] = el.value;
+        }
+    });
+ 
+    // Guardar también los campos de email widget (no tienen name en el form)
+    const emailUser   = document.getElementById('email-user');
+    const emailDomain = document.getElementById('email-domain');
+    if (emailUser)   draft['__email_user']   = emailUser.value;
+    if (emailDomain) draft['__email_domain'] = emailDomain.value;
+ 
+    // Guardar el código de país de los teléfonos
+    ['1','2','3'].forEach(suffix => {
+        const codeEl = document.getElementById('phone-code-' + suffix);
+        const flagEl = document.getElementById('phone-flag-' + suffix);
+        if (codeEl) draft['__phone_code_' + suffix] = codeEl.textContent;
+        if (flagEl) draft['__phone_flag_' + suffix] = flagEl.textContent;
+    });
+ 
+    // Guardar número de pasajeros adicionales creados (pN)
+    draft['__pax_count'] = pN;
+ 
+    try {
+        sessionStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(draft));
+    } catch (e) {
+        // sessionStorage lleno o bloqueado — ignorar silenciosamente
+    }
+}
+ 
+/* ── Restaurar el formulario desde sessionStorage ── */
+function restoreFormDraft() {
+    let draft;
+    try {
+        const raw = sessionStorage.getItem(FORM_STORAGE_KEY);
+        if (!raw) return;
+        draft = JSON.parse(raw);
+    } catch (e) {
+        return;
+    }
+ 
+    const form = document.getElementById('form-reserva');
+    if (!form) return;
+ 
+    // Mostrar banner de "datos recuperados"
+    showDraftBanner();
+ 
+    const elements = form.querySelectorAll('input, select, textarea');
+    elements.forEach(el => {
+        const name = el.name || el.id;
+        if (!name || SKIP_FIELDS.has(name) || !(name in draft)) return;
+ 
+        if (el.type === 'checkbox' || el.type === 'radio') {
+            el.checked = draft[name];
+        } else if (el.type === 'file') {
+            // no restauramos archivos
+        } else {
+            // No sobreescribir si ya tiene valor (ej: old() de Laravel)
+            if (!el.value) el.value = draft[name];
+        }
+    });
+ 
+    // Restaurar email widget
+    if (draft['__email_user']) {
+        const eu = document.getElementById('email-user');
+        if (eu && !eu.value) eu.value = draft['__email_user'];
+    }
+    if (draft['__email_domain']) {
+        const ed = document.getElementById('email-domain');
+        if (ed && !ed.value) ed.value = draft['__email_domain'];
+    }
+    loadEmailOld(); // sincronizar el campo hidden
+ 
+    // Restaurar códigos de teléfono
+    ['1','2','3'].forEach(suffix => {
+        const codeKey = '__phone_code_' + suffix;
+        const flagKey = '__phone_flag_' + suffix;
+        if (draft[codeKey]) {
+            const codeEl = document.getElementById('phone-code-' + suffix);
+            if (codeEl) codeEl.textContent = draft[codeKey];
+        }
+        if (draft[flagKey]) {
+            const flagEl = document.getElementById('phone-flag-' + suffix);
+            if (flagEl) flagEl.textContent = draft[flagKey];
+        }
+    });
+ 
+    // Forzar actualización de funciones dependientes
+    setTimeout(() => {
+        togFactura();
+        calcTotal();
+        calcDias();
+        toggleTransporte();
+        updOpHint();
+ 
+        // Resincronizar flatpickr con valores restaurados
+        resyncFlatpickr('fecha_arribo');
+        resyncFlatpickr('fecha_retorno');
+ 
+        // Titular → salud
+        const tiNombre = document.getElementById('titular_nombre');
+        if (tiNombre && tiNombre.value) actualizarNombreTitularSalud(tiNombre.value);
+ 
+        // Toggle solo pasajero
+        const soloChk = document.getElementById('solo-pasajero');
+        if (soloChk) toggleSoloPasajero(soloChk);
+ 
+        // Salud master
+        const saludChk = document.getElementById('salud-master-toggle');
+        if (saludChk && saludChk.checked) {
+            saludChk.dataset.touched = '1';
+            _updateSaludMasterVisual(true);
+        }
+ 
+        updateProgressSteps();
+    }, 100);
+}
+ 
+/* ── Re-sincronizar flatpickr con el valor del hidden ── */
+function resyncFlatpickr(fieldId) {
+    const hidden = document.getElementById(fieldId);
+    const display = document.getElementById(fieldId + '_display');
+    if (!hidden || !display || !hidden.value || hidden.value === 'N/D') return;
+    const fp = display._flatpickr;
+    if (fp) fp.setDate(hidden.value, true, 'Y-m-d');
+}
+ 
+/* ── Limpiar draft del sessionStorage ── */
+function clearFormDraft() {
+    try {
+        sessionStorage.removeItem(FORM_STORAGE_KEY);
+    } catch (e) {}
+}
+ 
+/* ── Banner "borrador recuperado" ── */
+function showDraftBanner() {
+    // Evitar duplicados
+    if (document.getElementById('draft-banner')) return;
+ 
+    const banner = document.createElement('div');
+    banner.id = 'draft-banner';
+    banner.innerHTML = `
+        <i class="bi bi-cloud-check-fill" style="font-size:.95rem;"></i>
+        <span>Se recuperaron los datos que estabas completando.</span>
+        <button type="button" onclick="dismissDraftBanner()" title="Cerrar"
+                style="background:none;border:none;cursor:pointer;color:inherit;
+                       padding:0 .2rem;font-size:.9rem;opacity:.7;line-height:1;">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    `;
+    banner.style.cssText = `
+        display:flex;align-items:center;gap:.6rem;
+        padding:.65rem 1rem;border-radius:10px;
+        background:#eff6ff;border:1.5px solid #bfdbfe;
+        color:#1e40af;font-size:.82rem;font-weight:600;
+        margin-bottom:.75rem;animation:draftFadeIn .3s ease;
+    `;
+ 
+    // Insertar antes del primer bloque del form
+    const form = document.getElementById('form-reserva');
+    if (form) form.insertAdjacentElement('beforebegin', banner);
+}
+ 
+window.dismissDraftBanner = function() {
+    document.getElementById('draft-banner')?.remove();
+};
+ 
+/* ── Animación del banner ── */
+(function injectDraftStyles() {
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes draftFadeIn {
+            from { opacity: 0; transform: translateY(-6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        /* Modal de confirmación limpiar */
+        #clear-modal-overlay {
+            display:none;position:fixed;inset:0;
+            background:rgba(0,0,0,.45);z-index:99999;
+            align-items:center;justify-content:center;
+        }
+        #clear-modal-overlay.open { display:flex; }
+        #clear-modal-box {
+            background:#fff;border-radius:16px;padding:1.5rem;
+            width:100%;max-width:380px;margin:1rem;
+            box-shadow:0 20px 60px rgba(0,0,0,.2);
+            animation:draftFadeIn .2s ease;
+        }
+        #clear-modal-box .cm-title {
+            font-size:1rem;font-weight:700;color:#0d1117;
+            display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem;
+        }
+        #clear-modal-box .cm-body {
+            font-size:.83rem;color:#6b7280;line-height:1.55;margin-bottom:1.25rem;
+        }
+        #clear-modal-box .cm-footer {
+            display:flex;gap:.6rem;justify-content:flex-end;
+        }
+        .cm-btn-cancel {
+            padding:8px 18px;border-radius:9px;font-size:.84rem;font-weight:600;
+            background:#f3f4f6;color:#6b7280;border:1.5px solid #e5e7eb;
+            cursor:pointer;font-family:inherit;transition:all .15s;
+        }
+        .cm-btn-cancel:hover { background:#e5e7eb; }
+        .cm-btn-danger {
+            padding:8px 20px;border-radius:9px;font-size:.84rem;font-weight:700;
+            background:#dc2626;color:white;border:none;cursor:pointer;
+            font-family:inherit;transition:background .15s;
+            display:flex;align-items:center;gap:.4rem;
+        }
+        .cm-btn-danger:hover { background:#b91c1c; }
+        /* Botón limpiar en la barra */
+        .btn-clear-form {
+            display:inline-flex;align-items:center;gap:.4rem;
+            padding:9px 16px;border-radius:10px;font-size:.84rem;font-weight:600;
+            font-family:inherit;cursor:pointer;transition:all .2s;
+            background:transparent;color:#6b7280;
+            border:1.5px solid #e5e7eb;
+        }
+        .btn-clear-form:hover {
+            border-color:#dc2626;color:#dc2626;background:#fef2f2;
+        }
+    `;
+    document.head.appendChild(style);
+})();
+ 
+/* ══════════════════════════════════════════════════════════════
+   MODAL DE CONFIRMACIÓN — Limpiar formulario
+══════════════════════════════════════════════════════════════ */
+(function injectClearModal() {
+    document.addEventListener('DOMContentLoaded', () => {
+        const overlay = document.createElement('div');
+        overlay.id = 'clear-modal-overlay';
+        overlay.innerHTML = `
+            <div id="clear-modal-box">
+                <div class="cm-title">
+                    <i class="bi bi-trash3-fill" style="color:#dc2626;font-size:1.1rem;"></i>
+                    ¿Limpiar formulario?
+                </div>
+                <div class="cm-body">
+                    Se borrarán <strong>todos los datos ingresados</strong> en el formulario
+                    y no podrás recuperarlos. Esta acción no se puede deshacer.
+                </div>
+                <div class="cm-footer">
+                    <button type="button" class="cm-btn-cancel"
+                            onclick="closeClearModal()">Cancelar</button>
+                    <button type="button" class="cm-btn-danger"
+                            onclick="confirmClearForm()">
+                        <i class="bi bi-trash3"></i> Sí, limpiar todo
+                    </button>
+                </div>
+            </div>
+        `;
+        overlay.addEventListener('click', e => {
+            if (e.target === overlay) closeClearModal();
+        });
+        document.body.appendChild(overlay);
+    });
+})();
+ 
+window.openClearModal  = function() {
+    document.getElementById('clear-modal-overlay')?.classList.add('open');
+    document.body.style.overflow = 'hidden';
+};
+window.closeClearModal = function() {
+    document.getElementById('clear-modal-overlay')?.classList.remove('open');
+    document.body.style.overflow = '';
+};
+ 
+window.confirmClearForm = function() {
+    closeClearModal();
+    clearFormDraft();
+ 
+    const form = document.getElementById('form-reserva');
+    if (!form) return;
+ 
+    // Reset nativo del form
+    form.reset();
+ 
+    // Limpiar flatpickr
+    ['fecha_arribo_display','fecha_retorno_display',
+     'hora_arribo_display','hora_retorno_display',
+     'hora_salida_vuelo_display','hora_llegada_vuelo_display'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el?._flatpickr) el._flatpickr.clear();
+    });
+ 
+    // Limpiar widgets personalizados
+    const emailUser   = document.getElementById('email-user');
+    const emailDomain = document.getElementById('email-domain');
+    if (emailUser)   emailUser.value = '';
+    if (emailDomain) emailDomain.value = '';
+    joinEmail();
+ 
+    // Limpiar pasajeros adicionales
+    const paxLista = document.getElementById('pax-lista');
+    if (paxLista) paxLista.innerHTML = '';
+    pN = 0;
+    paxCnt();
+ 
+    // Limpiar preview de voucher
+    removeFile();
+ 
+    // Limpiar errores visuales
+    form.querySelectorAll('.err, .ok-val').forEach(el => {
+        el.classList.remove('err', 'ok-val');
+    });
+    form.querySelectorAll('.live-err').forEach(el => el.remove());
+ 
+    // Quitar banner de draft si existe
+    document.getElementById('draft-banner')?.remove();
+ 
+    // Re-inicializar estados
+    togFactura();
+    calcTotal();
+    calcDias();
+    toggleTransporte();
+    updOpHint();
+    updateProgressSteps();
+ 
+    // Toast confirmación
+    showClearToast();
+};
+ 
+function showClearToast() {
+    const t = document.createElement('div');
+    t.style.cssText = `
+        position:fixed;top:1.25rem;left:50%;transform:translateX(-50%);
+        background:#dc2626;color:white;padding:.65rem 1.4rem;border-radius:12px;
+        font-size:.86rem;font-weight:700;z-index:99999;
+        box-shadow:0 4px 20px rgba(220,38,38,.35);
+        animation:draftFadeIn .25s ease;white-space:nowrap;
+        display:flex;align-items:center;gap:.5rem;
+    `;
+    t.innerHTML = '<i class="bi bi-check-circle-fill"></i> Formulario limpiado correctamente';
+    document.body.appendChild(t);
+    setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; }, 1800);
+    setTimeout(() => t.remove(), 2100);
+}
+ 
+/* ══════════════════════════════════════════════════════════════
+   GUARDAR AUTOMÁTICAMENTE
+   Se engancha a todos los cambios del formulario con debounce.
+══════════════════════════════════════════════════════════════ */
+(function initAutoSave() {
+    let saveTimer = null;
+ 
+    function scheduleSave() {
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(saveFormDraft, 400);
+    }
+ 
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('form-reserva');
+        if (!form) return;
+ 
+        // Escuchar cualquier cambio en el formulario
+        form.addEventListener('input',  scheduleSave);
+        form.addEventListener('change', scheduleSave);
+ 
+        // Limpiar draft al enviar exitosamente
+        form.addEventListener('submit', function(e) {
+            // Solo limpiar si el submit no fue cancelado (valid = true)
+            // Se verifica si el botón NO fue deshabilitado previamente por error
+            setTimeout(() => {
+                const btn = document.getElementById('btn-submit');
+                if (btn && btn.disabled) {
+                    // El form se está enviando → limpiar draft
+                    clearFormDraft();
+                }
+            }, 50);
+        });
+ 
+        // Restaurar al cargar (solo si no hay errores de servidor)
+        const hasServerErrors = document.querySelector('.lerr') !== null;
+        if (!hasServerErrors) {
+            restoreFormDraft();
+        }
+    });
+})();
+ 
+/* Tecla Escape cierra el modal de limpiar */
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeClearModal();
+});
+ 

@@ -1,55 +1,50 @@
 <?php
-// =====================================================================
-// ARCHIVO: UsuarioAdmin.php
-// UBICACIÓN: app/Models/UsuarioAdmin.php
-// =====================================================================
 
 namespace App\Models;
 
-// 1. Importamos la clase especial Authenticatable en lugar de Model
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-// 2. Extendemos de Authenticatable
 class UsuarioAdmin extends Authenticatable
 {
-    // 3. Agregamos los traits necesarios para autenticación
     use HasApiTokens, Notifiable;
 
     protected $table = 'usuarios_admin';
 
-    // Tus campos originales
     protected $fillable = [
-        'nombre', 'apellido', 'email', 'password', 'rol', 'activo',
+        'nombre', 'apellido', 'foto_perfil', 'email', 'password', 'rol', 'activo', 'invited_by',
     ];
 
-    // Ocultamos el password y agregamos remember_token (necesario para el "Recuérdame" del login)
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    // Tus conversiones originales + el encriptado de contraseña
     protected $casts = [
-        'activo' => 'boolean',
+        'activo'   => 'boolean',
         'password' => 'hashed',
     ];
-
-    // ==========================================
-    // TUS RELACIONES Y MÉTODOS ORIGINALES
-    // ==========================================
 
     public function reservasRegistradas()
     {
         return $this->hasMany(Reserva::class, 'usuario_admin_id');
     }
 
+    public function invitadoPor()
+    {
+        return $this->belongsTo(UsuarioAdmin::class, 'invited_by');
+    }
+
     public function getNombreCompletoAttribute(): string
     {
         return $this->nombre . ' ' . $this->apellido;
     }
-    public function getRememberToken() { return null; }
-    public function setRememberToken($value) {}
-    public function getRememberTokenName() { return ''; }
+
+    public function getFotoUrlAttribute(): string
+    {
+        return $this->foto_perfil
+            ? asset('storage/' . $this->foto_perfil)
+            : '';
+    }
 }

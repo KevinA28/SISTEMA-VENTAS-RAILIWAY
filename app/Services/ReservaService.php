@@ -138,6 +138,7 @@ class ReservaService
                 'politica_descripcion'               => $datos['politica_descripcion']     ?? null,
                 'politica_tipo'                      => $datos['politica_tipo']            ?? null,
                 'observaciones'                      => $datos['observaciones']            ?? null,
+                'email_contacto'                     => $datos['titular_email']            ?? null,
             ]);
 
             // ── 4. Pasajero titular ───────────────────────────────
@@ -175,31 +176,39 @@ if (!empty($datos['nombre_tour'])) {
         ?->registrarUso();
 }
 
-            // ── 6. Método de pago ─────────────────────────────────
-            $metodoPago = MetodoPago::where('clave', $datos['metodo_pago'])
-                            ->orWhere('nombre', $datos['metodo_pago'])
-                            ->firstOrFail();
+            $metodoPagoId = null;
+if (!empty($datos['metodo_pago']) && !empty($datos['monto_pagado_inicial'])) {
 
-            // ── 7. Baucher ────────────────────────────────────────
-            $rutaBaucher = null;
-            if (!empty($datos['archivo_baucher']) && $datos['archivo_baucher'] instanceof UploadedFile) {
-                $rutaBaucher = $datos['archivo_baucher']->store('baucherss', 'public');
-            }
+    $metodoPago = MetodoPago::where('clave', $datos['metodo_pago'])
+                    ->orWhere('nombre', $datos['metodo_pago'])
+                    ->first(); // ← first() en vez de firstOrFail()
 
-            // ── 8. Pago inicial ───────────────────────────────────
-            $reserva->pagos()->create([
-                'metodo_pago_id'    => $metodoPago->id,
-                'registrado_por'    => Auth::id(),
-                'monto'             => $datos['monto_pagado_inicial'],
-                'numero_operacion'  => $datos['numero_operacion'] ?? null,
-                'archivo_baucher'   => $rutaBaucher,
-                'tipo_pago'         => $datos['tipo_pago'],
-                'estado_validacion' => 'pendiente',
-                'fecha_pago'        => $datos['fecha_pago'],
-            ]);
-            $reserva->update([
-               'monto_pagado' => $reserva->pagos()->sum('monto'),
-            ]);
+    if ($metodoPago) {
+        $metodoPagoId = $metodoPago->id;
+
+        // ── 7. Baucher ────────────────────────────────────────
+        $rutaBaucher = null;
+        if (!empty($datos['archivo_baucher']) && $datos['archivo_baucher'] instanceof UploadedFile) {
+            $rutaBaucher = $datos['archivo_baucher']->store('baucherss', 'public');
+        }
+
+        // ── 8. Pago inicial ───────────────────────────────────
+        $reserva->pagos()->create([
+            'metodo_pago_id'    => $metodoPagoId,
+            'registrado_por'    => Auth::id(),
+            'monto'             => $datos['monto_pagado_inicial'],
+            'numero_operacion'  => $datos['numero_operacion'] ?? null,
+            'archivo_baucher'   => $rutaBaucher,
+            'tipo_pago'         => $datos['tipo_pago'],
+            'estado_validacion' => 'pendiente',
+            'fecha_pago'        => $datos['fecha_pago'],
+        ]);
+
+        $reserva->update([
+            'monto_pagado' => $reserva->pagos()->sum('monto'),
+        ]);
+    }
+}
 
             // ── 9. Historial ──────────────────────────────────────
             HistorialEstado::create([
@@ -352,7 +361,7 @@ if (!empty($datos['nombre_tour'])) {
                 'politica_descripcion'               => $datos['politica_descripcion']     ?? null,
                 'politica_tipo'                      => $datos['politica_tipo']            ?? null,
                 'observaciones'                      => $datos['observaciones']            ?? null,
-                'email_contacto'                     => $datos['titular_email'] ?? null,
+                'email_contacto'                     => $datos['titular_email'] ?? null
             ]);
 
             // ── 4. Reemplazar pasajeros + salud ───────────────────
@@ -432,14 +441,6 @@ if (!empty($datos['nombre_tour'])) {
     // ══════════════════════════════════════════════════════════════════
     private function guardarSaludTitular(Pasajero $pasajero, array $datos): void
     {
-    \Log::info('DEBUG salud titular', [
-    'tiene_alergias'   => $datos['titular_tiene_alergias'] ?? 'NO VIENE',
-    'alergias_detalle' => $datos['titular_alergias_detalle'] ?? 'NO VIENE',
-    'seguro'           => $datos['titular_seguro_salud'] ?? 'NO VIENE',
-    'discapacidades'   => $datos['titular_discapacidades'] ?? 'NO VIENE',
-    'restricciones'    => $datos['titular_restricciones'] ?? 'NO VIENE',
-    'obs_medicas'      => $datos['titular_obs_medicas'] ?? 'NO VIENE',
-    ]);
         $tieneAlergias      = ($datos['titular_tiene_alergias'] ?? 'no') === 'si';
         $tieneRestricciones = !empty(trim($datos['titular_restricciones']  ?? ''));
         $tieneObsMedicas    = !empty(trim($datos['titular_obs_medicas']    ?? ''));

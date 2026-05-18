@@ -208,7 +208,7 @@
 {{-- Bienvenida --}}
 <div class="welcome">
     <div>
-        <h2>Bienvenido, {{ Auth::user()->name }}</h2>
+        <h2>Bienvenido, {{ Auth::user()->nombre ?? Auth::user()->name }}</h2>
         <p>{{ now()->isoFormat('dddd, D [de] MMMM [de] YYYY') }} · Panel de administración</p>
     </div>
     <div class="welcome-badge">
