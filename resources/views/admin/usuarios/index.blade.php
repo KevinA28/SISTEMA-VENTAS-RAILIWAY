@@ -114,7 +114,6 @@
 }
 .rol-admin    { background: #ede9fe; color: #6d28d9; }
 .rol-ventas   { background: #dbeafe; color: #1d4ed8; }
-.rol-operador { background: #dcfce7; color: #15803d; }
 .estado-badge {
     display: inline-flex; align-items: center; gap: .3rem;
     padding: 3px 10px; border-radius: 999px;
@@ -270,7 +269,6 @@
             <label>Rol</label>
             <select name="rol" required class="inv-input">
                 <option value="ventas"        {{ old('rol') == 'ventas'        ? 'selected' : '' }}>Ventas</option>
-                <option value="operador"      {{ old('rol') == 'operador'      ? 'selected' : '' }}>Operador</option>
                 <option value="administrador" {{ old('rol') == 'administrador' ? 'selected' : '' }}>Administrador</option>
             </select>
         </div>
@@ -309,7 +307,7 @@
                         </div>
                     </td>
                     <td>
-                        <span class="rol-badge {{ $inv->rol === 'administrador' ? 'rol-admin' : ($inv->rol === 'ventas' ? 'rol-ventas' : 'rol-operador') }}">
+                       <span class="rol-badge {{ $inv->rol === 'administrador' ? 'rol-admin' : 'rol-ventas' }}">
                             {{ ucfirst($inv->rol) }}
                         </span>
                     </td>
@@ -356,7 +354,7 @@
                 @foreach ($usuarios as $usuario)
                 @php
                     $iniciales = strtoupper(substr($usuario->nombre, 0, 1) . substr($usuario->apellido, 0, 1));
-                    $colores   = ['administrador' => ['#ede9fe','#6d28d9'], 'ventas' => ['#dbeafe','#1d4ed8'], 'operador' => ['#dcfce7','#15803d']];
+                    $colores = ['administrador' => ['#ede9fe','#6d28d9'], 'ventas' => ['#dbeafe','#1d4ed8']];
                     $color     = $colores[$usuario->rol] ?? ['#f1f5f9','#475569'];
                 @endphp
                 <tr>
@@ -377,10 +375,9 @@
                         </div>
                     </td>
                     <td>
-                        <span class="rol-badge {{ $usuario->rol === 'administrador' ? 'rol-admin' : ($usuario->rol === 'ventas' ? 'rol-ventas' : 'rol-operador') }}">
+                        <span class="rol-badge {{ $usuario->rol === 'administrador' ? 'rol-admin' : 'rol-ventas' }}">
                             @if($usuario->rol === 'administrador') <i class="bi bi-shield-fill"></i>
-                            @elseif($usuario->rol === 'ventas') <i class="bi bi-bag"></i>
-                            @else <i class="bi bi-tools"></i>
+                            @else <i class="bi bi-bag"></i>
                             @endif
                             {{ ucfirst($usuario->rol) }}
                         </span>
