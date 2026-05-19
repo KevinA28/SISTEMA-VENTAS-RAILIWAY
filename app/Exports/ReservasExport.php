@@ -70,6 +70,14 @@ class ReservasExport
                   )
             );
         }
+        if (!empty($this->filtros['tour'])) {
+            $t = $this->filtros['tour'];
+            $query->where('nombre_tour', 'like', "%{$t}%");
+        }
+        if (!empty($this->filtros['ciudad_destino'])) {
+            $c = $this->filtros['ciudad_destino'];
+            $query->where('ciudad_destino', 'like', "%{$c}%");
+        }
 
         return $query->get()->map(function ($r) {
             $pagado = $r->pagos->sum('monto');

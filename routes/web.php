@@ -5,6 +5,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ReservaController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\EstadisticasController;
+use App\Http\Controllers\TourController;
+use App\Http\Controllers\CiudadController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -91,6 +93,8 @@ Route::middleware('auth')->group(function () {
 
 // ── Panel administración ──────────────────────────────────────────
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+
+    // ── Usuarios ──────────────────────────────────────────────────────
     Route::get('/usuarios', [\App\Http\Controllers\Admin\UsuarioAdminController::class, 'index'])
          ->name('usuarios.index');
     Route::post('/usuarios/invitar', [\App\Http\Controllers\Admin\UsuarioAdminController::class, 'invitar'])
@@ -101,6 +105,17 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
          ->name('usuarios.destroy');
     Route::delete('/invitaciones/{invitacion}', [\App\Http\Controllers\Admin\UsuarioAdminController::class, 'cancelarInvitacion'])
          ->name('invitaciones.cancelar');
+
+    // ── Tours ─────────────────────────────────────────────────────────
+    Route::resource('tours', TourController::class)->except(['show']);
+    Route::patch('tours/{tour}/toggle-activo', [TourController::class, 'toggleActivo'])
+         ->name('tours.toggleActivo');
+
+    // ── Ciudades / Ubigeo ─────────────────────────────────────────────
+    Route::get('/ciudades',          [CiudadController::class, 'index'])->name('ciudades.index');
+    Route::post('/ciudades',         [CiudadController::class, 'store'])->name('ciudades.store');
+    Route::delete('/ciudades/{id}',  [CiudadController::class, 'destroy'])->name('ciudades.destroy');
+
 });
 
 require __DIR__.'/auth.php';

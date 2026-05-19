@@ -52,21 +52,25 @@ class PdfService
     // Retorna el contenido del PDF como string (no lo guarda en disco)
     // -----------------------------------------------------------------
     public function generarReporteSalud(
-        $reservas,
-        string $fecha,
-        ?string $tourFiltro,
-        bool $soloAlertas,
-        int $totalPasajeros,
-        int $conAlertas
-    ): string {
-        $pdf = Pdf::loadView('pdf.reporte-salud', compact(
-            'reservas',
-            'fecha',
-            'tourFiltro',
-            'soloAlertas',
-            'totalPasajeros',
-            'conAlertas'
-        ));
+    $reservas,
+    ?string $fecha,
+    ?string $tourFiltro,
+    bool $soloAlertas,
+    int $totalPasajeros,
+    int $conAlertas,
+    ?string $fechaDesde = null,
+    ?string $fechaHasta = null
+): string {
+    $pdf = Pdf::loadView('pdf.reporte-salud', compact(
+        'reservas',
+        'fecha',
+        'fechaDesde',
+        'fechaHasta',
+        'tourFiltro',
+        'soloAlertas',
+        'totalPasajeros',
+        'conAlertas'
+    ));
 
         $pdf->setPaper('A4', 'portrait');
 

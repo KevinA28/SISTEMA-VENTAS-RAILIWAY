@@ -9,6 +9,22 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <style>
+.modal-ac-list {
+    position:absolute;top:calc(100% + 2px);left:0;right:0;
+    background:#fff;border:1px solid var(--line);border-radius:8px;
+    box-shadow:0 4px 16px rgba(0,0,0,.1);z-index:9999;
+    max-height:200px;overflow-y:auto;
+    margin:0;padding:0;list-style:none;display:none;
+}
+.modal-ac-list.open { display:block; }
+.modal-ac-list li {
+    padding:.4rem .75rem;font-size:.81rem;cursor:pointer;
+    color:var(--ink-2);border-bottom:1px solid var(--line-2);
+    display:flex;justify-content:space-between;align-items:center;
+}
+.modal-ac-list li:last-child { border-bottom:none; }
+.modal-ac-list li:hover { background:var(--blue-l); }
+.modal-ac-list li span.ac-sub { font-size:.68rem;color:var(--ink-4); }
 :root {
     --ink:#0d1117;--ink-2:#374151;--ink-3:#6b7280;--ink-4:#9ca3af;
     --line:#e5e7eb;--line-2:#f3f4f6;
@@ -657,6 +673,22 @@ body { font-family:'DM Sans',sans-serif; }
                 </button>
             </div>
         </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.65rem;margin-bottom:.75rem;">
+            <div style="position:relative;">
+                <label class="modal-field-label">Tour / servicio</label>
+                <input type="text" id="xls-tour" class="modal-input"
+                       placeholder="Buscar tour…" autocomplete="off"
+                       oninput="modalTourAC(this,'xls-tour-list')">
+                <ul id="xls-tour-list" class="modal-ac-list"></ul>
+            </div>
+            <div style="position:relative;">
+                <label class="modal-field-label">Ciudad destino</label>
+                <input type="text" id="xls-ciudad" class="modal-input"
+                       placeholder="Buscar ciudad…" autocomplete="off"
+                       oninput="modalCiudadAC(this,'xls-ciudad-list')">
+                <ul id="xls-ciudad-list" class="modal-ac-list"></ul>
+            </div>
+        </div>
         <div style="margin-bottom:.75rem;">
             <label class="modal-field-label">Buscar (código, nombre, DNI)</label>
             <div class="search-wrap" style="min-width:unset;">
@@ -692,22 +724,65 @@ body { font-family:'DM Sans',sans-serif; }
         <p style="font-size:.82rem;color:var(--ink-3);margin-bottom:1rem;line-height:1.55;">
             Genera un PDF con el listado de pasajeros por reserva para un día de tour específico.
         </p>
-        <div style="margin-bottom:.875rem;">
+        {{-- Modo: día único o rango --}}
+        <div style="display:flex;gap:.4rem;background:var(--line-2);border-radius:10px;padding:.3rem;margin-bottom:.875rem;">
+            <button type="button" id="salud-modo-dia" class="modal-tab act" onclick="setSaludModo('dia')">
+                <i class="bi bi-calendar-day"></i> Un día
+            </button>
+            <button type="button" id="salud-modo-rango" class="modal-tab" onclick="setSaludModo('rango')">
+                <i class="bi bi-calendar-range"></i> Rango de fechas
+            </button>
+        </div>
+
+        {{-- Día único --}}
+        <div id="salud-panel-dia" style="margin-bottom:.875rem;">
             <label class="modal-field-label" for="salud-fecha">
                 Fecha del tour <span style="color:var(--red);">*</span>
             </label>
             <div class="date-wrap" style="width:100%;">
                 <i class="bi bi-calendar3"></i>
-                <input type="text" id="salud-fecha" placeholder="Seleccionar fecha del tour"
+                <input type="text" id="salud-fecha" placeholder="Seleccionar fecha"
                        class="input-date" style="width:100%;box-sizing:border-box;" readonly>
             </div>
         </div>
-        <div style="margin-bottom:.875rem;">
-            <label class="modal-field-label" for="salud-tour">
-                Filtrar por nombre de tour <span style="font-weight:400;opacity:.6;">(opcional)</span>
+
+        {{-- Rango de fechas --}}
+        <div id="salud-panel-rango" style="display:none;margin-bottom:.875rem;">
+            <label class="modal-field-label">
+                Rango de fechas <span style="color:var(--red);">*</span>
             </label>
-            <input type="text" id="salud-tour" class="modal-input"
-                   placeholder="Ej: Ruta Inca, Tour Amazonas…">
+            <div style="display:flex;gap:.65rem;align-items:center;flex-wrap:wrap;">
+                <div class="date-wrap" style="flex:1;min-width:120px;">
+                    <i class="bi bi-calendar3"></i>
+                    <input type="text" id="salud-fecha-desde" placeholder="Desde"
+                           class="input-date" style="width:100%;box-sizing:border-box;" readonly>
+                </div>
+                <span style="color:var(--ink-4);font-size:.8rem;">—</span>
+                <div class="date-wrap" style="flex:1;min-width:120px;">
+                    <i class="bi bi-calendar3"></i>
+                    <input type="text" id="salud-fecha-hasta" placeholder="Hasta"
+                           class="input-date" style="width:100%;box-sizing:border-box;" readonly>
+                </div>
+            </div>
+            <div style="font-size:.7rem;color:var(--ink-4);margin-top:.3rem;">
+                <i class="bi bi-info-circle"></i> Incluye todas las reservas cuya fecha de tour esté dentro del rango.
+            </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.65rem;margin-bottom:.875rem;">
+            <div style="position:relative;">
+                <label class="modal-field-label" for="salud-tour">Tour <span style="font-weight:400;opacity:.6;">(opcional)</span></label>
+                <input type="text" id="salud-tour" class="modal-input"
+                       placeholder="Buscar tour…" autocomplete="off"
+                       oninput="modalTourAC(this,'salud-tour-list')">
+                <ul id="salud-tour-list" class="modal-ac-list"></ul>
+            </div>
+            <div style="position:relative;">
+                <label class="modal-field-label" for="salud-ciudad">Ciudad destino <span style="font-weight:400;opacity:.6;">(opcional)</span></label>
+                <input type="text" id="salud-ciudad" class="modal-input"
+                       placeholder="Buscar ciudad…" autocomplete="off"
+                       oninput="modalCiudadAC(this,'salud-ciudad-list')">
+                <ul id="salud-ciudad-list" class="modal-ac-list"></ul>
+            </div>
         </div>
         <div style="margin-bottom:1rem;display:flex;align-items:center;gap:.6rem;">
             <input type="checkbox" id="salud-solo-alertas" style="width:16px;height:16px;cursor:pointer;">
@@ -822,6 +897,65 @@ body { font-family:'DM Sans',sans-serif; }
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
 <script>
+/* ── AUTOCOMPLETE MODALES ── */
+let _acTimers = {};
+
+window.modalTourAC = function(inp, listId) {
+    clearTimeout(_acTimers[listId]);
+    const q = inp.value.trim();
+    const ul = document.getElementById(listId);
+    if (!q || q.length < 2) { ul.classList.remove('open'); return; }
+    _acTimers[listId] = setTimeout(async () => {
+        try {
+            const res  = await fetch('/api/tours/sugerencias?q=' + encodeURIComponent(q), { credentials:'same-origin' });
+            const data = await res.json();
+            if (!data.length) { ul.classList.remove('open'); return; }
+            ul.innerHTML = data.map(t =>
+                `<li onclick="modalAcSelect('${t.nombre.replace(/'/g,"\\'")}','${inp.id}','${listId}')">
+                    <span>${t.nombre}</span>
+                    <span class="ac-sub">${t.categoria ?? ''}</span>
+                </li>`
+            ).join('');
+            ul.classList.add('open');
+        } catch(e) { ul.classList.remove('open'); }
+    }, 300);
+};
+
+window.modalCiudadAC = function(inp, listId) {
+    clearTimeout(_acTimers[listId]);
+    const q = inp.value.trim();
+    const ul = document.getElementById(listId);
+    if (!q || q.length < 2) { ul.classList.remove('open'); return; }
+    _acTimers[listId] = setTimeout(async () => {
+        try {
+            const res  = await fetch('/api/ciudades/buscar?q=' + encodeURIComponent(q), { credentials:'same-origin' });
+            const data = await res.json();
+            if (!data.length) { ul.classList.remove('open'); return; }
+            ul.innerHTML = data.map(c =>
+                `<li onclick="modalAcSelect('${c.nombre.replace(/'/g,"\\'")}','${inp.id}','${listId}')">
+                    <span>${c.nombre}</span>
+                    <span class="ac-sub">${c.departamento ?? ''}</span>
+                </li>`
+            ).join('');
+            ul.classList.add('open');
+        } catch(e) { ul.classList.remove('open'); }
+    }, 300);
+};
+
+window.modalAcSelect = function(valor, inputId, listId) {
+    document.getElementById(inputId).value = valor;
+    document.getElementById(listId).classList.remove('open');
+};
+
+document.addEventListener('click', e => {
+    document.querySelectorAll('.modal-ac-list').forEach(ul => {
+        if (!ul.previousElementSibling?.contains(e.target)) {
+            ul.classList.remove('open');
+        }
+    });
+});
+
+/* ── RESTO DEL JS ── */
 (function () {
 
 const fpCfg = {
@@ -849,8 +983,9 @@ const fpXlsCfg = { locale:'es', dateFormat:'Y-m-d', altInput:true, altFormat:'d/
 flatpickr('#xls-desde', fpXlsCfg);
 flatpickr('#xls-hasta', fpXlsCfg);
 
-flatpickr('#salud-fecha', { locale:'es', dateFormat:'Y-m-d', altInput:true, altFormat:'d M Y', allowInput:false, disableMobile:true });
-
+flatpickr('#salud-fecha',       { locale:'es', dateFormat:'Y-m-d', altInput:true, altFormat:'d M Y', allowInput:false, disableMobile:true });
+flatpickr('#salud-fecha-desde', { locale:'es', dateFormat:'Y-m-d', altInput:true, altFormat:'d M Y', allowInput:false, disableMobile:true });
+flatpickr('#salud-fecha-hasta', { locale:'es', dateFormat:'Y-m-d', altInput:true, altFormat:'d M Y', allowInput:false, disableMobile:true });
 window.submitForm = function () {
     document.getElementById('form-filtros').submit();
 };
@@ -971,32 +1106,57 @@ window.descargarExcel = function () {
     if (hasta) params.set('fecha_hasta', hasta);
     const buscar = document.getElementById('xls-buscar').value.trim();
     if (buscar) params.set('buscar', buscar);
+    const xlsTour = document.getElementById('xls-tour').value.trim();
+    if (xlsTour) params.set('tour', xlsTour);
+    const xlsCiudad = document.getElementById('xls-ciudad').value.trim();
+    if (xlsCiudad) params.set('ciudad_destino', xlsCiudad);
     window.location.href = "{{ route('reservas.exportar') }}" + '?' + params.toString();
     cerrarModalExcel();
 };
 
 window.abrirModalSalud = function () {
     document.getElementById('salud-error').style.display = 'none';
+    setSaludModo('dia');
     document.getElementById('modal-salud').classList.add('open');
     document.body.style.overflow = 'hidden';
 };
-window.cerrarModalSalud = function () {
-    document.getElementById('modal-salud').classList.remove('open');
-    document.body.style.overflow = '';
+
+window.setSaludModo = function(modo) {
+    const esDia = modo === 'dia';
+    document.getElementById('salud-panel-dia').style.display   = esDia ? 'block' : 'none';
+    document.getElementById('salud-panel-rango').style.display = esDia ? 'none'  : 'block';
+    document.getElementById('salud-modo-dia').classList.toggle('act',   esDia);
+    document.getElementById('salud-modo-rango').classList.toggle('act', !esDia);
+    window._saludModo = modo;
 };
 window.descargarPdfSalud = function () {
-    const fecha = document.getElementById('salud-fecha').value;
     const errEl = document.getElementById('salud-error');
-    if (!fecha) {
-        errEl.textContent = 'Selecciona una fecha de tour para generar el reporte.';
-        errEl.style.display = 'block';
-        return;
-    }
-    errEl.style.display = 'none';
+    const modo  = window._saludModo || 'dia';
     const params = new URLSearchParams();
-    params.set('fecha', fecha);
+
+    if (modo === 'dia') {
+        const fecha = document.getElementById('salud-fecha').value;
+        if (!fecha) {
+            errEl.textContent = 'Selecciona una fecha de tour.';
+            errEl.style.display = 'block'; return;
+        }
+        params.set('fecha', fecha);
+    } else {
+        const desde = document.getElementById('salud-fecha-desde').value;
+        const hasta = document.getElementById('salud-fecha-hasta').value;
+        if (!desde || !hasta) {
+            errEl.textContent = 'Selecciona fecha de inicio y fin del rango.';
+            errEl.style.display = 'block'; return;
+        }
+        params.set('fecha_desde', desde);
+        params.set('fecha_hasta', hasta);
+    }
+
+    errEl.style.display = 'none';
     const tour = document.getElementById('salud-tour').value.trim();
     if (tour) params.set('tour', tour);
+    const ciudad = document.getElementById('salud-ciudad').value.trim();
+    if (ciudad) params.set('ciudad_destino', ciudad);
     if (document.getElementById('salud-solo-alertas').checked) params.set('solo_alertas', '1');
     window.open("{{ route('reservas.reporteSalud') }}" + '?' + params.toString(), '_blank');
     cerrarModalSalud();
@@ -1120,5 +1280,4 @@ function resetLoading() { setLoading(false); }
 })();
 </script>
 @endpush
-
 @endsection

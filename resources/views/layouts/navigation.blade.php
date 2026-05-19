@@ -42,6 +42,66 @@
                           height:64px;box-sizing:border-box;transition:all .15s;">
                     <i class="bi bi-people"></i> Clientes
                 </a>
+
+                {{-- Estadísticas --}}
+                <a href="{{ route('estadisticas.index') }}"
+                   style="color:{{ request()->routeIs('estadisticas.*') ? '#f59e0b' : 'rgba(255,255,255,.65)' }};
+                          background:{{ request()->routeIs('estadisticas.*') ? 'rgba(245,158,11,.12)' : 'transparent' }};
+                          border-bottom:{{ request()->routeIs('estadisticas.*') ? '2px solid #f59e0b' : '2px solid transparent' }};
+                          padding:8px 14px;font-size:.85rem;font-weight:600;
+                          text-decoration:none;display:flex;align-items:center;gap:.4rem;
+                          height:64px;box-sizing:border-box;transition:all .15s;">
+                    <i class="bi bi-graph-up-arrow"></i> Estadísticas
+                </a>
+
+                {{-- Administración — solo admins, en el navbar --}}
+                @if(Auth::user()->rol === 'administrador')
+                <div x-data="{ openAdmin: false }" style="position:relative;height:64px;display:flex;align-items:center;">
+                    <button @click="openAdmin = !openAdmin"
+                            style="color:{{ request()->routeIs('admin.*') ? '#f59e0b' : 'rgba(255,255,255,.65)' }};
+                                   background:{{ request()->routeIs('admin.*') ? 'rgba(245,158,11,.12)' : 'transparent' }};
+                                   border-bottom:{{ request()->routeIs('admin.*') ? '2px solid #f59e0b' : '2px solid transparent' }};
+                                   border-top:none;border-left:none;border-right:none;
+                                   padding:8px 14px;font-size:.85rem;font-weight:600;cursor:pointer;
+                                   font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:.4rem;
+                                   height:64px;box-sizing:border-box;transition:all .15s;">
+                        <i class="bi bi-shield-lock"></i> Admin
+                        <i class="bi bi-chevron-down" style="font-size:.6rem;opacity:.7;"></i>
+                    </button>
+                    <div x-show="openAdmin" @click.away="openAdmin = false"
+                         style="position:absolute;left:0;top:calc(100% + 0px);background:white;
+                                border:1px solid #e5e7eb;border-radius:10px;min-width:210px;
+                                box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:50;overflow:hidden;">
+                        <div style="padding:8px 14px;background:#f9fafb;border-bottom:1px solid #f3f4f6;">
+                            <div style="font-size:.7rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;">Administración</div>
+                        </div>
+                        <a href="{{ route('admin.usuarios.index') }}"
+                           style="display:flex;align-items:center;gap:.6rem;padding:10px 14px;
+                                  font-size:.84rem;color:{{ request()->routeIs('admin.usuarios.*') ? '#1a2744' : '#374151' }};
+                                  font-weight:{{ request()->routeIs('admin.usuarios.*') ? '700' : '400' }};
+                                  background:{{ request()->routeIs('admin.usuarios.*') ? '#fef3c7' : 'transparent' }};
+                                  text-decoration:none;transition:background .12s;">
+                            <i class="bi bi-people-fill" style="color:#6b7280;font-size:.85rem;"></i> Gestión de usuarios
+                        </a>
+                        <a href="{{ route('admin.tours.index') }}"
+                           style="display:flex;align-items:center;gap:.6rem;padding:10px 14px;
+                                  font-size:.84rem;color:{{ request()->routeIs('admin.tours.*') ? '#1a2744' : '#374151' }};
+                                  font-weight:{{ request()->routeIs('admin.tours.*') ? '700' : '400' }};
+                                  background:{{ request()->routeIs('admin.tours.*') ? '#fef3c7' : 'transparent' }};
+                                  text-decoration:none;transition:background .12s;">
+                            <i class="bi bi-briefcase" style="color:#6b7280;font-size:.85rem;"></i> Tours / Servicios
+                        </a>
+                        <a href="{{ route('admin.ciudades.index') }}"
+                           style="display:flex;align-items:center;gap:.6rem;padding:10px 14px;
+                                  font-size:.84rem;color:{{ request()->routeIs('admin.ciudades.*') ? '#1a2744' : '#374151' }};
+                                  font-weight:{{ request()->routeIs('admin.ciudades.*') ? '700' : '400' }};
+                                  background:{{ request()->routeIs('admin.ciudades.*') ? '#fef3c7' : 'transparent' }};
+                                  text-decoration:none;transition:background .12s;">
+                            <i class="bi bi-geo-alt" style="color:#6b7280;font-size:.85rem;"></i> Ciudades / Ubigeo
+                        </a>
+                    </div>
+                </div>
+                @endif
             </div>
         </div>
 
@@ -63,20 +123,24 @@
                     <div style="width:28px;height:28px;background:#f59e0b;border-radius:50%;
                                 display:flex;align-items:center;justify-content:center;
                                 color:#1a2744;font-size:.7rem;font-weight:900;">
-                        {{ strtoupper(substr(Auth::user()->name,0,2)) }}
+                        {{ strtoupper(substr(Auth::user()->nombre ?? Auth::user()->name, 0, 2)) }}
                     </div>
-                    {{ Auth::user()->name }}
+                    {{ Auth::user()->nombre ?? Auth::user()->name }}
                     <i class="bi bi-chevron-down" style="font-size:.6rem;opacity:.7;"></i>
                 </button>
-                
-                {{-- Dropdown corregido --}}
+
                 <div x-show="open" @click.away="open = false"
-                   style="position:absolute;right:0;top:calc(100% + 8px);background:white;
-                        border:1px solid #e5e7eb;border-radius:10px;min-width:190px;
-                        box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:50;overflow:hidden;">
+                     style="position:absolute;right:0;top:calc(100% + 8px);background:white;
+                            border:1px solid #e5e7eb;border-radius:10px;min-width:210px;
+                            box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:50;overflow:hidden;">
                     <div style="padding:10px 14px;border-bottom:1px solid #f3f4f6;background:#f9fafb;">
-                        <div style="font-size:.82rem;font-weight:700;color:#0f1923;">{{ Auth::user()->name }}</div>
+                        <div style="font-size:.82rem;font-weight:700;color:#0f1923;">{{ Auth::user()->nombre ?? Auth::user()->name }}</div>
                         <div style="font-size:.72rem;color:#9ca3af;">{{ Auth::user()->email }}</div>
+                        @if(Auth::user()->rol === 'administrador')
+                            <div style="font-size:.68rem;font-weight:700;color:#f59e0b;margin-top:2px;text-transform:uppercase;letter-spacing:.06em;">
+                                <i class="bi bi-shield-check"></i> Administrador
+                            </div>
+                        @endif
                     </div>
                     <a href="{{ route('profile.edit') }}"
                        style="display:flex;align-items:center;gap:.5rem;padding:10px 14px;
@@ -84,8 +148,6 @@
                         <i class="bi bi-gear" style="color:#6b7280;"></i> Configuración
                     </a>
                     <div style="border-top:1px solid #f3f4f6;"></div>
-                    
-                    {{-- Formulario sin margen por defecto --}}
                     <form method="POST" action="{{ route('logout') }}" style="margin:0;">
                         @csrf
                         <button type="submit"

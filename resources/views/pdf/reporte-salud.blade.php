@@ -54,7 +54,15 @@ body { font-family: DejaVu Sans, sans-serif; font-size: 11px; color: #0d1117; ba
 
 <div class="doc-header">
     <h1>Reporte de Salud y Documentos — Día de Tour</h1>
-    <div class="doc-fecha">{{ \Carbon\Carbon::parse($fecha)->isoFormat('dddd, D [de] MMMM [de] YYYY') }}</div>
+    <div class="doc-fecha">
+        @if($fecha)
+            {{ \Carbon\Carbon::parse($fecha)->isoFormat('dddd, D [de] MMMM [de] YYYY') }}
+        @else
+            {{ \Carbon\Carbon::parse($fechaDesde)->format('d/m/Y') }}
+            &nbsp;—&nbsp;
+            {{ \Carbon\Carbon::parse($fechaHasta)->format('d/m/Y') }}
+        @endif
+    </div>
     <div class="doc-meta">
         Generado el {{ now()->format('d/m/Y H:i') }}
         @if($tourFiltro) &nbsp;·&nbsp; Tour: {{ $tourFiltro }} @endif
@@ -121,10 +129,11 @@ body { font-family: DejaVu Sans, sans-serif; font-size: 11px; color: #0d1117; ba
     <table class="pasajeros-table">
         <thead>
             <tr>
-                <th style="width:22%;">Nombre</th>
-                <th style="width:10%;">Tipo</th>
-                <th style="width:15%;">Documento</th>
-                <th style="width:53%;">Salud / Alertas</th>
+                <th style="width:20%;">Nombre</th>
+                <th style="width:9%;">Tipo</th>
+                <th style="width:14%;">Documento</th>
+                <th style="width:10%;">Cumpleaños</th>
+                <th style="width:47%;">Salud / Alertas</th>
             </tr>
         </thead>
         <tbody>
@@ -184,6 +193,30 @@ body { font-family: DejaVu Sans, sans-serif; font-size: 11px; color: #0d1117; ba
                 {{ $pasajero->tipo_documento ? $pasajero->tipo_documento.': '.$pasajero->numero_documento : '—' }}
                 @if($pasajero->fecha_nacimiento)
                 <br><span style="color:#6b7280;">{{ \Carbon\Carbon::parse($pasajero->fecha_nacimiento)->format('d/m/Y') }}</span>
+                @endif
+            </td>
+            @php
+                $cumplFecha = null; $cumplProx = false; $diasParaCumpl = null;
+                if ($pasajero->fecha_nacimiento) {
+                    $fn = \Carbon\Carbon::parse($pasajero->fecha_nacimiento);
+                    $cumplFecha = $fn->format('d/m');
+                    $proxCumpl = \Carbon\Carbon::now()->setMonth($fn->month)->setDay($fn->day)->startOfDay();
+                    if ($proxCumpl->isPast()) $proxCumpl->addYear();
+                    $diasParaCumpl = (int) $proxCumpl->diffInDays(now());
+                    $cumplProx = $diasParaCumpl <= 30;
+                }
+            @endphp
+            <td style="text-align:center;font-size:10px;vertical-align:middle;
+                {{ $cumplProx ? 'background:#fffbeb;font-weight:bold;color:#92400e;' : 'color:#6b7280;' }}">
+                @if($cumplFecha)
+                    {{ $cumplFecha }}
+                    @if($cumplProx)
+                        <br><span style="font-size:8px;">
+                            🎂 {{ $diasParaCumpl == 0 ? '¡Hoy!' : 'en '.$diasParaCumpl.'d' }}
+                        </span>
+                    @endif
+                @else
+                    —
                 @endif
             </td>
             <td class="{{ $tieneAlgo ? 'alerta-cell' : '' }}">

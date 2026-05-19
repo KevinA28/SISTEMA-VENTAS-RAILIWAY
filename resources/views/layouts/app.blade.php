@@ -47,9 +47,6 @@
 
         .adv-layout { display: flex; min-height: 100vh; }
 
-        /* ════════════════════════════════
-           SIDEBAR — fondo blanco
-        ════════════════════════════════ */
         .adv-sidebar {
             width: var(--sidebar-w);
             background: var(--sidebar-bg);
@@ -67,7 +64,6 @@
         }
         .adv-sidebar::-webkit-scrollbar { display: none; }
 
-        /* ── BRAND ── */
         .sb-brand {
             padding: .5rem .75rem;
             height: 150px;
@@ -85,10 +81,7 @@
             max-width: 210px;
             object-fit: contain;
             flex-shrink: 0;
-            filter:
         }
-
-        /* fallback icono si no hay logo */
         .sb-brand-icon {
             width: 40px; height: 40px;
             background: linear-gradient(135deg, var(--amber) 0%, var(--amber-d) 100%);
@@ -101,7 +94,6 @@
         .sb-brand-text .name { color: var(--navy); font-weight: 700; font-size: .95rem; line-height: 1.2; }
         .sb-brand-text .sub  { color: var(--amber-d); font-size: .6rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
 
-        /* ── NAV ── */
         .sb-nav { padding: .75rem .65rem; flex: 1; }
 
         .sb-section-label {
@@ -115,7 +107,6 @@
         }
         .sb-section-label:first-child { margin-top: 0; }
 
-        /* ── LINKS ── */
         .sb-link {
             display: flex; align-items: center; gap: .65rem;
             padding: .55rem .7rem; border-radius: 8px;
@@ -134,16 +125,9 @@
             font-size: .9rem; width: 18px; text-align: center;
             flex-shrink: 0; color: var(--ink-4); transition: color .15s;
         }
-        .sb-link:hover {
-            background: var(--line-2);
-            color: var(--navy);
-        }
+        .sb-link:hover { background: var(--line-2); color: var(--navy); }
         .sb-link:hover i { color: var(--navy); }
-        .sb-link.active {
-            background: #eef3fb;
-            color: var(--navy);
-            font-weight: 700;
-        }
+        .sb-link.active { background: #eef3fb; color: var(--navy); font-weight: 700; }
         .sb-link.active i { color: var(--navy); }
         .sb-link.active::before {
             content: '';
@@ -151,45 +135,18 @@
             width: 3px; border-radius: 0 3px 3px 0;
             background: var(--amber);
         }
-        .topbar-page-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: .5rem;
-    background: #eef3fb;
-    border: 1.5px solid #c8dff0;
-    border-radius: 10px;
-    padding: 6px 14px;
-    max-width: fit-content; /* ← solo ocupa lo que necesita */
-    overflow: hidden;
-}
-.topbar-page-tag i {
-    font-size: .85rem;
-    color: var(--navy);
-    flex-shrink: 0;
-}
-.topbar-title {
-    font-size: .82rem;
-    font-weight: 700;
-    color: var(--navy);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.topbar-divider {
-    color: var(--ink-4);
-    font-size: .75rem;
-    flex-shrink: 0;
-}
-.topbar-sub {
-    font-size: .78rem;
-    font-weight: 500;
-    color: var(--ink-3);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
 
-        /* ── CTA ── */
+        .topbar-page-tag {
+            display: inline-flex; align-items: center; gap: .5rem;
+            background: #eef3fb; border: 1.5px solid #c8dff0;
+            border-radius: 10px; padding: 6px 14px;
+            max-width: fit-content; overflow: hidden;
+        }
+        .topbar-page-tag i { font-size: .85rem; color: var(--navy); flex-shrink: 0; }
+        .topbar-title { font-size: .82rem; font-weight: 700; color: var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .topbar-divider { color: var(--ink-4); font-size: .75rem; flex-shrink: 0; }
+        .topbar-sub { font-size: .78rem; font-weight: 500; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
         .sb-link-cta {
             display: flex; align-items: center; gap: .65rem;
             padding: .6rem .85rem; border-radius: 8px;
@@ -204,169 +161,87 @@
         .sb-link-cta i { font-size: .9rem; width: 18px; text-align: center; flex-shrink: 0; }
         .sb-link-cta:hover { opacity: .9; transform: translateY(-1px); color: var(--navy); }
 
-        /* Badge */
         .sb-badge {
             margin-left: auto;
-            background: var(--navy);
-            color: #fff;
-            border-radius: 999px;
-            font-size: .6rem; font-weight: 800;
-            padding: 2px 7px; min-width: 20px; text-align: center;
-            line-height: 1.4;
+            background: var(--navy); color: #fff;
+            border-radius: 999px; font-size: .6rem; font-weight: 800;
+            padding: 2px 7px; min-width: 20px; text-align: center; line-height: 1.4;
         }
         .sb-link.active .sb-badge { background: var(--amber); color: var(--navy); }
-
         .sb-divider { height: 1px; background: var(--line); margin: .5rem .65rem; }
 
-        /* ── FOOTER USUARIO ── */
-        .sb-footer {
-            padding: .75rem .65rem;
-            border-top: 1px solid var(--line);
-            flex-shrink: 0;
-        }
+        .sb-footer { padding: .75rem .65rem; border-top: 1px solid var(--line); flex-shrink: 0; }
         .sb-user {
             display: flex; align-items: center; gap: .65rem;
             padding: .6rem .7rem; border-radius: 8px;
-            background: var(--line-2);
-            transition: background .15s; cursor: default;
+            background: var(--line-2); transition: background .15s; cursor: default;
         }
         .sb-user:hover { background: var(--line); }
         .sb-avatar {
             width: 32px; height: 32px;
             background: linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 100%);
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0;
-            color: var(--amber); font-size: .68rem; font-weight: 800;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; color: var(--amber); font-size: .68rem; font-weight: 800;
         }
         .sb-user-info { min-width: 0; flex: 1; }
-        .sb-user-name {
-            color: var(--ink-2); font-size: .78rem; font-weight: 600;
-            line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
+        .sb-user-name { color: var(--ink-2); font-size: .78rem; font-weight: 600; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .sb-user-role { color: var(--ink-4); font-size: .63rem; margin-top: 1px; }
         .sb-logout {
             display: flex; align-items: center; justify-content: center;
             width: 30px; height: 30px; border-radius: 7px;
             color: var(--ink-4); background: none; border: none;
-            cursor: pointer; transition: all .15s; flex-shrink: 0;
-            font-size: .85rem;
+            cursor: pointer; transition: all .15s; flex-shrink: 0; font-size: .85rem;
         }
         .sb-logout:hover { background: var(--red-l); color: var(--red); }
 
-        /* ════════════════════════════════
-           CONTENIDO
-        ════════════════════════════════ */
-        .adv-content {
-            margin-left: var(--sidebar-w);
-            flex: 1; display: flex; flex-direction: column; min-width: 0;
-        }
+        .adv-content { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-width: 0; }
 
-        /* ════════════════════════════════
-           TOPBAR — mejorado
-        ════════════════════════════════ */
         .adv-topbar {
-            height: 64px;
-            background: #ffffff;
-            border-bottom: 1px solid var(--line);
-            display: flex; align-items: center;
-            padding: 0 1.75rem; gap: 1rem;
-            position: sticky; top: 0; z-index: 50;
-            box-shadow: 0 1px 4px rgba(0,0,0,.04);
+            height: 64px; background: #ffffff; border-bottom: 1px solid var(--line);
+            display: flex; align-items: center; padding: 0 1.75rem; gap: 1rem;
+            position: sticky; top: 0; z-index: 50; box-shadow: 0 1px 4px rgba(0,0,0,.04);
         }
-        .topbar-title {
-            font-size: .95rem; font-weight: 700; color: var(--ink);
-            flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        .topbar-title .tb-sub {
-            font-weight: 400; color: var(--ink-4); font-size: .82rem; margin-left: .4rem;
-        }
-        .topbar-actions {
-    display: flex;
-    align-items: center;
-    gap: .6rem;
-    flex-shrink: 0;
-    margin-left: auto; /* ← esto lo empuja siempre al extremo derecho */
-}
+        .topbar-actions { display: flex; align-items: center; gap: .6rem; flex-shrink: 0; margin-left: auto; }
+        .topbar-left { flex: 1; min-width: 0; display: flex; align-items: center; }
 
-        /* Botón primario */
         .tb-btn {
             display: inline-flex; align-items: center; gap: .4rem;
-            padding: 8px 16px; border-radius: 9px;
-            font-size: .8rem; font-weight: 700;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            cursor: pointer; text-decoration: none;
+            padding: 8px 16px; border-radius: 9px; font-size: .8rem; font-weight: 700;
+            font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; text-decoration: none;
             transition: all .15s; border: none; white-space: nowrap;
         }
-        .tb-btn-primary {
-            background: var(--navy); color: #ffffff;
-            box-shadow: 0 2px 8px rgba(27,58,107,.2);
-        }
-        .tb-btn-primary:hover {
-            background: var(--navy-2); color: #ffffff;
-            box-shadow: 0 4px 14px rgba(27,58,107,.3);
-            transform: translateY(-1px);
-        }
+        .tb-btn-primary { background: var(--navy); color: #ffffff; box-shadow: 0 2px 8px rgba(27,58,107,.2); }
+        .tb-btn-primary:hover { background: var(--navy-2); color: #ffffff; box-shadow: 0 4px 14px rgba(27,58,107,.3); transform: translateY(-1px); }
+        .tb-btn-secondary { background: var(--amber); color: var(--navy); box-shadow: 0 2px 8px rgba(212,168,0,.2); }
+        .tb-btn-secondary:hover { background: var(--amber-h); color: var(--navy); transform: translateY(-1px); }
 
-        /* Botón secundario */
-        .tb-btn-secondary {
-            background: var(--amber); color: var(--navy);
-            box-shadow: 0 2px 8px rgba(212,168,0,.2);
-        }
-        .tb-btn-secondary:hover {
-            background: var(--amber-h); color: var(--navy);
-            transform: translateY(-1px);
-        }
-.topbar-left {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    align-items: center;
-}
-        /* User button */
         .tb-user-btn {
             display: flex; align-items: center; gap: .55rem;
-            padding: 6px 12px 6px 6px;
-            border: 1.5px solid var(--line); border-radius: 10px;
-            background: white; cursor: pointer;
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            padding: 6px 12px 6px 6px; border: 1.5px solid var(--line); border-radius: 10px;
+            background: white; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif;
             transition: border-color .15s, box-shadow .15s, background .15s;
         }
-        .tb-user-btn:hover {
-            border-color: var(--navy);
-            background: var(--line-2);
-            box-shadow: 0 0 0 3px rgba(27,58,107,.08);
-        }
+        .tb-user-btn:hover { border-color: var(--navy); background: var(--line-2); box-shadow: 0 0 0 3px rgba(27,58,107,.08); }
         .tb-user-avatar {
             width: 30px; height: 30px;
             background: linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 100%);
-            border-radius: 50%; display: flex; align-items: center;
-            justify-content: center; color: var(--amber);
-            font-size: .65rem; font-weight: 800;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            color: var(--amber); font-size: .65rem; font-weight: 800;
         }
         .tb-user-name { font-size: .8rem; font-weight: 600; color: var(--ink-2); }
         .tb-user-btn i { font-size: .62rem; color: var(--ink-4); }
 
-        /* Dropdown */
         .tb-dropdown { position: relative; }
         .tb-dropdown-menu {
-            display: none; position: absolute; right: 0;
-            top: calc(100% + 8px);
-            background: white;
-            border: 1px solid var(--line);
-            border-radius: 12px;
-            min-width: 210px;
-            box-shadow: 0 8px 30px rgba(0,0,0,.1), 0 2px 8px rgba(0,0,0,.05);
+            display: none; position: absolute; right: 0; top: calc(100% + 8px);
+            background: white; border: 1px solid var(--line); border-radius: 12px;
+            min-width: 210px; box-shadow: 0 8px 30px rgba(0,0,0,.1), 0 2px 8px rgba(0,0,0,.05);
             z-index: 200; overflow: hidden;
         }
         .tb-dropdown-menu.open { display: block; animation: ddFadeIn .15s ease; }
         @keyframes ddFadeIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
 
-        .tb-dd-header {
-            padding: 12px 16px;
-            background: linear-gradient(135deg, #eef3fb 0%, var(--line-2) 100%);
-            border-bottom: 1px solid var(--line);
-        }
+        .tb-dd-header { padding: 12px 16px; background: linear-gradient(135deg, #eef3fb 0%, var(--line-2) 100%); border-bottom: 1px solid var(--line); }
         .tb-dd-header .dd-name  { font-size: .82rem; font-weight: 700; color: var(--navy); }
         .tb-dd-header .dd-email { font-size: .69rem; color: var(--ink-4); margin-top: 2px; }
 
@@ -375,8 +250,7 @@
             padding: 10px 16px; font-size: .81rem; color: var(--ink-2);
             text-decoration: none; transition: background .1s;
             background: none; border: none; cursor: pointer;
-            width: 100%; font-family: 'Plus Jakarta Sans', sans-serif;
-            text-align: left;
+            width: 100%; font-family: 'Plus Jakarta Sans', sans-serif; text-align: left;
         }
         .tb-dd-item i { font-size: .85rem; color: var(--ink-4); }
         .tb-dd-item:hover { background: var(--line-2); color: var(--navy); }
@@ -386,30 +260,22 @@
         .tb-dd-item.danger:hover { background: var(--red-l); }
         .tb-dd-divider { height: 1px; background: var(--line); }
 
-        /* ── MAIN ── */
         .adv-main { flex: 1; padding: 1.5rem; }
 
-        /* ── HAMBURGUESA ── */
         .sb-toggle {
-            display: none; background: none; border: none;
-            cursor: pointer; color: var(--ink); font-size: 1.2rem;
-            padding: 5px 7px; border-radius: 7px;
-            transition: background .15s; flex-shrink: 0;
-            align-items: center;
+            display: none; background: none; border: none; cursor: pointer;
+            color: var(--ink); font-size: 1.2rem; padding: 5px 7px; border-radius: 7px;
+            transition: background .15s; flex-shrink: 0; align-items: center;
         }
         .sb-toggle:hover { background: var(--line); }
 
         .sb-overlay {
             display: none; position: fixed; inset: 0;
-            background: rgba(0,0,0,.45); z-index: 99;
-            backdrop-filter: blur(2px);
+            background: rgba(0,0,0,.45); z-index: 99; backdrop-filter: blur(2px);
         }
         .sb-overlay.open { display: block; animation: overlayIn .2s ease; }
         @keyframes overlayIn { from{opacity:0} to{opacity:1} }
 
-        /* ════════════════════════════════
-           RESPONSIVE
-        ════════════════════════════════ */
         @media (max-width: 768px) {
             .adv-sidebar { transform: translateX(-100%); z-index: 100; }
             .adv-sidebar.open { transform: translateX(0); }
@@ -425,9 +291,6 @@
             .adv-main { padding: .875rem; }
         }
 
-        /* ════════════════════════════════
-           TOASTS
-        ════════════════════════════════ */
         @keyframes slideIn  { from{opacity:0;transform:translateX(16px)} to{opacity:1;transform:translateX(0)} }
         @keyframes slideOut { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(16px)} }
     </style>
@@ -461,7 +324,6 @@
             {{-- ── PRINCIPAL ── --}}
             <div class="sb-section-label">Principal</div>
 
-            {{-- NUEVA RESERVA — destacada aquí en Principal --}}
             <a href="{{ route('reservas.create') }}" class="sb-link-cta">
                 <i class="bi bi-plus-circle-fill"></i> Nueva Reserva
             </a>
@@ -497,20 +359,33 @@
 
             <div class="sb-divider"></div>
 
+            {{-- ── ADMINISTRACIÓN (solo admins) ── --}}
+            @if(Auth::user()->rol === 'administrador')
+            <div class="sb-section-label">Administración</div>
+
+            <a href="{{ route('admin.usuarios.index') }}"
+               class="sb-link {{ request()->routeIs('admin.usuarios.*') ? 'active' : '' }}">
+                <i class="bi bi-people-fill"></i> Gestión de usuarios
+            </a>
+
+            <a href="{{ route('admin.tours.index') }}"
+               class="sb-link {{ request()->routeIs('admin.tours.*') ? 'active' : '' }}">
+                <i class="bi bi-briefcase"></i> Tours / Servicios
+            </a>
+
+            <a href="{{ route('admin.ciudades.index') }}"
+               class="sb-link {{ request()->routeIs('admin.ciudades.*') ? 'active' : '' }}">
+                <i class="bi bi-geo-alt"></i> Ciudades / Ubigeo
+            </a>
+            @endif
+
             {{-- ── CUENTA ── --}}
-<div class="sb-section-label">Cuenta</div>
+            <div class="sb-section-label">Cuenta</div>
 
-@if(Auth::user()->rol === 'administrador')
-<a href="{{ route('admin.usuarios.index') }}"
-   class="sb-link {{ request()->routeIs('admin.*') ? 'active' : '' }}">
-    <i class="bi bi-people-fill"></i> Gestión de usuarios
-</a>
-@endif
-
-<a href="{{ route('profile.edit') }}"
-   class="sb-link {{ request()->routeIs('profile.*') ? 'active' : '' }}">
-    <i class="bi bi-gear"></i> Configuración
-</a>
+            <a href="{{ route('profile.edit') }}"
+               class="sb-link {{ request()->routeIs('profile.*') ? 'active' : '' }}">
+                <i class="bi bi-gear"></i> Configuración
+            </a>
 
             <form method="POST" action="{{ route('logout') }}" style="margin:0;" id="sb-logout-form">
                 @csrf
@@ -525,15 +400,15 @@
         {{-- ── FOOTER USUARIO ── --}}
         <div class="sb-footer">
             <div class="sb-user">
-        @if(Auth::user()->foto_perfil)
-    <img src="{{ asset('storage/' . Auth::user()->foto_perfil) }}"
-         alt="Foto"
-         style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;">
-        @else
-        <div class="sb-avatar">
-           {{ strtoupper(substr(Auth::user()->nombre ?? Auth::user()->name ?? 'AD', 0, 2)) }}
-         </div>
-             @endif
+                @if(Auth::user()->foto_perfil)
+                    <img src="{{ asset('storage/' . Auth::user()->foto_perfil) }}"
+                         alt="Foto"
+                         style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;">
+                @else
+                    <div class="sb-avatar">
+                        {{ strtoupper(substr(Auth::user()->nombre ?? Auth::user()->name ?? 'AD', 0, 2)) }}
+                    </div>
+                @endif
                 <div class="sb-user-info">
                     <div class="sb-user-name">
                         {{ Auth::user()->nombre ?? Auth::user()->name }}
@@ -558,13 +433,13 @@
             </button>
 
             <div class="topbar-page-tag">
-    <i class="bi bi-grid-1x2" id="topbar-icon"></i>
-    <span class="topbar-title">@yield('titulo', 'Panel')</span>
-    @hasSection('subtitulo')
-        <span class="topbar-divider">/</span>
-        <span class="topbar-sub">@yield('subtitulo')</span>
-    @endif
-</div>
+                <i class="bi bi-grid-1x2" id="topbar-icon"></i>
+                <span class="topbar-title">@yield('titulo', 'Panel')</span>
+                @hasSection('subtitulo')
+                    <span class="topbar-divider">/</span>
+                    <span class="topbar-sub">@yield('subtitulo')</span>
+                @endif
+            </div>
 
             <div class="topbar-actions">
                 <a href="{{ route('reservas.create') }}" class="tb-btn tb-btn-primary">
@@ -573,15 +448,15 @@
                 </a>
                 <div class="tb-dropdown" id="tb-dropdown">
                     <button class="tb-user-btn" onclick="toggleDropdown()" aria-label="Menú de usuario">
-                    @if(Auth::user()->foto_perfil)
-                        <img src="{{ asset('storage/' . Auth::user()->foto_perfil) }}"
-                        alt="Foto"
-                        style="width:30px;height:30px;border-radius:50%;object-fit:cover;">
-                    @else
-                     <div class="tb-user-avatar">
-                     {{ strtoupper(substr(Auth::user()->nombre ?? Auth::user()->name ?? 'AD', 0, 2)) }}
-                     </div>
-                     @endif
+                        @if(Auth::user()->foto_perfil)
+                            <img src="{{ asset('storage/' . Auth::user()->foto_perfil) }}"
+                                 alt="Foto"
+                                 style="width:30px;height:30px;border-radius:50%;object-fit:cover;">
+                        @else
+                            <div class="tb-user-avatar">
+                                {{ strtoupper(substr(Auth::user()->nombre ?? Auth::user()->name ?? 'AD', 0, 2)) }}
+                            </div>
+                        @endif
                         <span class="tb-user-name">{{ Auth::user()->nombre ?? Auth::user()->name }}</span>
                         <i class="bi bi-chevron-down"></i>
                     </button>
@@ -619,11 +494,10 @@
     </div>
 </div>
 
-{{-- ══ SCRIPTS SIDEBAR / DROPDOWN ══ --}}
+{{-- ══ SCRIPTS ══ --}}
 <script>
 function toggleDropdown() {
-    const menu = document.getElementById('tb-dd-menu');
-    menu.classList.toggle('open');
+    document.getElementById('tb-dd-menu').classList.toggle('open');
 }
 document.addEventListener('click', function(e) {
     const dd = document.getElementById('tb-dropdown');
@@ -660,27 +534,21 @@ document.addEventListener('keydown', e => {
     <div class="toast-msg" style="display:flex;align-items:center;gap:.6rem;background:white;border:1.5px solid #86efac;border-left:4px solid #16a34a;padding:.75rem 1rem;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.1);font-size:.82rem;font-weight:500;color:#15803d;min-width:280px;max-width:400px;animation:slideIn .25s ease;">
         <i class="bi bi-check-circle-fill" style="font-size:1rem;flex-shrink:0;"></i>
         <span style="flex:1;">{{ session('success') }}</span>
-        <button onclick="this.closest('.toast-msg').remove()" style="background:none;border:none;cursor:pointer;color:#16a34a;font-size:.9rem;padding:0;flex-shrink:0;line-height:1;">
-            <i class="bi bi-x-lg"></i>
-        </button>
+        <button onclick="this.closest('.toast-msg').remove()" style="background:none;border:none;cursor:pointer;color:#16a34a;font-size:.9rem;padding:0;flex-shrink:0;line-height:1;"><i class="bi bi-x-lg"></i></button>
     </div>
     @endif
     @if(session('error'))
     <div class="toast-msg" style="display:flex;align-items:center;gap:.6rem;background:white;border:1.5px solid #fca5a5;border-left:4px solid #dc2626;padding:.75rem 1rem;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.1);font-size:.82rem;font-weight:500;color:#dc2626;min-width:280px;max-width:400px;animation:slideIn .25s ease;">
         <i class="bi bi-exclamation-circle-fill" style="font-size:1rem;flex-shrink:0;"></i>
         <span style="flex:1;">{{ session('error') }}</span>
-        <button onclick="this.closest('.toast-msg').remove()" style="background:none;border:none;cursor:pointer;color:#dc2626;font-size:.9rem;padding:0;flex-shrink:0;line-height:1;">
-            <i class="bi bi-x-lg"></i>
-        </button>
+        <button onclick="this.closest('.toast-msg').remove()" style="background:none;border:none;cursor:pointer;color:#dc2626;font-size:.9rem;padding:0;flex-shrink:0;line-height:1;"><i class="bi bi-x-lg"></i></button>
     </div>
     @endif
     @if(session('warning'))
     <div class="toast-msg" style="display:flex;align-items:center;gap:.6rem;background:white;border:1.5px solid #fcd34d;border-left:4px solid #d97706;padding:.75rem 1rem;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.1);font-size:.82rem;font-weight:500;color:#b45309;min-width:280px;max-width:400px;animation:slideIn .25s ease;">
         <i class="bi bi-exclamation-triangle-fill" style="font-size:1rem;flex-shrink:0;"></i>
         <span style="flex:1;">{{ session('warning') }}</span>
-        <button onclick="this.closest('.toast-msg').remove()" style="background:none;border:none;cursor:pointer;color:#d97706;font-size:.9rem;padding:0;flex-shrink:0;line-height:1;">
-            <i class="bi bi-x-lg"></i>
-        </button>
+        <button onclick="this.closest('.toast-msg').remove()" style="background:none;border:none;cursor:pointer;color:#d97706;font-size:.9rem;padding:0;flex-shrink:0;line-height:1;"><i class="bi bi-x-lg"></i></button>
     </div>
     @endif
 </div>

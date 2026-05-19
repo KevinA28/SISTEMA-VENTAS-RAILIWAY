@@ -54,8 +54,17 @@ class ReservaController extends Controller
 
         $reservas = $query->paginate(20)->withQueryString();
         $estados  = EstadoReserva::all();
+        $tours    = \App\Models\Tour::where('activo', true)
+                        ->orderByDesc('veces_usado')
+                        ->orderBy('nombre')
+                        ->pluck('nombre');
+        $ciudades = \App\Models\Reserva::whereNotNull('ciudad_destino')
+                        ->where('ciudad_destino', '!=', '')
+                        ->distinct()
+                        ->orderBy('ciudad_destino')
+                        ->pluck('ciudad_destino');
 
-        return view('reservas.index', compact('reservas', 'estados'));
+        return view('reservas.index', compact('reservas', 'estados', 'tours', 'ciudades'));
     }
 
     public function create()
@@ -241,6 +250,7 @@ class ReservaController extends Controller
             'canal',   'canales',
             'fecha_desde', 'fecha_hasta',
             'buscar',
+            'tour', 'ciudad_destino',
         ]);
         return (new ReservasExport($filtros))->download();
     }
@@ -249,32 +259,40 @@ class ReservaController extends Controller
     public function reporteSalud(Request $request)
     {
       $request->validate([
-        'fecha'        => 'required|date',
-        'tour'         => 'nullable|string|max:200',
-        'solo_alertas' => 'nullable|in:0,1',
-    ]);
+            'fecha'          => 'nullable|date|required_without:fecha_desde',
+            'fecha_desde'    => 'nullable|date|required_without:fecha',
+            'fecha_hasta'    => 'nullable|date|after_or_equal:fecha_desde',
+            'tour'           => 'nullable|string|max:200',
+            'ciudad_destino' => 'nullable|string|max:200',
+            'solo_alertas'   => 'nullable|in:0,1',
+        ]);
+    $fecha        = $request->fecha ?? null;
+        $fechaDesde   = $request->fecha_desde ?? null;
+        $fechaHasta   = $request->fecha_hasta ?? null;
+        $tourFiltro   = $request->tour ?? null;
+        $ciudadFiltro = $request->ciudad_destino ?? null;
+        $soloAlertas  = $request->boolean('solo_alertas', false);
 
-    $fecha       = $request->fecha;
-    $tourFiltro  = $request->tour ?? null;
-    $soloAlertas = $request->boolean('solo_alertas', false);
+        // Para el nombre del archivo y la vista
+        $labelFecha = $fecha
+            ? $fecha
+            : ($fechaDesde . '_al_' . $fechaHasta);
 
     // ✅ Agregar fechaTour.tour al eager load para el fallback de nombre
     $query = Reserva::with(['cliente', 'estado', 'pasajeros.salud', 'fechaTour.tour'])
-        ->where(function ($q) use ($fecha) {
-            // ✅ Buscar por campo directo O por la relación fechaTour
-            $q->whereDate('fecha_tour', $fecha)
-              ->orWhereHas('fechaTour', fn($fq) => $fq->whereDate('fecha', $fecha));
-        })
-        ->whereHas('estado', fn($q) => $q->whereNotIn('nombre', ['cancelada']))
-        ->orderBy('hora_recojo'); // ✅ Usar hora_recojo (campo real del modelo)
-
-    if ($tourFiltro) {
-        $query->where(function ($q) use ($tourFiltro) {
-            $q->where('nombre_tour', 'like', '%' . $tourFiltro . '%')
-              ->orWhereHas('fechaTour.tour', fn($tq) =>
-                  $tq->where('nombre', 'like', '%' . $tourFiltro . '%')
-              );
+        ->where(function ($q) use ($fecha, $fechaDesde, $fechaHasta) {
+            if ($fecha) {
+                $q->whereDate('fecha_tour', $fecha)
+                  ->orWhereHas('fechaTour', fn($fq) => $fq->whereDate('fecha', $fecha));
+            } else {
+                $q->whereBetween('fecha_tour', [$fechaDesde, $fechaHasta])
+                  ->orWhereHas('fechaTour', fn($fq) =>
+                      $fq->whereBetween('fecha', [$fechaDesde, $fechaHasta])
+                  );
+            }
         });
+    if ($ciudadFiltro) {
+        $query->where('ciudad_destino', 'like', '%' . $ciudadFiltro . '%');
     }
 
     $reservas = $query->get();
@@ -331,12 +349,14 @@ class ReservaController extends Controller
             $tourFiltro,
             $soloAlertas,
             $totalPasajeros,
-            $conAlertas
+            $conAlertas,
+            $fechaDesde,
+            $fechaHasta
         );
 
     return response()->streamDownload(
         fn() => print($pdfOutput),
-        'reporte-salud-' . $fecha . '.pdf',
+        'reporte-salud-' . $labelFecha . '.pdf',
         ['Content-Type' => 'application/pdf']
     );
 }
