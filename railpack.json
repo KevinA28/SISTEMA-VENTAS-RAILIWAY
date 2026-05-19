@@ -2,7 +2,10 @@
   "providers": {
     "php": {
       "version": "8.2",
-      "extensions": ["pdo_mysql", "mbstring", "tokenizer", "xml", "ctype", "json", "bcmath"]
+      "extensions": ["pdo_mysql", "mbstring", "xml", "ctype", "json", "bcmath", "tokenizer"]
     }
+  },
+  "deploy": {
+    "startCommand": "php artisan migrate --force && php-fpm"
   }
 }
