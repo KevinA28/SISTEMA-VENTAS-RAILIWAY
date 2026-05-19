@@ -1,5 +1,7 @@
 {
-  "php": {
-    "version": "8.2"
+  "providers": {
+    "php": {
+      "version": "8.2"
+    }
   }
 }
