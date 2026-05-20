@@ -24,7 +24,8 @@ return new class extends Migration
             $table->foreignId('cliente_id')->constrained('clientes')->cascadeOnDelete();
             $table->foreignId('fecha_tour_id')->nullable()->constrained('fechas_tour')->nullOnDelete();
             $table->foreignId('estado_id')->constrained('estados_reserva');
-            $table->foreignId('usuario_admin_id')->constrained('usuarios_admin');
+            $table->foreignId('usuario_admin_id')->nullable()->constrained('usuarios_admin')->nullOnDelete();
+            $table->string('registrado_por_nombre', 150)->nullable();
 
             // ── Pasajeros y precio ─────────────────────────────────────
             $table->unsignedSmallInteger('cantidad_adultos')->default(1);

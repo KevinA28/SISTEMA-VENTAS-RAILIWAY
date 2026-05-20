@@ -89,4 +89,17 @@ class UsuarioAdminController extends Controller
         $invitacion->delete();
         return back()->with('success', 'Invitación cancelada.');
     }
+    public function cambiarRol(UsuarioAdmin $usuario): RedirectResponse
+{
+    if ($usuario->id === auth()->id()) {
+        return back()->withErrors(['error' => 'No puedes cambiar tu propio rol.']);
+    }
+
+    $nuevoRol = $usuario->rol === 'administrador' ? 'ventas' : 'administrador';
+    $usuario->update(['rol' => $nuevoRol]);
+
+    return back()->with('success',
+        "Rol de {$usuario->nombre_completo} cambiado a " . ucfirst($nuevoRol) . "."
+    );
+  }
 }

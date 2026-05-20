@@ -183,6 +183,7 @@ body { font-family: 'DM Sans', sans-serif; }
     padding:7px 16px;border-radius:9px;font-size:.82rem;font-weight:600;
     background:white;color:var(--ink-2);border:1.5px solid var(--line);
     text-decoration:none;transition:all .15s;font-family:'DM Sans',sans-serif;
+    cursor:pointer;
 }
 .btn-editar:hover { border-color:var(--blue);color:var(--blue);background:var(--blue-l); }
 .btn-completar {
@@ -307,9 +308,11 @@ body { font-family: 'DM Sans', sans-serif; }
                 Registrada el {{ $reserva->created_at->format('d/m/Y \a \l\a\s H:i') }}
                 &nbsp;·&nbsp; Por
                 @php
-                    $admin = $reserva->usuarioAdmin;
-                    $adminNombre = $admin ? trim(($admin->nombre ?? '') . ' ' . ($admin->apellido ?? '')) : 'Sistema';
-                @endphp
+    $adminNombre = $reserva->registrado_por_nombre
+        ?? ($reserva->usuarioAdmin
+            ? trim(($reserva->usuarioAdmin->nombre ?? '') . ' ' . ($reserva->usuarioAdmin->apellido ?? ''))
+            : 'Sistema');
+@endphp
                 <strong>{{ $adminNombre }}</strong>
                 &nbsp;·&nbsp;
                 @php $canalIcon=['whatsapp'=>'bi-whatsapp','presencial'=>'bi-shop','llamada'=>'bi-telephone','redes_sociales'=>'bi-instagram','web'=>'bi-globe2','referido'=>'bi-people']; @endphp
@@ -326,6 +329,10 @@ body { font-family: 'DM Sans', sans-serif; }
             <i class="bi bi-circle-fill" style="font-size:.4rem;"></i>
             {{ ucfirst(str_replace('_',' ',$reserva->estado->nombre ?? '')) }}
         </span>
+        {{-- BOTÓN REENVIAR --}}
+        <button type="button" class="btn-editar" onclick="abrirModalReenviar()">
+            <i class="bi bi-send"></i> Reenviar
+        </button>
         <a href="{{ route('reservas.edit', $reserva) }}" class="btn-editar">
             <i class="bi bi-pencil"></i> Editar
         </a>
@@ -413,7 +420,6 @@ body { font-family: 'DM Sans', sans-serif; }
                         </div>
                         @endif
 
-                        {{-- Nacionalidad solo si fue ingresada explícitamente (no default) --}}
                         @if($reserva->cliente->nacionalidad && $reserva->cliente->nacionalidad !== 'Peruana')
                         <div class="dato">
                             <div class="lbl">Nacionalidad</div>
@@ -610,7 +616,7 @@ body { font-family: 'DM Sans', sans-serif; }
     </div>
 
     {{-- ══════════════════════════════════════════════════════════
-         PASAJEROS + SALUD — todos en un solo bloque unificado
+         PASAJEROS + SALUD
     ══════════════════════════════════════════════════════════ --}}
     <div class="info-card">
         <div class="info-card-header">
@@ -637,11 +643,8 @@ body { font-family: 'DM Sans', sans-serif; }
         <div style="border-bottom:1px solid var(--line);padding:1rem 1.25rem;
                     {{ $loop->last ? 'border-bottom:none;' : '' }}">
 
-            {{-- Cabecera pasajero --}}
             <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;margin-bottom:.6rem;">
                 <div style="display:flex;align-items:center;gap:.65rem;">
-
-                    {{-- Avatar numerado --}}
                     <div style="width:34px;height:34px;border-radius:50%;flex-shrink:0;
                                 display:flex;align-items:center;justify-content:center;
                                 font-size:.8rem;font-weight:800;
@@ -650,7 +653,6 @@ body { font-family: 'DM Sans', sans-serif; }
                                     : 'background:var(--line-2);color:var(--ink-3);border:2px solid var(--line);' }}">
                         {{ $loop->index + 1 }}
                     </div>
-
                     <div>
                         <div style="font-weight:700;font-size:.9rem;color:var(--ink);display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;">
                             {{ $pasajero->nombre_completo }}
@@ -676,7 +678,6 @@ body { font-family: 'DM Sans', sans-serif; }
                     </div>
                 </div>
 
-                {{-- Badges salud --}}
                 <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;">
                     @if($salud?->seguro_salud)
                         <span style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;
@@ -704,7 +705,6 @@ body { font-family: 'DM Sans', sans-serif; }
                 </div>
             </div>
 
-            {{-- Panel salud expandido --}}
             @if($tieneSalud)
             <div style="background:#fffbf5;border:1px solid #fde68a;border-radius:10px;
                         padding:.75rem 1rem;display:flex;flex-direction:column;gap:.5rem;margin-top:.1rem;">
@@ -829,12 +829,11 @@ body { font-family: 'DM Sans', sans-serif; }
             $saldo    = max(0, $total - $pagado);
             $pct      = $total > 0 ? min(100, round($pagado / $total * 100)) : 0;
             $barColor = $pct >= 100 ? 'var(--green)' : ($pct >= 50 ? 'var(--blue)' : 'var(--amber)');
-            $estadosNoPendiente  = ['pagado','cancelada','finalizada'];
+            $estadosNoPendiente   = ['pagado','cancelada','finalizada'];
             $mostrarCompletarPago = $saldo > 0 && !in_array($estadoSlug, $estadosNoPendiente);
-            $estadoPagadoId = $estados->firstWhere('nombre','pagado')?->id ?? null;
+            $estadoPagadoId       = $estados->firstWhere('nombre','pagado')?->id ?? null;
         @endphp
 
-        {{-- Barra de progreso --}}
         <div class="progress-wrap">
             <div class="progress-header">
                 <span style="font-size:.73rem;font-weight:700;color:var(--ink-3);">Progreso de pago</span>
@@ -860,7 +859,6 @@ body { font-family: 'DM Sans', sans-serif; }
             </div>
         </div>
 
-        {{-- Tabla de pagos --}}
         <table class="inner-table">
             <thead>
                 <tr>
@@ -934,7 +932,6 @@ body { font-family: 'DM Sans', sans-serif; }
             </tbody>
         </table>
 
-        {{-- Resumen --}}
         <div class="pago-resumen">
             <div class="pago-res-item">
                 <div class="pr-label">Total reserva</div>
@@ -952,7 +949,6 @@ body { font-family: 'DM Sans', sans-serif; }
             </div>
         </div>
 
-        {{-- Banner completar pago --}}
         @if($mostrarCompletarPago && $estadoPagadoId)
         <div style="padding:.875rem 1.25rem;border-top:1px solid var(--line);background:var(--blue-l);
                     display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
@@ -1128,7 +1124,6 @@ body { font-family: 'DM Sans', sans-serif; }
             </div>
         </div>
 
-        {{-- Tabs --}}
         <div style="display:flex;gap:.5rem;margin-bottom:1rem;background:var(--line-2);border-radius:10px;padding:.3rem;">
             <button type="button" id="tab-btn-solo" onclick="switchTab('solo')"
                     style="flex:1;padding:.5rem .75rem;border-radius:8px;border:none;cursor:pointer;
@@ -1228,14 +1223,101 @@ body { font-family: 'DM Sans', sans-serif; }
 </div>
 @endif
 
+{{-- ═══ MODAL — REENVIAR NOTIFICACIÓN ════════════════════════════════ --}}
+@php $emailEnvio = $reserva->email_contacto ?? $reserva->cliente->email; @endphp
+<div class="modal-overlay" id="modal-reenviar" onclick="if(event.target===this)cerrarModalReenviar()">
+    <div class="modal-box" style="max-width:420px;">
+
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+            <div class="modal-title">
+                <i class="bi bi-send-fill" style="color:var(--blue);margin-right:.4rem;"></i>
+                Reenviar confirmación
+            </div>
+            <button type="button" onclick="cerrarModalReenviar()"
+                    style="background:none;border:none;cursor:pointer;color:var(--ink-4);font-size:1.1rem;padding:.2rem .4rem;border-radius:6px;">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        {{-- Info del destinatario --}}
+        <div style="background:var(--line-2);border:1px solid var(--line);border-radius:10px;
+                    padding:.75rem 1rem;margin-bottom:1rem;font-size:.82rem;">
+            <div style="font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
+                        color:var(--ink-4);margin-bottom:.4rem;">Destinatario</div>
+            <div style="font-weight:700;color:var(--ink);">{{ $reserva->cliente->nombre_completo }}</div>
+            @if($emailEnvio)
+            <div style="font-size:.78rem;color:var(--ink-3);margin-top:2px;display:flex;align-items:center;gap:.3rem;">
+                <i class="bi bi-envelope" style="font-size:.72rem;"></i> {{ $emailEnvio }}
+            </div>
+            @else
+            <div style="font-size:.75rem;color:var(--red);margin-top:3px;">
+                <i class="bi bi-exclamation-triangle-fill"></i> Sin correo registrado
+            </div>
+            @endif
+            @if($reserva->cliente->telefono)
+            <div style="font-size:.78rem;color:var(--ink-3);margin-top:2px;display:flex;align-items:center;gap:.3rem;">
+                <i class="bi bi-whatsapp" style="color:#25d366;font-size:.72rem;"></i> +51 {{ $reserva->cliente->telefono }}
+            </div>
+            @endif
+        </div>
+
+        {{-- Info de envío --}}
+        @if($emailEnvio)
+        <div style="background:var(--blue-l);border:1.5px solid var(--blue-m);border-radius:10px;
+                    padding:.875rem 1rem;margin-bottom:1rem;display:flex;align-items:center;gap:.75rem;">
+            <div style="width:36px;height:36px;border-radius:9px;background:var(--blue);color:white;
+                        display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.95rem;">
+                <i class="bi bi-envelope-fill"></i>
+            </div>
+            <div>
+                <div style="font-weight:700;font-size:.84rem;color:var(--ink);">Correo de confirmación</div>
+                <div style="font-size:.75rem;color:var(--ink-3);margin-top:1px;">
+                    Se enviará el PDF adjunto a <strong>{{ $emailEnvio }}</strong>
+                </div>
+            </div>
+        </div>
+        @else
+        <div style="padding:.875rem;background:var(--red-l);border:1px solid #fca5a5;border-radius:9px;
+                    font-size:.82rem;color:var(--red);text-align:center;margin-bottom:1rem;">
+            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+            Este cliente no tiene correo registrado.
+        </div>
+        @endif
+
+        <div id="reenviar-error"
+             style="display:none;margin-bottom:.75rem;padding:.6rem .875rem;
+                    background:var(--red-l);border:1px solid #fca5a5;
+                    border-radius:8px;font-size:.8rem;color:var(--red);font-weight:600;"></div>
+
+        <div class="modal-footer">
+            <button type="button" class="modal-btn-cancel"
+                    id="reenviar-btn-cancelar" onclick="cerrarModalReenviar()">
+                Cancelar
+            </button>
+            <button type="button" id="reenviar-btn-confirmar"
+        onclick="ejecutarReenvio()"
+        @if(!$emailEnvio) disabled @endif
+        style="padding:8px 20px;border-radius:9px;font-size:.84rem;font-weight:700;
+               background:var(--blue);color:white;border:none;cursor:pointer;
+               font-family:'DM Sans',sans-serif;transition:background .15s;
+               display:flex;align-items:center;gap:.4rem;">
+      <i class="bi bi-send-fill"></i> Reenviar ahora
+    </button>
+        </div>
+
+    </div>
+</div>
+
 @push('scripts')
 <script>
 const RESERVA_ID   = {{ $reserva->id }};
 const PAGO_URL     = "{{ route('reservas.registrarPago', $reserva) }}";
+const REENVIAR_URL = "{{ route('reservas.reenviarNotificacion', $reserva) }}";
 const CSRF_TOKEN   = "{{ csrf_token() }}";
 const PRECIO_TOTAL = {{ (float)$reserva->precio_total }};
 let   pagadoActual = {{ $pagado }};
 let   tabActual    = 'solo';
+let   canalReenvio = 'email';
 
 /* ── VOUCHER ── */
 function toggleVoucher(id, btn) {
@@ -1252,7 +1334,7 @@ function toggleVoucher(id, btn) {
     if (chevron) chevron.className = panel.classList.contains('open') ? 'bi bi-chevron-up' : 'bi bi-chevron-down';
 }
 
-/* ── MODAL ABRIR/CERRAR ── */
+/* ── MODAL COMPLETAR PAGO — ABRIR/CERRAR ── */
 function abrirModalCompletarPago() {
     const m = document.getElementById('modal-completar-pago');
     if (m) { m.classList.add('open'); document.body.style.overflow = 'hidden'; }
@@ -1263,9 +1345,24 @@ function cerrarModal() {
     if (m) { m.classList.remove('open'); document.body.style.overflow = ''; }
 }
 function cerrarModalSiOverlay(e) { if (e.target === e.currentTarget) cerrarModal(); }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarModal(); });
 
-/* ── TABS ── */
+/* ── MODAL REENVIAR — ABRIR/CERRAR ── */
+function abrirModalReenviar() {
+    document.getElementById('modal-reenviar').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    document.getElementById('reenviar-error').style.display = 'none';
+}
+function cerrarModalReenviar() {
+    document.getElementById('modal-reenviar').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+/* ESC cierra cualquier modal abierto */
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { cerrarModal(); cerrarModalReenviar(); }
+});
+
+/* ── TABS COMPLETAR PAGO ── */
 function switchTab(tab) {
     tabActual = tab;
     const btnSolo = document.getElementById('tab-btn-solo');
@@ -1274,12 +1371,12 @@ function switchTab(tab) {
     const panPago = document.getElementById('panel-pago');
     if (tab === 'solo') {
         if(btnSolo) { btnSolo.style.background='white'; btnSolo.style.color='var(--ink-2)'; btnSolo.style.boxShadow='0 1px 3px rgba(0,0,0,.1)'; }
-        if(btnPago) { btnPago.style.background='none'; btnPago.style.color='var(--ink-4)'; btnPago.style.boxShadow='none'; }
+        if(btnPago) { btnPago.style.background='none';  btnPago.style.color='var(--ink-4)'; btnPago.style.boxShadow='none'; }
         if(panSolo) panSolo.style.display='block';
         if(panPago) panPago.style.display='none';
     } else {
         if(btnPago) { btnPago.style.background='white'; btnPago.style.color='var(--ink-2)'; btnPago.style.boxShadow='0 1px 3px rgba(0,0,0,.1)'; }
-        if(btnSolo) { btnSolo.style.background='none'; btnSolo.style.color='var(--ink-4)'; btnSolo.style.boxShadow='none'; }
+        if(btnSolo) { btnSolo.style.background='none';  btnSolo.style.color='var(--ink-4)'; btnSolo.style.boxShadow='none'; }
         if(panSolo) panSolo.style.display='none';
         if(panPago) panPago.style.display='block';
     }
@@ -1295,7 +1392,7 @@ function onModalFile(input) {
     } else { if(txt) txt.textContent='Seleccionar...'; }
 }
 
-/* ── ERROR/LOADING ── */
+/* ── ERROR/LOADING (modal pago) ── */
 function mostrarError(msg) { const el=document.getElementById('modal-error'); if(el){el.textContent=msg;el.style.display='block';} }
 function ocultarError()    { const el=document.getElementById('modal-error'); if(el) el.style.display='none'; }
 function setLoading(on) {
@@ -1305,7 +1402,7 @@ function setLoading(on) {
     document.getElementById('modal-btn-cancelar').disabled  = on;
 }
 
-/* ── EJECUTAR PAGO ── */
+/* ── EJECUTAR PAGO COMPLETO ── */
 async function ejecutarPagoCompleto() {
     ocultarError();
     if (tabActual === 'pago') {
@@ -1326,33 +1423,76 @@ async function ejecutarPagoCompleto() {
             const baucher = document.getElementById('modal-baucher')?.files[0];
             if (baucher) fd.append('archivo_baucher', baucher);
         }
+
         const resp = await fetch(PAGO_URL, { method:'POST', body:fd });
+        const contentType = resp.headers.get('content-type') ?? '';
+        if (!contentType.includes('application/json')) {
+            const texto = await resp.text();
+            console.error('Respuesta no-JSON:', texto);
+            mostrarError('Error del servidor (status ' + resp.status + '). Revisa la consola.');
+            setLoading(false); return;
+        }
+
         const data = await resp.json();
         if (!data.ok) { mostrarError(data.message || 'Error al guardar.'); setLoading(false); return; }
 
-        // Animar barra
+        const nuevoPagado = parseFloat(data.nuevo_pagado ?? PRECIO_TOTAL);
+        const nuevoSaldo  = Math.max(0, PRECIO_TOTAL - nuevoPagado);
+        const nuevoPct    = PRECIO_TOTAL > 0 ? Math.min(100, Math.round(nuevoPagado / PRECIO_TOTAL * 100)) : 0;
+        const barColor    = nuevoPct >= 100 ? 'var(--green)' : (nuevoPct >= 50 ? 'var(--blue)' : 'var(--amber)');
+
         const bar   = document.getElementById('pago-progress-bar');
         const label = document.getElementById('pago-pct-label');
-        if (bar)   { bar.style.width='100%'; bar.style.background='var(--green)'; }
-        if (label) { label.textContent='100%'; label.style.color='var(--green)'; }
-        document.getElementById('pagado-label').textContent = 'S/ ' + PRECIO_TOTAL.toFixed(2);
-        document.getElementById('saldo-label').textContent  = 'S/ 0.00';
-        document.getElementById('saldo-label').style.color  = 'var(--green)';
+        if (bar)   { bar.style.width = nuevoPct + '%'; bar.style.background = barColor; }
+        if (label) { label.textContent = nuevoPct + '%'; label.style.color = barColor; }
+        document.getElementById('pagado-label').textContent = 'S/ ' + nuevoPagado.toFixed(2);
+        document.getElementById('saldo-label').textContent  = 'S/ ' + nuevoSaldo.toFixed(2);
+        document.getElementById('saldo-label').style.color  = nuevoSaldo > 0 ? 'var(--red)' : 'var(--green)';
 
         cerrarModal();
-
-        // Toast
-        const t = document.createElement('div');
-        t.style.cssText = 'position:fixed;top:1rem;left:50%;transform:translateX(-50%);background:var(--green);color:white;padding:.7rem 1.4rem;border-radius:12px;font-size:.86rem;font-weight:700;z-index:99999;box-shadow:0 4px 20px rgba(5,150,105,.4);white-space:nowrap;';
-        t.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> ' + (data.message || 'Pago completado');
-        document.body.appendChild(t);
-        setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity .3s'; }, 1400);
-        setTimeout(() => { t.remove(); window.location.reload(); }, 1800);
+        mostrarToast('var(--green)', 'bi-check-circle-fill', data.message || 'Pago completado', 'rgba(5,150,105,.4)');
+        setTimeout(() => window.location.reload(), 1800);
 
     } catch(e) {
-        mostrarError('Error de conexión. Intenta de nuevo.');
+        console.error('Error:', e);
+        mostrarError('Error inesperado: ' + e.message);
         setLoading(false);
     }
+}
+
+/* ── EJECUTAR REENVÍO ── */
+/* ── EJECUTAR REENVÍO ── */
+function ejecutarReenvio() {
+    // Cerrar modal al instante sin esperar nada
+    cerrarModalReenviar();
+    mostrarToast('var(--blue)', 'bi-send-fill', 'Enviando notificación...', 'rgba(29,78,216,.35)');
+
+    // Enviar en segundo plano, el usuario no espera
+    const fd = new FormData();
+    fd.append('_token', CSRF_TOKEN);
+    fd.append('canal', canalReenvio);
+
+    fetch(REENVIAR_URL, { method: 'POST', body: fd })
+        .then(resp => resp.json())
+        .then(data => {
+            mostrarToast('var(--green)', 'bi-check-circle-fill', 'Notificación enviada correctamente', 'rgba(5,150,105,.4)');
+        })
+        .catch(() => {
+            mostrarToast('var(--red)', 'bi-x-circle-fill', 'Error al enviar, intenta de nuevo', 'rgba(220,38,38,.35)');
+        });
+}
+
+/* ── TOAST HELPER ── */
+function mostrarToast(bg, icon, msg, shadow) {
+    const t = document.createElement('div');
+    t.style.cssText = `position:fixed;top:1rem;left:50%;transform:translateX(-50%);
+        background:${bg};color:white;padding:.7rem 1.4rem;border-radius:12px;
+        font-size:.86rem;font-weight:700;z-index:99999;
+        box-shadow:0 4px 20px ${shadow};white-space:nowrap;`;
+    t.innerHTML = `<i class="bi ${icon}" style="margin-right:.4rem;"></i> ${msg}`;
+    document.body.appendChild(t);
+    setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity .3s'; }, 1500);
+    setTimeout(() => t.remove(), 1900);
 }
 </script>
 @endpush

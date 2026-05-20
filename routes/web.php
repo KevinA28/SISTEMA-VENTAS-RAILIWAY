@@ -101,6 +101,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
          ->name('usuarios.invitar');
     Route::patch('/usuarios/{usuario}/toggle-activo', [\App\Http\Controllers\Admin\UsuarioAdminController::class, 'toggleActivo'])
          ->name('usuarios.toggleActivo');
+    Route::patch('/usuarios/{usuario}/rol', [\App\Http\Controllers\Admin\UsuarioAdminController::class, 'cambiarRol'])
+         ->name('usuarios.cambiarRol');
     Route::delete('/usuarios/{usuario}', [\App\Http\Controllers\Admin\UsuarioAdminController::class, 'destroy'])
          ->name('usuarios.destroy');
     Route::delete('/invitaciones/{invitacion}', [\App\Http\Controllers\Admin\UsuarioAdminController::class, 'cancelarInvitacion'])
@@ -112,9 +114,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
          ->name('tours.toggleActivo');
 
     // ── Ciudades / Ubigeo ─────────────────────────────────────────────
-    Route::get('/ciudades',          [CiudadController::class, 'index'])->name('ciudades.index');
-    Route::post('/ciudades',         [CiudadController::class, 'store'])->name('ciudades.store');
-    Route::delete('/ciudades/{id}',  [CiudadController::class, 'destroy'])->name('ciudades.destroy');
+    Route::get('/ciudades',         [CiudadController::class, 'index'])->name('ciudades.index');
+    Route::post('/ciudades',        [CiudadController::class, 'store'])->name('ciudades.store');
+    Route::delete('/ciudades/{id}', [CiudadController::class, 'destroy'])->name('ciudades.destroy');
 
 });
 

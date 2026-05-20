@@ -75,6 +75,8 @@
     cursor: pointer;
     transition: background .15s, transform .15s;
 }
+.gu-btn-purple { border-color: #c4b5fd; color: #6d28d9; }
+.gu-btn-purple:hover { background: #f5f3ff; }
 .inv-btn:hover { background: var(--navy-2); transform: translateY(-1px); }
 .gu-table { width: 100%; border-collapse: collapse; }
 .gu-table th {
@@ -412,6 +414,17 @@
                                         <i class="bi bi-trash3"></i> Eliminar
                                     </button>
                                 </form>
+                                <form method="POST"
+                                   action="{{ route('admin.usuarios.cambiarRol', $usuario) }}"
+                                    id="form-rol-{{ $usuario->id }}">
+                                @csrf @method('PATCH')
+                             <button type="button"
+                               class="gu-btn gu-btn-purple"
+                                   onclick="abrirModal('cambiar-rol', 'form-rol-{{ $usuario->id }}', '{{ $usuario->nombre_completo }}', '{{ $usuario->rol }}')">
+                              <i class="bi bi-arrow-left-right"></i>
+                             {{ $usuario->rol === 'administrador' ? 'Quitar admin' : 'Hacer admin' }}
+                         </button>
+                        </form>
                             </div>
                         @else
                             <span class="tu-cuenta">
@@ -432,51 +445,70 @@
 <script>
 let _modalFormId = null;
 
-function abrirModal(tipo, formId, nombre) {
+function abrirModal(tipo, formId, nombre, rolActual = '') {
     _modalFormId = formId;
 
-    const overlay   = document.getElementById('gu-modal-overlay');
-    const icon      = document.getElementById('modal-icon');
-    const iconI     = document.getElementById('modal-icon-i');
-    const title     = document.getElementById('modal-title');
-    const desc      = document.getElementById('modal-desc');
+    const overlay    = document.getElementById('gu-modal-overlay');
+    const icon       = document.getElementById('modal-icon');
+    const iconI      = document.getElementById('modal-icon-i');
+    const title      = document.getElementById('modal-title');
+    const desc       = document.getElementById('modal-desc');
     const confirmBtn = document.getElementById('modal-confirm-btn');
 
+    // reset inline styles que se puedan haber seteado antes
+    icon.style.background = '';
+    icon.style.color      = '';
+    confirmBtn.style.background = '';
+    confirmBtn.style.color      = '';
+
     if (tipo === 'eliminar') {
-        icon.className      = 'gu-modal-icon danger';
-        iconI.className     = 'bi bi-trash3-fill';
-        title.textContent   = 'Eliminar usuario';
-        desc.innerHTML      = `¿Estás seguro de que quieres eliminar a <span class="gu-modal-name">${nombre}</span>?<br>Esta acción no se puede deshacer.`;
+        icon.className       = 'gu-modal-icon danger';
+        iconI.className      = 'bi bi-trash3-fill';
+        title.textContent    = 'Eliminar usuario';
+        desc.innerHTML       = `¿Estás seguro de que quieres eliminar a <span class="gu-modal-name">${nombre}</span>?<br>Esta acción no se puede deshacer.`;
         confirmBtn.className = 'gu-modal-confirm danger';
         confirmBtn.innerHTML = '<i class="bi bi-trash3"></i> Sí, eliminar';
 
     } else if (tipo === 'desactivar') {
-        icon.className      = 'gu-modal-icon warning';
-        iconI.className     = 'bi bi-pause-circle-fill';
-        title.textContent   = 'Desactivar usuario';
-        desc.innerHTML      = `¿Desactivar a <span class="gu-modal-name">${nombre}</span>?<br>No podrá iniciar sesión hasta que lo reactives.`;
+        icon.className       = 'gu-modal-icon warning';
+        iconI.className      = 'bi bi-pause-circle-fill';
+        title.textContent    = 'Desactivar usuario';
+        desc.innerHTML       = `¿Desactivar a <span class="gu-modal-name">${nombre}</span>?<br>No podrá iniciar sesión hasta que lo reactives.`;
         confirmBtn.className = 'gu-modal-confirm warning';
         confirmBtn.innerHTML = '<i class="bi bi-pause-circle"></i> Sí, desactivar';
 
     } else if (tipo === 'activar') {
-        icon.className      = 'gu-modal-icon';
+        icon.className        = 'gu-modal-icon';
         icon.style.background = '#f0fdf4';
-        icon.style.color    = '#15803d';
-        iconI.className     = 'bi bi-play-circle-fill';
-        title.textContent   = 'Activar usuario';
-        desc.innerHTML      = `¿Activar a <span class="gu-modal-name">${nombre}</span>?<br>Podrá iniciar sesión nuevamente.`;
-        confirmBtn.className = 'gu-modal-confirm';
+        icon.style.color      = '#15803d';
+        iconI.className       = 'bi bi-play-circle-fill';
+        title.textContent     = 'Activar usuario';
+        desc.innerHTML        = `¿Activar a <span class="gu-modal-name">${nombre}</span>?<br>Podrá iniciar sesión nuevamente.`;
+        confirmBtn.className  = 'gu-modal-confirm';
         confirmBtn.style.background = '#15803d';
-        confirmBtn.style.color = '#fff';
-        confirmBtn.innerHTML = '<i class="bi bi-play-circle"></i> Sí, activar';
+        confirmBtn.style.color      = '#fff';
+        confirmBtn.innerHTML  = '<i class="bi bi-play-circle"></i> Sí, activar';
 
     } else if (tipo === 'cancelar-inv') {
-        icon.className      = 'gu-modal-icon danger';
-        iconI.className     = 'bi bi-x-circle-fill';
-        title.textContent   = 'Cancelar invitación';
-        desc.innerHTML      = `¿Cancelar la invitación enviada a <span class="gu-modal-name">${nombre}</span>?<br>El enlace dejará de funcionar.`;
+        icon.className       = 'gu-modal-icon danger';
+        iconI.className      = 'bi bi-x-circle-fill';
+        title.textContent    = 'Cancelar invitación';
+        desc.innerHTML       = `¿Cancelar la invitación enviada a <span class="gu-modal-name">${nombre}</span>?<br>El enlace dejará de funcionar.`;
         confirmBtn.className = 'gu-modal-confirm danger';
         confirmBtn.innerHTML = '<i class="bi bi-x-lg"></i> Sí, cancelar';
+
+    } else if (tipo === 'cambiar-rol') {
+        const nuevoRol = rolActual === 'administrador' ? 'Ventas' : 'Administrador';
+        icon.className        = 'gu-modal-icon';
+        icon.style.background = '#f5f3ff';
+        icon.style.color      = '#6d28d9';
+        iconI.className       = 'bi bi-arrow-left-right';
+        title.textContent     = 'Cambiar rol de usuario';
+        desc.innerHTML        = `¿Cambiar el rol de <span class="gu-modal-name">${nombre}</span> a <strong>${nuevoRol}</strong>?`;
+        confirmBtn.className  = 'gu-modal-confirm';
+        confirmBtn.style.background = '#6d28d9';
+        confirmBtn.style.color      = '#fff';
+        confirmBtn.innerHTML  = `<i class="bi bi-arrow-left-right"></i> Sí, cambiar a ${nuevoRol}`;
     }
 
     overlay.classList.add('open');
