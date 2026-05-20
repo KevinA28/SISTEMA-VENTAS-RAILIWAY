@@ -26,7 +26,6 @@ class DatabaseSeeder extends Seeder
         }
 
         // Métodos de pago
-        
         $this->call(MetodoPagoSeeder::class);
 
         // Usuario administrador inicial

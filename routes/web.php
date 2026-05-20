@@ -24,7 +24,7 @@ Route::middleware('auth')->group(function () {
          ->name('reservas.exportar');
     Route::get('/reservas/reporte-salud', [ReservaController::class, 'reporteSalud'])
          ->name('reservas.reporteSalud');
-    Route::resource('reservas', ReservaController::class);
+    Route::resource('reservas', ReservaController::class)->except(['destroy']);
     Route::post('reservas/{reserva}/estado', [ReservaController::class, 'cambiarEstado'])
          ->name('reservas.cambiarEstado');
     Route::post('reservas/{reserva}/registrar-pago', [ReservaController::class, 'registrarPago'])
@@ -102,7 +102,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::patch('/usuarios/{usuario}/toggle-activo', [\App\Http\Controllers\Admin\UsuarioAdminController::class, 'toggleActivo'])
          ->name('usuarios.toggleActivo');
     Route::patch('/usuarios/{usuario}/rol', [\App\Http\Controllers\Admin\UsuarioAdminController::class, 'cambiarRol'])
-         ->name('usuarios.cambiarRol');
+         ->name('usuarios.cambiarRol')
+         ->middleware('superadmin');
     Route::delete('/usuarios/{usuario}', [\App\Http\Controllers\Admin\UsuarioAdminController::class, 'destroy'])
          ->name('usuarios.destroy');
     Route::delete('/invitaciones/{invitacion}', [\App\Http\Controllers\Admin\UsuarioAdminController::class, 'cancelarInvitacion'])

@@ -60,7 +60,8 @@
                       <div style="width:48px;height:48px;background:linear-gradient(135deg,#1b3a6b,#2a56a8);
                                   border-radius:12px;display:inline-flex;align-items:center;justify-content:center;">
                         <span style="font-size:22px;line-height:48px;display:block;text-align:center;width:48px;">
-                          @if($invitacion->rol === 'administrador')&#128737;
+                          @if($invitacion->rol === 'superadmin')&#11088;
+                          @elseif($invitacion->rol === 'administrador')&#128737;
                           @elseif($invitacion->rol === 'ventas')&#128188;
                           @else&#128295;@endif
                         </span>

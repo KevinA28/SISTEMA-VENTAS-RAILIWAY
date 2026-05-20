@@ -55,7 +55,7 @@
                 </a>
 
                 {{-- Administración — solo admins, en el navbar --}}
-                @if(Auth::user()->rol === 'administrador')
+                @if(in_array(Auth::user()->rol, ['administrador', 'superadmin']))
                 <div x-data="{ openAdmin: false }" style="position:relative;height:64px;display:flex;align-items:center;">
                     <button @click="openAdmin = !openAdmin"
                             style="color:{{ request()->routeIs('admin.*') ? '#f59e0b' : 'rgba(255,255,255,.65)' }};
@@ -136,7 +136,11 @@
                     <div style="padding:10px 14px;border-bottom:1px solid #f3f4f6;background:#f9fafb;">
                         <div style="font-size:.82rem;font-weight:700;color:#0f1923;">{{ Auth::user()->nombre ?? Auth::user()->name }}</div>
                         <div style="font-size:.72rem;color:#9ca3af;">{{ Auth::user()->email }}</div>
-                        @if(Auth::user()->rol === 'administrador')
+                        @if(Auth::user()->rol === 'superadmin')
+                            <div style="font-size:.68rem;font-weight:700;color:#86198f;margin-top:2px;text-transform:uppercase;letter-spacing:.06em;">
+                                <i class="bi bi-star-fill"></i> Superadmin
+                            </div>
+                        @elseif(Auth::user()->rol === 'administrador')
                             <div style="font-size:.68rem;font-weight:700;color:#f59e0b;margin-top:2px;text-transform:uppercase;letter-spacing:.06em;">
                                 <i class="bi bi-shield-check"></i> Administrador
                             </div>

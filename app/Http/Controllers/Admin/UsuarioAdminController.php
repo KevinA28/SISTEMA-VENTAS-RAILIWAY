@@ -26,13 +26,17 @@ class UsuarioAdminController extends Controller
 
     public function invitar(Request $request): RedirectResponse
     {
+        $rolesPermitidos = auth()->user()->rol === 'superadmin'
+            ? 'superadmin,administrador,ventas'
+            : 'ventas';
+
         $request->validate([
             'email' => [
                 'required', 'email',
                 'unique:usuarios_admin,email',
                 'unique:invitaciones,email',
             ],
-            'rol' => ['required', 'in:administrador,ventas,operador'],
+            'rol' => ['required', 'in:' . $rolesPermitidos],
         ]);
 
         // Eliminar invitaciones previas expiradas para ese email
@@ -68,6 +72,10 @@ class UsuarioAdminController extends Controller
             return back()->withErrors(['error' => 'No puedes desactivar tu propia cuenta.']);
         }
 
+        if ($usuario->rol === 'superadmin' && auth()->user()->rol !== 'superadmin') {
+            abort(403);
+        }
+
         $usuario->update(['activo' => ! $usuario->activo]);
 
         $estado = $usuario->activo ? 'activado' : 'desactivado';
@@ -80,6 +88,10 @@ class UsuarioAdminController extends Controller
             return back()->withErrors(['error' => 'No puedes eliminar tu propia cuenta.']);
         }
 
+        if ($usuario->rol === 'superadmin' && auth()->user()->rol !== 'superadmin') {
+            abort(403);
+        }
+
         $usuario->delete();
         return back()->with('success', 'Usuario eliminado correctamente.');
     }
@@ -90,16 +102,20 @@ class UsuarioAdminController extends Controller
         return back()->with('success', 'Invitación cancelada.');
     }
     public function cambiarRol(UsuarioAdmin $usuario): RedirectResponse
-{
-    if ($usuario->id === auth()->id()) {
-        return back()->withErrors(['error' => 'No puedes cambiar tu propio rol.']);
+    {
+        if ($usuario->id === auth()->id()) {
+            return back()->withErrors(['error' => 'No puedes cambiar tu propio rol.']);
+        }
+
+        if ($usuario->rol === 'superadmin') {
+            return back()->withErrors(['error' => 'El rol de superadmin no se puede cambiar desde aquí.']);
+        }
+
+        $nuevoRol = $usuario->rol === 'administrador' ? 'ventas' : 'administrador';
+        $usuario->update(['rol' => $nuevoRol]);
+
+        return back()->with('success',
+            "Rol de {$usuario->nombre_completo} cambiado a " . ucfirst($nuevoRol) . "."
+        );
     }
-
-    $nuevoRol = $usuario->rol === 'administrador' ? 'ventas' : 'administrador';
-    $usuario->update(['rol' => $nuevoRol]);
-
-    return back()->with('success',
-        "Rol de {$usuario->nombre_completo} cambiado a " . ucfirst($nuevoRol) . "."
-    );
-  }
 }

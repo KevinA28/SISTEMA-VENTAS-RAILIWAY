@@ -360,7 +360,7 @@
             <div class="sb-divider"></div>
 
             {{-- ── ADMINISTRACIÓN (solo admins) ── --}}
-            @if(Auth::user()->rol === 'administrador')
+            @if(in_array(Auth::user()->rol, ['administrador', 'superadmin']))
             <div class="sb-section-label">Administración</div>
 
             <a href="{{ route('admin.usuarios.index') }}"

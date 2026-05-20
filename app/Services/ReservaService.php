@@ -139,6 +139,7 @@ class ReservaService
                 'politica_tipo'                      => $datos['politica_tipo']            ?? null,
                 'observaciones'                      => $datos['observaciones']            ?? null,
                 'email_contacto'                     => $datos['titular_email']            ?? null,
+                'registrado_por_nombre'              => Auth::user()?->nombre_completo     ?? null,
             ]);
 
             // ── 4. Pasajero titular ───────────────────────────────
@@ -397,27 +398,29 @@ if (!empty($datos['metodo_pago']) && !empty($datos['monto_pagado_inicial'])) {
             if (!empty($datos['metodo_pago']) && !empty($datos['monto_pagado_inicial'])) {
                 $metodoPago = MetodoPago::where('clave', $datos['metodo_pago'])
                                 ->orWhere('nombre', $datos['metodo_pago'])
-                                ->firstOrFail();
+                                ->first();
 
-                $rutaBaucher = null;
-                if (!empty($datos['archivo_baucher']) && $datos['archivo_baucher'] instanceof UploadedFile) {
-                    $rutaBaucher = $datos['archivo_baucher']->store('bauchers', 'local');
+                if ($metodoPago) {
+                    $rutaBaucher = null;
+                    if (!empty($datos['archivo_baucher']) && $datos['archivo_baucher'] instanceof UploadedFile) {
+                        $rutaBaucher = $datos['archivo_baucher']->store('bauchers', 'local');
+                    }
+
+                    $reserva->pagos()->create([
+                        'metodo_pago_id'    => $metodoPago->id,
+                        'registrado_por'    => Auth::id(),
+                        'monto'             => $datos['monto_pagado_inicial'],
+                        'numero_operacion'  => $datos['numero_operacion'] ?? null,
+                        'archivo_baucher'   => $rutaBaucher,
+                        'tipo_pago'         => $datos['tipo_pago'] ?? 'adelanto',
+                        'estado_validacion' => 'pendiente',
+                        'fecha_pago'        => $datos['fecha_pago'] ?? now(),
+                    ]);
+
+                    $reserva->update([
+                        'monto_pagado' => $reserva->pagos()->sum('monto'),
+                    ]);
                 }
-
-                $reserva->pagos()->create([
-                    'metodo_pago_id'    => $metodoPago->id,
-                    'registrado_por'    => Auth::id(),
-                    'monto'             => $datos['monto_pagado_inicial'],
-                    'numero_operacion'  => $datos['numero_operacion'] ?? null,
-                    'archivo_baucher'   => $rutaBaucher,
-                    'tipo_pago'         => $datos['tipo_pago'] ?? 'adelanto',
-                    'estado_validacion' => 'pendiente',
-                    'fecha_pago'        => $datos['fecha_pago'] ?? now(),
-                ]);
-
-                $reserva->update([
-                    'monto_pagado' => $reserva->pagos()->sum('monto'),
-                ]);
             }
 
             // ── 6. Historial estado ───────────────────────────────
@@ -518,12 +521,15 @@ if (!empty($datos['metodo_pago']) && !empty($datos['monto_pagado_inicial'])) {
     $phpBin  = PHP_BINARY;
     $artisan = base_path('artisan');
 
-    // ✅ Escribir payload a archivo temporal para evitar problemas con comillas
     $tmpFile = storage_path('app/notif_' . $reserva->id . '_' . time() . '.json');
     file_put_contents($tmpFile, $payload);
 
-    // ✅ Pasar ruta del archivo en vez del JSON directamente
-    $cmd = "start /B \"\" \"{$phpBin}\" \"{$artisan}\" reserva:notificar-file \"{$tmpFile}\"";
-    pclose(popen($cmd, "r"));
+    if (PHP_OS_FAMILY === 'Windows') {
+        $cmd = 'start /B "" ' . escapeshellarg($phpBin) . ' ' . escapeshellarg($artisan) . ' reserva:notificar-file ' . escapeshellarg($tmpFile);
+        pclose(popen($cmd, 'r'));
+    } else {
+        $cmd = escapeshellarg($phpBin) . ' ' . escapeshellarg($artisan) . ' reserva:notificar-file ' . escapeshellarg($tmpFile) . ' > /dev/null 2>&1 &';
+        exec($cmd);
+    }
 }
 }

@@ -2,11 +2,10 @@
 @section('titulo', 'Estadísticas')
 
 @push('styles')
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
-    --ink:#0d1117; --ink-2:#1f2937; --ink-3:#6b7280; --ink-4:#9ca3af;
-    --line:#e5e7eb; --line-2:#f3f4f6; --surface:#f9fafb;
+    --ink:#0f172a; --ink-2:#1e293b; --ink-3:#475569; --ink-4:#94a3b8;
+    --line:#e2e8f0; --line-2:#f8fafc; --surface:#f0f4f8;
     --blue:#1d4ed8; --blue-l:#eff6ff; --blue-m:#bfdbfe;
     --green:#059669; --green-l:#ecfdf5; --green-m:#6ee7b7;
     --amber:#d97706; --amber-l:#fffbeb; --amber-m:#fcd34d;
@@ -15,10 +14,8 @@
     --teal:#0d9488; --teal-l:#f0fdfa;
     --radius-sm:8px; --radius-md:14px; --radius-lg:20px;
     --shadow-sm:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.05);
-    --shadow-md:0 4px 12px rgba(0,0,0,.08),0 2px 4px rgba(0,0,0,.04);
+    --shadow-md:0 4px 16px rgba(0,0,0,.1),0 2px 4px rgba(0,0,0,.05);
 }
-*, *::before, *::after { box-sizing: border-box; }
-body { font-family:'DM Sans',sans-serif; background:var(--surface); color:var(--ink); }
 
 /* ── PAGE HEADER ── */
 .st-header {
@@ -27,7 +24,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--surface); color:var(--
     padding-bottom:1.25rem; border-bottom:1.5px solid var(--line);
 }
 .st-title {
-    font-family:'Syne',sans-serif;
+    font-family:'Plus Jakarta Sans',sans-serif;
     font-size:1.5rem; font-weight:800; color:var(--ink);
     display:flex; align-items:center; gap:.6rem; letter-spacing:-.02em;
 }
@@ -55,7 +52,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--surface); color:var(--
     padding:.35rem .85rem; border-radius:999px;
     border:1.5px solid var(--line); background:#fff;
     font-size:.78rem; font-weight:600; color:var(--ink-3);
-    cursor:pointer; transition:all .15s; font-family:'DM Sans',sans-serif;
+    cursor:pointer; transition:all .15s; font-family:'Plus Jakarta Sans',sans-serif;
 }
 .period-btn:hover { border-color:var(--blue); color:var(--blue); }
 .period-btn.active {
@@ -99,7 +96,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--surface); color:var(--
 .trend-neutral { background:var(--line-2); color:var(--ink-4); }
 
 .metric-val {
-    font-family:'DM Mono',monospace;
+    font-family:'JetBrains Mono',monospace;
     font-size:1.7rem; font-weight:500; color:var(--ink); line-height:1;
 }
 .metric-lbl { font-size:.72rem; color:var(--ink-3); margin-top:.3rem; font-weight:500; }
@@ -107,7 +104,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--surface); color:var(--
 
 /* ── SECTION LABELS ── */
 .section-label {
-    font-family:'Syne',sans-serif;
+    font-family:'Plus Jakarta Sans',sans-serif;
     font-size:.65rem; font-weight:700; letter-spacing:.12em;
     text-transform:uppercase; color:var(--ink-4);
     display:flex; align-items:center; gap:.5rem;
@@ -128,7 +125,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--surface); color:var(--
     margin-bottom:1.1rem; flex-wrap:wrap; gap:.5rem;
 }
 .chart-title {
-    font-family:'Syne',sans-serif;
+    font-family:'Plus Jakarta Sans',sans-serif;
     font-size:.92rem; font-weight:700; color:var(--ink);
     display:flex; align-items:center; gap:.45rem;
 }
@@ -166,8 +163,8 @@ body { font-family:'DM Sans',sans-serif; background:var(--surface); color:var(--
     font-size:.6rem; font-weight:800; flex-shrink:0;
 }
 .hbar-meta { display:flex; align-items:center; gap:.5rem; }
-.hbar-val { font-size:.75rem; font-weight:700; color:var(--ink-2); font-family:'DM Mono',monospace; }
-.hbar-pct { font-size:.68rem; color:var(--ink-4); font-family:'DM Mono',monospace; }
+.hbar-val { font-size:.75rem; font-weight:700; color:var(--ink-2); font-family:'JetBrains Mono',monospace; }
+.hbar-pct { font-size:.68rem; color:var(--ink-4); font-family:'JetBrains Mono',monospace; }
 .hbar-track { height:6px; background:var(--line-2); border-radius:999px; overflow:hidden; }
 .hbar-fill  { height:100%; border-radius:999px; transition:width .7s cubic-bezier(.4,0,.2,1); }
 
@@ -177,7 +174,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--surface); color:var(--
 .legend-row { display:flex; align-items:center; gap:.5rem; cursor:default; }
 .legend-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
 .legend-name { font-size:.77rem; font-weight:500; color:var(--ink-2); flex:1; }
-.legend-count { font-size:.72rem; font-family:'DM Mono',monospace; color:var(--ink-3); }
+.legend-count { font-size:.72rem; font-family:'JetBrains Mono',monospace; color:var(--ink-3); }
 .legend-pct { font-size:.68rem; color:var(--ink-4); }
 
 /* ── VIP LIST ── */
@@ -214,7 +211,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--surface); color:var(--
     border-radius:10px;
 }
 .week-num {
-    font-family:'DM Mono',monospace;
+    font-family:'JetBrains Mono',monospace;
     font-size:1.9rem; font-weight:500; line-height:1;
 }
 .week-lbl { font-size:.7rem; color:var(--ink-4); margin-top:.3rem; }
@@ -263,6 +260,89 @@ body { font-family:'DM Sans',sans-serif; background:var(--surface); color:var(--
 
 /* ── CHART TOOLTIP CUSTOM ── */
 canvas { max-width:100%; }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeSlideUp {
+    from { opacity:0; transform:translateY(18px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+@keyframes fadeIn {
+    from { opacity:0; }
+    to   { opacity:1; }
+}
+@keyframes scaleIn {
+    from { opacity:0; transform:scale(.94); }
+    to   { opacity:1; transform:scale(1); }
+}
+@keyframes accentGrow {
+    from { transform:scaleX(0); transform-origin:left; }
+    to   { transform:scaleX(1); transform-origin:left; }
+}
+
+.st-header    { animation: fadeSlideUp .4s ease both; }
+.period-bar   { animation: fadeSlideUp .4s .08s ease both; }
+.section-label { animation: fadeIn .35s ease both; }
+
+.metric-card {
+    animation: fadeSlideUp .45s ease both;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    padding: 1.1rem 1.25rem;
+    position: relative; overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    transition: transform .2s cubic-bezier(.34,1.56,.64,1), box-shadow .2s ease;
+}
+.metric-card:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: var(--shadow-md);
+}
+.metric-card:nth-child(1) { animation-delay:.12s }
+.metric-card:nth-child(2) { animation-delay:.18s }
+.metric-card:nth-child(3) { animation-delay:.24s }
+.metric-card:nth-child(4) { animation-delay:.30s }
+.metric-card:nth-child(5) { animation-delay:.36s }
+
+.metric-accent { animation: accentGrow .6s .5s ease both; }
+
+.chart-card {
+    animation: scaleIn .45s ease both;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    padding: 1.25rem;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow .2s ease;
+}
+.chart-card:hover { box-shadow: var(--shadow-md); }
+.grid-2 .chart-card:nth-child(1) { animation-delay:.2s }
+.grid-2 .chart-card:nth-child(2) { animation-delay:.3s }
+.grid-3 .chart-card:nth-child(1) { animation-delay:.2s }
+.grid-3 .chart-card:nth-child(2) { animation-delay:.28s }
+.grid-3 .chart-card:nth-child(3) { animation-delay:.36s }
+
+.vip-item {
+    animation: fadeSlideUp .35s ease both;
+    transition: background .15s, border-color .15s, transform .15s;
+}
+.vip-item:hover { transform: translateX(4px); }
+.vip-list .vip-item:nth-child(1) { animation-delay:.4s }
+.vip-list .vip-item:nth-child(2) { animation-delay:.46s }
+.vip-list .vip-item:nth-child(3) { animation-delay:.52s }
+.vip-list .vip-item:nth-child(4) { animation-delay:.58s }
+.vip-list .vip-item:nth-child(5) { animation-delay:.64s }
+
+.hbar-fill { width:0 !important; transition: width .9s cubic-bezier(.4,0,.2,1); }
+.hbar-fill.animated { width: var(--target-w) !important; }
+
+.metric-val { transition: all .3s ease; }
+
+/* period-btn mejorado */
+.period-btn {
+    transition: all .18s cubic-bezier(.34,1.2,.64,1);
+}
+.period-btn:hover { transform: translateY(-1px); }
+.period-btn.active { transform: translateY(-1px); }
 </style>
 @endpush
 
@@ -627,8 +707,65 @@ canvas { max-width:100%; }
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
+// ── Count-up animado para métricas ──
+function countUp(el, target, duration, prefix, isMoney) {
+    const start   = performance.now();
+    const from    = 0;
+    const isFloat = target % 1 !== 0;
+
+    function step(now) {
+        const progress = Math.min((now - start) / duration, 1);
+        const ease     = 1 - Math.pow(1 - progress, 3);
+        const current  = from + (target - from) * ease;
+        if (isMoney) {
+            el.textContent = prefix + 'S/ ' + Math.round(current).toLocaleString('es-PE');
+        } else {
+            el.textContent = prefix + Math.round(current).toLocaleString('es-PE');
+        }
+        if (progress < 1) requestAnimationFrame(step);
+        else el.textContent = el.dataset.final;
+    }
+    requestAnimationFrame(step);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Guardar valores finales y animar contadores
+    document.querySelectorAll('.metric-val').forEach(el => {
+        const raw    = el.textContent.trim();
+        el.dataset.final = raw;
+        const isMoney   = raw.startsWith('S/');
+        const prefix    = '';
+        const numStr    = raw.replace(/[^0-9]/g, '');
+        const target    = parseInt(numStr, 10);
+        if (!isNaN(target) && target > 0) {
+            el.textContent = isMoney ? 'S/ 0' : '0';
+            setTimeout(() => countUp(el, target, 900, prefix, isMoney), 300);
+        }
+    });
+
+    // Animar barras horizontales con IntersectionObserver
+    document.querySelectorAll('.hbar-fill').forEach(bar => {
+        const w = bar.style.width;
+        bar.style.setProperty('--target-w', w);
+        bar.style.width = '0';
+    });
+
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.querySelectorAll('.hbar-fill').forEach((bar, i) => {
+                    setTimeout(() => bar.classList.add('animated'), i * 80);
+                });
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.2 });
+
+    document.querySelectorAll('.hbar-list').forEach(list => observer.observe(list));
+});
+
 // ── Defaults globales ──
-Chart.defaults.font.family  = "'DM Sans', sans-serif";
+Chart.defaults.font.family  = "'Plus Jakarta Sans', sans-serif";
 Chart.defaults.font.size    = 12;
 Chart.defaults.color        = '#9ca3af';
 Chart.defaults.plugins.tooltip.padding      = 10;

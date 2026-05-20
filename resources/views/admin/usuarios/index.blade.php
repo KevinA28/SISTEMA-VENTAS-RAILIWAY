@@ -114,8 +114,9 @@
     padding: 3px 10px; border-radius: 999px;
     font-size: .7rem; font-weight: 700;
 }
-.rol-admin    { background: #ede9fe; color: #6d28d9; }
-.rol-ventas   { background: #dbeafe; color: #1d4ed8; }
+.rol-superadmin { background: #fdf2f8; color: #86198f; }
+.rol-admin      { background: #ede9fe; color: #6d28d9; }
+.rol-ventas     { background: #dbeafe; color: #1d4ed8; }
 .estado-badge {
     display: inline-flex; align-items: center; gap: .3rem;
     padding: 3px 10px; border-radius: 999px;
@@ -271,7 +272,10 @@
             <label>Rol</label>
             <select name="rol" required class="inv-input">
                 <option value="ventas"        {{ old('rol') == 'ventas'        ? 'selected' : '' }}>Ventas</option>
+                @if(auth()->user()->rol === 'superadmin')
                 <option value="administrador" {{ old('rol') == 'administrador' ? 'selected' : '' }}>Administrador</option>
+                <option value="superadmin"    {{ old('rol') == 'superadmin'    ? 'selected' : '' }}>Superadmin</option>
+                @endif
             </select>
         </div>
         <button type="submit" class="inv-btn">
@@ -309,7 +313,7 @@
                         </div>
                     </td>
                     <td>
-                       <span class="rol-badge {{ $inv->rol === 'administrador' ? 'rol-admin' : 'rol-ventas' }}">
+                        <span class="rol-badge {{ $inv->rol === 'superadmin' ? 'rol-superadmin' : ($inv->rol === 'administrador' ? 'rol-admin' : 'rol-ventas') }}">
                             {{ ucfirst($inv->rol) }}
                         </span>
                     </td>
@@ -356,8 +360,12 @@
                 @foreach ($usuarios as $usuario)
                 @php
                     $iniciales = strtoupper(substr($usuario->nombre, 0, 1) . substr($usuario->apellido, 0, 1));
-                    $colores = ['administrador' => ['#ede9fe','#6d28d9'], 'ventas' => ['#dbeafe','#1d4ed8']];
-                    $color     = $colores[$usuario->rol] ?? ['#f1f5f9','#475569'];
+                    $colores = [
+                        'superadmin'   => ['#fdf2f8','#86198f'],
+                        'administrador' => ['#ede9fe','#6d28d9'],
+                        'ventas'        => ['#dbeafe','#1d4ed8'],
+                    ];
+                    $color = $colores[$usuario->rol] ?? ['#f1f5f9','#475569'];
                 @endphp
                 <tr>
                     <td>
@@ -377,12 +385,19 @@
                         </div>
                     </td>
                     <td>
-                        <span class="rol-badge {{ $usuario->rol === 'administrador' ? 'rol-admin' : 'rol-ventas' }}">
-                            @if($usuario->rol === 'administrador') <i class="bi bi-shield-fill"></i>
-                            @else <i class="bi bi-bag"></i>
-                            @endif
-                            {{ ucfirst($usuario->rol) }}
+                        @if($usuario->rol === 'superadmin')
+                        <span class="rol-badge rol-superadmin">
+                            <i class="bi bi-star-fill"></i> Superadmin
                         </span>
+                        @elseif($usuario->rol === 'administrador')
+                        <span class="rol-badge rol-admin">
+                            <i class="bi bi-shield-fill"></i> Administrador
+                        </span>
+                        @else
+                        <span class="rol-badge rol-ventas">
+                            <i class="bi bi-bag"></i> Ventas
+                        </span>
+                        @endif
                     </td>
                     <td>
                         <span class="estado-badge {{ $usuario->activo ? 'estado-activo' : 'estado-inactivo' }}">
@@ -392,7 +407,13 @@
                     </td>
                     <td>
                         @if ($usuario->id !== auth()->id())
+                            @php
+                                $authRol   = auth()->user()->rol;
+                                $esSuperauth = $authRol === 'superadmin';
+                                $puedeGestionar = $esSuperauth || $usuario->rol !== 'superadmin';
+                            @endphp
                             <div class="gu-actions">
+                                @if($puedeGestionar)
                                 <form method="POST"
                                       action="{{ route('admin.usuarios.toggleActivo', $usuario) }}"
                                       id="form-toggle-{{ $usuario->id }}">
@@ -414,17 +435,27 @@
                                         <i class="bi bi-trash3"></i> Eliminar
                                     </button>
                                 </form>
+                                @endif
+
+                                @if($esSuperauth && $usuario->rol !== 'superadmin')
                                 <form method="POST"
-                                   action="{{ route('admin.usuarios.cambiarRol', $usuario) }}"
-                                    id="form-rol-{{ $usuario->id }}">
-                                @csrf @method('PATCH')
-                             <button type="button"
-                               class="gu-btn gu-btn-purple"
-                                   onclick="abrirModal('cambiar-rol', 'form-rol-{{ $usuario->id }}', '{{ $usuario->nombre_completo }}', '{{ $usuario->rol }}')">
-                              <i class="bi bi-arrow-left-right"></i>
-                             {{ $usuario->rol === 'administrador' ? 'Quitar admin' : 'Hacer admin' }}
-                         </button>
-                        </form>
+                                      action="{{ route('admin.usuarios.cambiarRol', $usuario) }}"
+                                      id="form-rol-{{ $usuario->id }}">
+                                    @csrf @method('PATCH')
+                                    <button type="button"
+                                            class="gu-btn gu-btn-purple"
+                                            onclick="abrirModal('cambiar-rol', 'form-rol-{{ $usuario->id }}', '{{ $usuario->nombre_completo }}', '{{ $usuario->rol }}')">
+                                        <i class="bi bi-arrow-left-right"></i>
+                                        {{ $usuario->rol === 'administrador' ? 'Quitar admin' : 'Hacer admin' }}
+                                    </button>
+                                </form>
+                                @endif
+
+                                @if(!$puedeGestionar && !$esSuperauth)
+                                <span style="font-size:.72rem;color:var(--ink-4);display:flex;align-items:center;gap:.3rem">
+                                    <i class="bi bi-star-fill" style="color:#86198f"></i> Superadmin
+                                </span>
+                                @endif
                             </div>
                         @else
                             <span class="tu-cuenta">

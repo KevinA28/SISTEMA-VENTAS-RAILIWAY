@@ -54,7 +54,8 @@ class Reserva extends Model
         'tipo_cama',
         'plan_alimentacion',
         'titular_obs_medicas',
-        'email_contacto',          
+        'email_contacto',
+        'registrado_por_nombre',
         'notificacion_enviada',
     ];
 

@@ -21,7 +21,7 @@ class EnsureIsAdmin
                 ->withErrors(['email' => 'Tu cuenta ha sido desactivada.']);
         }
 
-        if ($user->rol !== 'administrador') {
+        if (! in_array($user->rol, ['administrador', 'superadmin'])) {
             abort(403, 'No tienes permiso para acceder a esta sección.');
         }
 
